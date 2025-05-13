@@ -1,0 +1,19 @@
+{
+  "footer":{
+    "copyright" : "Todos los derechos reservados",
+    "developedBy": "Desarrollado por"
+  },
+  "toolbar" : {
+    "search" : "Buscar en Cable Peru TV Disney"
+  },
+  "main" : {
+    "title" : "Tienda de Personajes"
+  },
+  "episode" : {
+    "button" : "Ver en TVDisney",
+    "a":"Ver fuente original",
+    "createdAt" : "Creado el",
+    "movies" : "Peliculas"
+
+  }
+}

@@ -1,0 +1,37 @@
+{
+    "categories": [
+      {
+        "id": 1,
+        "name": "Vue.js"
+      },
+      {
+        "id": 2,
+        "name": "ASP.NET Core"
+      },
+      {
+        "id": 3,
+        "name": "books",
+        "apiId": "v1"
+      },
+      {
+        "id": 4,
+        "name": "books1",
+        "apiId": "v1"
+      },
+      {
+        "id": 5,
+        "name": "books",
+        "apiId": "v1"
+      }
+    ],
+    "xd": [
+      {
+        "id": 1,
+        "name": "Vue.js"
+      },
+      {
+        "id": 2,
+        "name": "ASP.NET Core"
+      }
+    ]
+  }

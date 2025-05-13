@@ -1,0 +1,23 @@
+// _dark.scss
+@use '../variables' as *;
+@use "sass:color";
+
+[data-theme='dark'] {
+    --clr-primary-100: #{$primary-300};
+    --clr-primary-200: #{$primary-200};
+    --clr-primary-300: #{$primary-100};
+    --clr-primary-400: #{$primary-100};
+    --clr-primary-500: #{$primary-200};
+  
+    --clr-bg: #121212;
+    --clr-surface: #2a2a2d;
+    --clr-text: #e5e5e5;
+  
+    --clr-danger: #{shade($danger-500, 10%)};
+    --clr-danger-050: #3d2d2d;
+    
+    --clr-color: #{shade($grey-100, 70%)};
+    --clr-gris: #2d2d2d;
+    --clr-gris2: #3e3e3e;
+}
+  

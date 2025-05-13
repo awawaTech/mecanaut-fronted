@@ -1,0 +1,11 @@
+// styles.scss
+
+/* Importar los archivos de estilo base */
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'reset';
+// @use 'typography'; // Parece que este archivo no existe
+
+/* Importar temas */
+@use 'themes/light';
+@use 'themes/dark';  // Se carga pero se activa con data-theme

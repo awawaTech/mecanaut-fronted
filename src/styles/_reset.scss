@@ -1,0 +1,29 @@
+// _reset.scss
+@use 'variables' as *;
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: var(--clr-text);
+  background: var(--clr-bg);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+img, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+button {
+  cursor: pointer;
+}
+

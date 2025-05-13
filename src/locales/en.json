@@ -1,0 +1,18 @@
+{
+  "footer":{
+    "copyright" : "All rights reserved",
+    "developedBy": "Developed by"
+  },
+  "toolbar" : {
+    "search" : "Search in Cable Peru TV Disney"
+  },
+  "main" : {
+    "title" : "Store Characters"
+  },
+  "episode" : {
+    "button" : "View on TV Disney",
+    "a":"See original source",
+    "createdAt" : "Created at",
+    "movies" : "Movies"
+  }
+}

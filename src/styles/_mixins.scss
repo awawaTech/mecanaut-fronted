@@ -1,0 +1,14 @@
+// _mixins.scss
+
+// Mixin para la flexbox centrado
+@mixin flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  // Mixin para aplicar bordes redondeados
+  @mixin radius {
+    border-radius: $radius-md;
+  }
+  

@@ -1,0 +1,42 @@
+// _variables.scss
+@use "sass:color";
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* Colores primarios (Escala de Azules/Morados) */
+$primary-100: #6DA0E1; // 1
+$primary-200: #5B62B3; // 2
+$primary-300: #ECA6BB; // 3
+$primary-400: #2E80E4; // 4
+$primary-500: #18549E; // 5
+
+/* Colores neutrales */
+$white: #FFFFFF;      // Blanco
+$grey-050: #F4F4F4;   // Gris
+$grey-100: #F1E9F7;   // Color
+$grey-200: #C4C4C4;   // gris2
+$text-color: #383A37; // texto
+
+/* Colores de feedback */
+$danger-500: #D7465E; // rojo
+$danger-050: #FFF5F4; // rojo 2
+
+/* Tipografía & Radios */
+$font-family-base: 'Montserrat', sans-serif;
+$font-size-base: 16px;          // 1 rem
+$line-height-base: 1.5;
+$radius-md: .5rem;
+
+/* Funciones Utilitarias */
+@function rem($px) { 
+  @return ($px / $font-size-base) * 1rem; 
+}
+
+/* Función para oscurecer colores */
+@function shade($color, $percentage) {
+  @return color.mix(#000000, $color, $percentage);
+}
+
+/* Función para aclarar colores */
+@function tint($color, $percentage) {
+  @return color.mix(#ffffff, $color, $percentage);
+}
