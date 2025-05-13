@@ -1,18 +1,52 @@
 {
-  "footer":{
-    "copyright" : "All rights reserved",
+  "footer": {
+    "copyright": "All rights reserved",
     "developedBy": "Developed by"
   },
-  "toolbar" : {
-    "search" : "Search in Cable Peru TV Disney"
+  "toolbar": {
+    "search": "Search in Cable Peru TV Disney"
   },
-  "main" : {
-    "title" : "Store Characters"
+  "main": {
+    "title": "Store Characters"
   },
-  "episode" : {
-    "button" : "View on TV Disney",
-    "a":"See original source",
-    "createdAt" : "Created at",
-    "movies" : "Movies"
+  "episode": {
+    "button": "View on TV Disney",
+    "a": "See original source",
+    "createdAt": "Created at",
+    "movies": "Movies"
+  },
+  "search": {
+    "placeholder": "Search...",
+    "filters": "Filters",
+    "new": "New"
+  },
+  "table": {
+    "noData": "No data to display",
+    "action": "Action"
+  },
+  "sidebar": {
+    "menu": {
+      "home": "Home",
+      "calendar": "Calendar",
+      "inventory": {
+        "title": "Inventory",
+        "parts": "Parts",
+        "purchaseOrders": "Purchase Orders"
+      },
+      "assetManagement": {
+        "title": "Asset Management",
+        "machinery": "Machinery",
+        "productionLines": "Production Lines"
+      },
+      "workOrder": "Work Orders",
+      "maintenancePlan": "Maintenance Plan",
+      "execution": "Execution",
+      "dashboard": "Dashboard",
+      "staffManagement": "Staff Management",
+      "settings": "Settings"
+    },
+    "user": {
+      "role": "Role"
+    }
   }
 }

@@ -14,6 +14,39 @@
     "a":"Ver fuente original",
     "createdAt" : "Creado el",
     "movies" : "Peliculas"
-
+  },
+  "search": {
+    "placeholder": "Buscar...",
+    "filters": "Filtros",
+    "new": "Nuevo"
+  },
+  "table": {
+    "noData": "No hay datos para mostrar",
+    "action": "Acción"
+  },
+  "sidebar": {
+    "menu": {
+      "home": "Inicio",
+      "calendar": "Calendario",
+      "inventory": {
+        "title": "Inventario",
+        "parts": "Repuestos",
+        "purchaseOrders": "Órdenes de Compra"
+      },
+      "assetManagement": {
+        "title": "Gestión de Activos",
+        "machinery": "Maquinarias",
+        "productionLines": "Líneas de Producción"
+      },
+      "workOrder": "Órdenes de Trabajo",
+      "maintenancePlan": "Plan de Mantenimiento",
+      "execution": "Ejecución",
+      "dashboard": "Dashboard",
+      "staffManagement": "Gestión de Personal",
+      "settings": "Configuración"
+    },
+    "user": {
+      "role": "Rol"
+    }
   }
 }
