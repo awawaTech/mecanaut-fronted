@@ -13,6 +13,7 @@ export default {
 
 <template>
     <div class="app">
+        
         <main class="main-content">
             <RouterView />
         </main>

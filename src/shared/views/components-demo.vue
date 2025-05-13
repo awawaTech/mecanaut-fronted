@@ -7,6 +7,11 @@ import InformationPanel from '../components/information-panel/information-panel.
 import InfoSection from '../components/information-panel/info-section.component.vue';
 import InfoContainer from '../components/information-panel/info-container.component.vue';
 import InfoListItems from '../components/information-panel/info-list-items.component.vue';
+import { useI18n } from 'vue-i18n';
+import Button from '../components/button.component.vue';
+import Search from '../components/search.component.vue';
+import RecordTable from '../components/record-table.component.vue';
+import SidebarMecanaut from '../components/sidebar-mecanaut.component.vue';
 
 export default {
     name: 'ComponentsDemo',
@@ -18,7 +23,15 @@ export default {
         InformationPanel,
         InfoSection,
         InfoContainer,
-        InfoListItems
+        InfoListItems,
+        Button,
+        Search,
+        RecordTable,
+        SidebarMecanaut
+    },
+    setup() {
+        const { t } = useI18n();
+        return { t };
     },
     data() {
         return {
@@ -28,7 +41,10 @@ export default {
                 { id: 'theme', name: 'Theme Toggle', component: 'ThemeToggle' },
                 { id: 'language', name: 'Language Switcher', component: 'LanguageSwitcher' },
                 { id: 'notifications', name: 'Notifications', component: 'NotificationContainer' },
-                { id: 'infopanel', name: 'Information Panel', component: 'InformationPanel' }
+                { id: 'infopanel', name: 'Information Panel', component: 'InformationPanel' },
+                { id: 'button', name: 'Button', component: 'Button' },
+                { id: 'search', name: 'Search', component: 'Search' },
+                { id: 'table', name: 'Record Table', component: 'RecordTable' }
             ],
             headerProps: [
                 { name: 'title', type: 'String', default: 'MecanautApp', description: 'Título mostrado en el encabezado' }
@@ -72,6 +88,65 @@ export default {
             movimientosItems: [
                 { date: '25/06/2023', action: 'Traslado', order: 'Orden #12345' },
                 { date: '10/06/2023', action: 'Préstamo', order: 'Orden #12340' }
+            ],
+            // Datos para el botón de demostración
+            buttonVariants: ['primary', 'secondary', 'danger', 'success'],
+            buttonSizes: ['sm', 'md', 'lg'],
+
+            // Datos para la tabla de demostración
+            demoTableColumns: [
+                { key: 'nombre', label: 'Nombre', type: 'texto' },
+                { key: 'edad', label: 'Edad', type: 'numero' },
+                { key: 'descripcion', label: 'Info', type: 'informacion' },
+                { 
+                    key: 'accion', 
+                    label: 'Acciones', 
+                    type: 'cta',
+                    ctaLabel: 'Ver perfil',
+                    ctaVariant: 'primary' 
+                }
+            ],
+            demoTableData: [
+                { 
+                    id: 1, 
+                    nombre: 'Juan Pérez', 
+                    edad: 28, 
+                    descripcion: 'Desarrollador Full Stack con 5 años de experiencia',
+                },
+                { 
+                    id: 2, 
+                    nombre: 'María García', 
+                    edad: 32, 
+                    descripcion: 'Diseñadora UX/UI especializada en aplicaciones móviles',
+                },
+                { 
+                    id: 3, 
+                    nombre: 'Carlos López', 
+                    edad: 25, 
+                    descripcion: 'Desarrollador Frontend Junior',
+                }
+            ],
+
+            // Datos para el Search de demostración
+            demoFilters: [
+                {
+                    label: 'Categoría',
+                    value: 'category',
+                    options: [
+                        { label: 'Todas', value: 'all' },
+                        { label: 'Electrónica', value: 'electronics' },
+                        { label: 'Ropa', value: 'clothing' }
+                    ]
+                },
+                {
+                    label: 'Estado',
+                    value: 'status',
+                    options: [
+                        { label: 'Todos', value: 'all' },
+                        { label: 'Activo', value: 'active' },
+                        { label: 'Inactivo', value: 'inactive' }
+                    ]
+                }
             ]
         }
     },
@@ -82,6 +157,21 @@ export default {
         toggleDemoSidebar() {
             // Solo para demostración
             alert('Evento toggle-sidebar emitido');
+        },
+        handleSearch(text) {
+            console.log('Búsqueda:', text);
+        },
+        handleFilterChange(filters) {
+            console.log('Filtros:', filters);
+        },
+        handleNewClick() {
+            console.log('Crear nuevo elemento');
+        },
+        handleTableCtaClick({ row, column }) {
+            console.log('CTA clicked:', { row, column });
+        },
+        handleButtonClick() {
+            console.log('Botón clickeado');
         }
     }
 }
@@ -89,6 +179,11 @@ export default {
 
 <template>
     <div class="components-demo">
+        <SidebarMecanaut 
+            userName="Usuario Demo"
+            userRole="Administrador"
+        />
+
         <div class="demo-header">
             <h1>Biblioteca de Componentes</h1>
         </div>
@@ -162,6 +257,34 @@ export default {
                         <header-component 
                             title="Título de ejemplo" 
                             @toggle-sidebar="toggleDemoSidebar"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!--search-->
+            <div v-show="activeTab === 'search'" class="component-section">
+                <div class="component-info">
+                    <h2>Search Component</h2>
+                    <p>Un componente de búsqueda que permite filtrar y buscar elementos en una lista.</p>
+
+                    <h3>Código de ejemplo</h3>
+                    <pre><code>&lt;Search 
+                        :filters="demoFilters"
+                        @search="handleSearch"
+                        @filter-change="handleFilterChange"
+                        @action-click="handleNewClick"
+                    /&gt;</code></pre>
+                </div>
+
+                <div class="component-preview">
+                    <h3>Vista previa</h3>
+                    <div class="preview-container">
+                            <Search 
+                            :filters="demoFilters"
+                            @search="handleSearch"
+                            @filter-change="handleFilterChange"
+                            @action-click="handleNewClick"
                         />
                     </div>
                 </div>
@@ -328,6 +451,104 @@ export default {
                 </div>
             </div>
 
+            <!-- Button Demo -->
+            <div v-show="activeTab === 'button'" class="component-section">
+                <div class="component-info">
+                    <h2>Button Component</h2>
+                    <p>Un componente de botón versátil con diferentes variantes, tamaños y estados.</p>
+                    
+                    <h3>Variantes</h3>
+                    <div class="button-demo-group">
+                        <Button 
+                            v-for="variant in buttonVariants"
+                            :key="variant"
+                            :variant="variant"
+                            @clicked="handleButtonClick"
+                        >
+                            Botón {{ variant }}
+                        </Button>
+                    </div>
+
+                    <h3>Tamaños</h3>
+                    <div class="button-demo-group">
+                        <Button 
+                            v-for="size in buttonSizes"
+                            :key="size"
+                            :size="size"
+                            @clicked="handleButtonClick"
+                        >
+                            Botón {{ size }}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Demo -->
+            <div v-show="activeTab === 'table'" class="component-section">
+                <div class="component-info">
+                    <h2>Record Table Component</h2>
+                    <p>Una tabla de registros versátil que admite diferentes tipos de columnas y acciones.</p>
+
+                    <h3>Props</h3>
+                    <table class="props-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>columns</td>
+                                <td>Array</td>
+                                <td>Array de objetos que define las columnas de la tabla. Cada columna debe tener: key, label, y type (texto, numero, informacion, cta)</td>
+                            </tr>
+                            <tr>
+                                <td>data</td>
+                                <td>Array</td>
+                                <td>Array de objetos con los datos a mostrar en la tabla</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Eventos</h3>
+                    <table class="props-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Parámetros</th>
+                                <th>Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ctaClick</td>
+                                <td>{ row, column }</td>
+                                <td>Emitido cuando se hace clic en un botón CTA de la tabla</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Código de ejemplo</h3>
+                    <pre><code>&lt;record-table 
+    :columns="demoTableColumns"
+    :data="demoTableData"
+    @ctaClick="handleTableCtaClick"
+/&gt;</code></pre>
+                </div>
+
+                <div class="component-preview">
+                    <h3>Vista previa</h3>
+                    <div class="preview-container">
+                        <record-table 
+                            :columns="demoTableColumns"
+                            :data="demoTableData"
+                            @ctaClick="handleTableCtaClick"
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -340,6 +561,7 @@ export default {
     padding: 0 1rem 3rem;
     max-width: 1200px;
     margin: 0 auto;
+    margin-left: 100px;
 }
 
 .demo-header {
