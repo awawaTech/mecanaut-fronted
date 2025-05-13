@@ -1,6 +1,5 @@
-
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
@@ -18,8 +17,16 @@ const props = defineProps({
   }
 });
 
+// Emits
+const emit = defineEmits(['sidebar-toggle']);
+
 // Estado
 const isExpanded = ref(false);
+
+// Observar cambios en isExpanded para emitir eventos
+watch(isExpanded, (newValue) => {
+  emit('sidebar-toggle', newValue);
+});
 
 // Opciones del menú usando i18n
 const menuOptions = [
@@ -179,11 +186,11 @@ const collapseSidebar = () => {
   height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
-  position: fixed;
-  top: 16px;
-  left: 16px;
+  position: relative;
+  margin: 16px;
   border-radius: 16px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 10;
 
   &.expanded {
     width: 280px;
