@@ -83,12 +83,17 @@ export default {
 </template>
 
 <style scoped lang="scss">
+*{
+    font-family: var(--font-family-base);
+}
+
 .record-table-container {
   width: 100%;
   padding: 2rem 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+
 }
 
 .record-table {
