@@ -39,10 +39,6 @@ class ThemeService {
     }
   }
 
-  /**
-   * Establece el tema actual
-   * @param {string} theme - 'light' o 'dark'
-   */
   setTheme(theme) {
     // Aplicar tema al documento
     if (theme === 'dark') {
