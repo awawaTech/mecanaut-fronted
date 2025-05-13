@@ -2,13 +2,23 @@
 import HeaderComponent from '../components/header.component.vue';
 import ThemeToggle from '../components/theme-toggle.component.vue';
 import LanguageSwitcher from '../components/language-switcher.component.vue';
+import NotificationContainer from '../components/notifications/notification-container.component.vue';
+import InformationPanel from '../components/information-panel/information-panel.component.vue';
+import InfoSection from '../components/information-panel/info-section.component.vue';
+import InfoContainer from '../components/information-panel/info-container.component.vue';
+import InfoListItems from '../components/information-panel/info-list-items.component.vue';
 
 export default {
     name: 'ComponentsDemo',
     components: {
         HeaderComponent,
         ThemeToggle,
-        LanguageSwitcher
+        LanguageSwitcher,
+        NotificationContainer,
+        InformationPanel,
+        InfoSection,
+        InfoContainer,
+        InfoListItems
     },
     data() {
         return {
@@ -16,7 +26,9 @@ export default {
             components: [
                 { id: 'header', name: 'Header', component: 'HeaderComponent' },
                 { id: 'theme', name: 'Theme Toggle', component: 'ThemeToggle' },
-                { id: 'language', name: 'Language Switcher', component: 'LanguageSwitcher' }
+                { id: 'language', name: 'Language Switcher', component: 'LanguageSwitcher' },
+                { id: 'notifications', name: 'Notifications', component: 'NotificationContainer' },
+                { id: 'infopanel', name: 'Information Panel', component: 'InformationPanel' }
             ],
             headerProps: [
                 { name: 'title', type: 'String', default: 'MecanautApp', description: 'Título mostrado en el encabezado' }
@@ -27,7 +39,40 @@ export default {
             themeProps: [],
             themeEvents: [],
             languageProps: [],
-            languageEvents: []
+            languageEvents: [],
+            notificationsList: [
+            { title: 'Notificación 1', message: 'Mensaje de la notificación 1', type: 'notification', icon: 'error' },
+            { title: 'Notificación 2', message: 'Mensaje de la notificación 2', type: 'error', icon: 'error' },
+            { title: 'Notificación 3', message: 'Mensaje de la notificación 3', type: 'notification', icon: 'FiAirplay ' }
+        ],
+            // Datos para el Information Panel
+            especificacionesData: [
+                { subtitle: 'Modelo', info: 'Excavadora XYZ-200' },
+                { subtitle: 'Marca', info: 'CAT' },
+                { subtitle: 'Año', info: '2021' },
+                { subtitle: 'Potencia', info: '220 HP' }
+            ],
+            actividadData: [
+                { subtitle: 'Última actividad', info: '15/06/2023' },
+                { subtitle: 'Horas de trabajo', info: '1,200 hrs' }
+            ],
+            statisticsData: [
+                { stadistic: '720', percentage: '85%', description: 'Rendimiento general' },
+                { stadistic: '120', percentage: '75%', description: 'Días sin incidentes' }
+            ],
+            mantenimientoItems: [
+                { date: '10/05/2023', type: 'Preventivo', responsible: 'Juan Pérez' },
+                { date: '15/03/2023', type: 'Correctivo', responsible: 'María García' }
+            ],
+            maquinariasItems: [
+                { model: 'Excavadora XYZ-100' },
+                { model: 'Bulldozer AB-200' },
+                { model: 'Grúa G-300' }
+            ],
+            movimientosItems: [
+                { date: '25/06/2023', action: 'Traslado', order: 'Orden #12345' },
+                { date: '10/06/2023', action: 'Préstamo', order: 'Orden #12340' }
+            ]
         }
     },
     methods: {
@@ -157,6 +202,132 @@ export default {
                     </div>
                 </div>
             </div>
+
+            <!-- NotificationsContainer Demo -->
+            <div v-show="activeTab === 'notifications'" class="component-section">
+            <div class="component-info">
+                <h2>Notification Container Component</h2>
+                <p>Un contenedor para mostrar una lista de notificaciones. Las notificaciones se pasan como un array de objetos con propiedades como título, mensaje, tipo e icono.</p>
+
+                <h3>Código de ejemplo</h3>
+                <pre><code>&lt;NotificationContainer :title="'Notificaciones de ejemplo'" :notifications="notificationsList" /&gt;</code></pre>
+            </div>
+
+            <div class="component-preview">
+                <h3>Vista previa</h3>
+                <div class="preview-container">
+                    <NotificationContainer 
+                        :title="'Notificaciones de ejemplo'" 
+                        :notifications="notificationsList"
+                    />
+                </div>
+            </div>
+            </div>
+
+            <!-- Information Panel Demo -->
+            <div v-show="activeTab === 'infopanel'" class="component-section">
+                <div class="component-info">
+                    <h2>Information Panel Component</h2>
+                    <p>Un panel de información flexible que contiene múltiples secciones y contenedores para mostrar diferentes tipos de datos.</p>
+
+                    <h3>Código de ejemplo</h3>
+                    <pre><code>&lt;InformationPanel headerText="Panel de Información Completo"&gt;
+                        &lt;InfoSection 
+                            :infoType="1" 
+                            :showSubtitle="true"
+                            subtitleText="Especificaciones:" 
+                            :data="especificacionesData"
+                        /&gt;
+                    
+                    &lt;InfoSection 
+                        :infoType="2" 
+                        :showSubtitle="true"
+                        subtitleText="Actividad:" 
+                        :data="actividadData"
+                    /&gt;
+  
+                    &lt;InfoContainer 
+                        title="Historial de mantenimiento" 
+                        :titleType="1"
+                    &gt;
+                        &lt;InfoListItems 
+                        type="maintenance" 
+                        :items="mantenimientoItems"
+                        /&gt;
+                    &lt;/InfoContainer&gt;
+                    &lt;/InformationPanel&gt;</code></pre>
+                                    </div>
+
+                <div class="component-preview">
+                    <h3>Vista previa</h3>
+                    <div class="preview-container preview-container--large">
+                        <InformationPanel headerText="Panel de Información Completo">
+                            <!-- Sección 1: Especificaciones -->
+                            <InfoSection 
+                                :infoType="1" 
+                                :showSubtitle="true"
+                                subtitleText="Especificaciones:" 
+                                :data="especificacionesData">
+                            </InfoSection>
+                            
+                            <!-- Sección 2: Actividad -->
+                            <InfoSection 
+                                :infoType="2" 
+                                :showSubtitle="true"
+                                subtitleText="Actividad:" 
+                                :data="actividadData">
+                            </InfoSection>
+                            
+                            <!-- Sección 3: Estadísticas -->
+                            <InfoSection 
+                                :infoType="3" 
+                                :statisticsData="statisticsData">
+                            </InfoSection>
+                            
+                            <!-- Historial de mantenimiento -->
+                            <InfoContainer 
+                                title="Historial de mantenimiento" 
+                                :titleType="1">
+                                <InfoListItems 
+                                    type="maintenance" 
+                                    :items="mantenimientoItems">
+                                </InfoListItems>
+                            </InfoContainer>
+                            
+                            <!-- Maquinarias asociadas -->
+                            <InfoContainer 
+                                title="Lista Simple de maquinarias" 
+                                :titleType="1">
+                                <InfoListItems 
+                                    type="simpleList" 
+                                    :items="maquinariasItems">
+                                </InfoListItems>
+                            </InfoContainer>
+
+                            <!-- Historial de movimientos -->
+                            <InfoContainer 
+                                title="Historial de movimientos" 
+                                :titleType="1">
+                                <InfoListItems 
+                                    type="movements" 
+                                    :items="movimientosItems">
+                                </InfoListItems>
+                            </InfoContainer>
+                            
+                            <!-- Anotaciones -->
+                            <InfoContainer 
+                                title="Anotaciones" 
+                                :titleType="2">
+                                <InfoListItems 
+                                    type="default" 
+                                    :items="[{text: 'Muestra texto de forma simple'}]">
+                                </InfoListItems>
+                            </InfoContainer>
+                        </InformationPanel>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </template>
@@ -305,6 +476,11 @@ export default {
         align-items: center;
         justify-content: center;
     }
+
+    &--large {
+        min-height: 500px;
+        overflow-y: auto;
+    }
 }
 
 pre {
@@ -315,5 +491,26 @@ pre {
     margin: 1rem 0;
     
     
+}
+
+.information-panel {
+  width: 100%;
+  padding: 2.3em 2.1em;
+  border: 2px solid #F1E9F7;
+  border-radius: 8px;
+  background-color: var(--clr-bg);
+}
+
+.list-statistics {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5em;
+  
+  .stadistic {
+    font-size: 1.8em;
+    font-weight: 730;
+    color: #6DA0E1;
+  }
+  /* ... */
 }
 </style>
