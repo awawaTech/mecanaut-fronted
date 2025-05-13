@@ -1,21 +1,26 @@
 <script>
 import { RouterView } from 'vue-router'
 import HeaderComponent from './shared/components/header.component.vue'
+import Toast from 'primevue/toast'
 
 export default {
     name: 'App',
     components: {
         HeaderComponent,
-        RouterView
+        RouterView,
+        Toast
     }
 }
 </script>
 
 <template>
     <div class="app">
+        <h1>MyHeader</h1>
+        <h1>MySidebar</h1>
         <main class="main-content">
             <RouterView />
         </main>
+        <Toast />
     </div>
 </template>
 
