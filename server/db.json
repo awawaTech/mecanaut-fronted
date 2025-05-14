@@ -104,27 +104,50 @@
   ],
   "inventory-parts": [
     {
-      "id": 3,
+      "id": 1,
       "code": "560239",
       "name": "asd",
-      "description": "AAAAAAAAAAA",
+      "description": "ABC",
       "current_stock": 3,
-      "min_stock": 3,
+      "min_stock": 7,
+      "unit_price": 12,
+      "stock_status": "LOW",
+      "last_restock": "2025-05-14T04:55:05.092Z"
+    },
+    {
+      "code": "12312",
+      "name": "124135",
+      "description": "aedvgb",
+      "current_stock": 6,
+      "min_stock": 2,
       "unit_price": 15,
-      "stock_status": "MEDIUM",
-      "last_restock": "2025-05-14T01:13:14.129Z"
+      "stock_status": "OK",
+      "last_restock": "2025-05-14T04:55:43.703Z",
+      "id": 2
+    },
+    {
+      "code": "12312",
+      "name": "asdff",
+      "description": "dddd",
+      "current_stock": 4,
+      "min_stock": 5,
+      "unit_price": 15,
+      "stock_status": "LOW",
+      "last_restock": "2025-05-14T14:33:38.665Z",
+      "id": 5
     }
   ],
   "purchase-orders": [
     {
       "id": 1,
       "inventory_part_id": 1,
-      "quantity": 10,
-      "price": 10,
-      "order_date": "2021-01-01",
-      "received_date": "2021-01-02",
+      "quantity": 16,
+      "price": 0,
+      "order_date": "",
+      "received_date": null,
       "status": "PENDING",
-      "user_id": 1
+      "user_id": 0,
+      "inventoryPart": null
     },
     {
       "id": 2,
@@ -135,6 +158,28 @@
       "received_date": "2021-01-02",
       "status": "PENDING",
       "user_id": 2
+    },
+    {
+      "id": 3,
+      "inventory_part_id": "2",
+      "quantity": 11,
+      "price": 0,
+      "order_date": "",
+      "received_date": null,
+      "status": "PENDING",
+      "user_id": 0,
+      "inventoryPart": null
+    },
+    {
+      "id": 4,
+      "inventory_part_id": "1",
+      "quantity": 19,
+      "price": 0,
+      "order_date": "",
+      "received_date": null,
+      "status": "PENDING",
+      "user_id": 0,
+      "inventoryPart": null
     }
   ]
 }

@@ -1,8 +1,8 @@
 // inventory-parts-api.service.ts
 import axios from 'axios';
 
-import { InventoryPartAssembler } from './inventory-part.assembler.js';
-import { PurchaseOrderAssembler } from './purchase-order.assembler.js';
+import { InventoryPartAssembler } from '../../shared/services/inventory-part.assembler.js';
+import { PurchaseOrderAssembler } from '../../shared/services/purchase-order.assembler.js';
 
 const baseEndpoint = 'http://localhost:3000';
 const inventoryPartsEndpoint = `${baseEndpoint}/inventory-parts`;
