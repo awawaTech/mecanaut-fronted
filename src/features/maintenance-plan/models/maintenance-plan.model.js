@@ -1,50 +1,46 @@
-/**
- * Modelo que representa un plan de mantenimiento
- */
+
 export class MaintenancePlanModel {
   constructor({
-    planId = null,
-    productionLineId = null,
-    startDate = null,
-    durationDays = 0,
-    userCreator = null,
-    items = []
+    id = 0,                
+    planId = 0,            
+    planName = '',
+    productionLineId = 0,
+    startDate = '',
+    durationDays = 1,
+    userCreator = 0,
+    items = [],
   } = {}) {
+    this.id = id;
     this.planId = planId;
+    this.planName = planName;
     this.productionLineId = productionLineId;
-    this.startDate = startDate instanceof Date ? startDate : new Date(startDate);
+    this.startDate = startDate ? new Date(startDate) : new Date();
     this.durationDays = durationDays;
     this.userCreator = userCreator;
-    this.items = items.map(item => new MaintenancePlanItemModel(item));
+    this.items = items.map((i) => new MaintenancePlanItemModel(i));
   }
 }
 
-/**
- * Modelo que representa un ítem dentro del plan de mantenimiento (un día específico)
- */
+
 export class MaintenancePlanItemModel {
-  constructor({
-    dayNumber = 0,
-    tasks = []
-  } = {}) {
-    this.dayNumber = dayNumber;
-    this.tasks = tasks.map(task => new MaintenancePlanTaskModel(task));
+  constructor({ dayNumber = 0, tasks = [] } = {}) {
+    this.dayNumber = Number(dayNumber);
+    this.tasks = tasks.map((t) => new MaintenancePlanTaskModel(t));
   }
 }
 
-/**
- * Modelo que representa una tarea dentro de un ítem del plan de mantenimiento
- */
+
+
 export class MaintenancePlanTaskModel {
   constructor({
     taskId = null,
     taskName = '',
     taskDescription = '',
-    machineIds = []
+    machineIds = [],
   } = {}) {
     this.taskId = taskId;
     this.taskName = taskName;
     this.taskDescription = taskDescription;
-    this.machineIds = machineIds;
+    this.machineIds = Array.isArray(machineIds) ? machineIds : [];
   }
-} 
+}

@@ -1,116 +1,162 @@
-import { ApiService } from '../../../core/services/api.service';
-import { MaintenancePlanAssembler } from '../models/maintenance-plan.assembler';
+import axios from 'axios';
+import { MaintenancePlanAssembler } from './maintenance-plan.assembler';
 
-/**
- * Servicio para manejar las operaciones de planes de mantenimiento
- */
+const http = axios.create({
+  baseURL: 'http://localhost:3000/maintenance-plan-data',
+  timeout: 8000,
+});
+
 export class MaintenancePlanService {
-  constructor() {
-    this.apiService = new ApiService();
-    this.endpoint = 'MaintenancePlanData';
-  }
-
-  /**
-   * Obtiene todos los planes de mantenimiento
-   * @returns {Promise<Array>} - Lista de planes de mantenimiento
-   */
+  /* -------- READ ALL -------- */
   async getAllPlans() {
-    try {
-      const response = await this.apiService.get(this.endpoint);
-      
-      // Verificar la estructura exacta de la respuesta para extraer los datos correctamente
-      if (response && response.info && Array.isArray(response.data)) {
-        console.log('Datos obtenidos de la API:', response.data);
-        return MaintenancePlanAssembler.toModelList(response.data);
-      } else if (Array.isArray(response)) {
-        // Si directamente es un array
-        console.log('Datos obtenidos como array:', response);
-        return MaintenancePlanAssembler.toModelList(response);
-      } else {
-        // Si no tiene la estructura esperada
-        console.error('Estructura de respuesta inesperada:', response);
-        return [];
-      }
-    } catch (error) {
-      console.error('Error al obtener planes de mantenimiento:', error);
-      throw error;
-    }
+    const res = await http.get('/');
+    // res.data → { info, data }
+    return MaintenancePlanAssembler.toModelList(res.data);
   }
 
-  /**
-   * Obtiene un plan de mantenimiento por su ID
-   * @param {number} planId - ID del plan
-   * @returns {Promise<Object>} - Plan de mantenimiento
-   */
+  /* -------- READ ONE -------- */
   async getPlanById(planId) {
+    const plans = await this.getAllPlans();
+    return plans.find((p) => p.planId === planId) ?? null;
+  }
+
+  /* -------- CREATE -------- */
+  async createPlan(planModel) {
     try {
-      const response = await this.apiService.get(`${this.endpoint}/${planId}`);
+      // Primero, obtener los datos actuales
+      const currentData = await http.get('/');
       
-      // Verificar la estructura
-      if (response && response.info && response.data) {
-        return MaintenancePlanAssembler.toModel(response.data);
+      // Obtener el máximo planId existente
+      let maxPlanId = 0;
+      if (currentData.data && Array.isArray(currentData.data.data)) {
+        maxPlanId = currentData.data.data.reduce((max, plan) => Math.max(max, plan.planId || 0), 0);
       }
       
-      // Transformar la respuesta al modelo
-      return MaintenancePlanAssembler.toModel(response);
+      // Asignar un nuevo planId secuencial (el siguiente número)
+      const newPlanId = maxPlanId + 1;
+      
+      // Asegurarse de que el plan tenga un ID único
+      const planWithId = {
+        ...planModel,
+        planId: newPlanId
+      };
+      
+      // Encontrar el ID de tarea más alto en todos los planes para mantener secuencia
+      let maxTaskId = 0;
+      if (currentData.data && Array.isArray(currentData.data.data)) {
+        currentData.data.data.forEach(plan => {
+          if (plan.items && Array.isArray(plan.items)) {
+            plan.items.forEach(item => {
+              if (item.tasks && Array.isArray(item.tasks)) {
+                item.tasks.forEach(task => {
+                  if (task.taskId && task.taskId > maxTaskId) {
+                    maxTaskId = task.taskId;
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+      
+      // Asignar IDs secuenciales a las tareas
+      let taskIdCounter = maxTaskId + 1;
+      if (planWithId.items && Array.isArray(planWithId.items)) {
+        planWithId.items.forEach(item => {
+          if (item.tasks && Array.isArray(item.tasks)) {
+            item.tasks.forEach(task => {
+              task.taskId = taskIdCounter++;
+            });
+          }
+        });
+      }
+      
+      // Crear el recurso con el assembler
+      const planResource = MaintenancePlanAssembler.toResource(planWithId);
+      
+      // Añadir el nuevo plan a la lista existente
+      const updatedData = {
+        info: currentData.data.info || [{registers: 0}],
+        data: [...(currentData.data.data || []), planResource]
+      };
+      
+      // Actualizar el contador de registros
+      if (updatedData.info && Array.isArray(updatedData.info) && updatedData.info.length > 0) {
+        updatedData.info[0].registers = updatedData.data.length;
+      }
+      
+      console.log('Actualizando data con:', updatedData);
+      
+      // Enviar la lista completa actualizada
+      const res = await http.put('/', updatedData);
+      
+      return MaintenancePlanAssembler.toModel(planResource);
     } catch (error) {
-      console.error(`Error al obtener plan de mantenimiento con ID ${planId}:`, error);
+      console.error('Error al crear el plan de mantenimiento:', error);
       throw error;
     }
   }
 
-  /**
-   * Crea un nuevo plan de mantenimiento
-   * @param {Object} planData - Datos del plan
-   * @returns {Promise<Object>} - Plan creado
-   */
-  async createPlan(planData) {
+  /* -------- UPDATE -------- */
+  async updatePlan(planModel) {
     try {
-      // Convertir el modelo al formato de API
-      const apiData = MaintenancePlanAssembler.toApiFormat(planData);
+      // Primero, obtener los datos actuales
+      const currentData = await http.get('/');
       
-      const response = await this.apiService.post(this.endpoint, apiData);
+      // Encontrar el índice del plan a actualizar
+      const planIndex = currentData.data.data.findIndex(p => p.planId === planModel.planId);
       
-      // Transformar la respuesta al modelo
-      return MaintenancePlanAssembler.toModel(response);
+      if (planIndex === -1) {
+        throw new Error(`Plan con ID ${planModel.planId} no encontrado.`);
+      }
+      
+      // Crear el recurso actualizado con el assembler
+      const updatedPlanResource = MaintenancePlanAssembler.toResource(planModel);
+      
+      // Actualizar el plan en la lista
+      const updatedData = {
+        ...currentData.data,
+        data: [...currentData.data.data]
+      };
+      
+      updatedData.data[planIndex] = updatedPlanResource;
+      
+      // Enviar la lista completa actualizada
+      await http.put('/', updatedData);
+      
+      return planModel;
     } catch (error) {
-      console.error('Error al crear plan de mantenimiento:', error);
+      console.error('Error al actualizar el plan de mantenimiento:', error);
       throw error;
     }
   }
 
-  /**
-   * Actualiza un plan de mantenimiento existente
-   * @param {number} planId - ID del plan a actualizar
-   * @param {Object} planData - Datos actualizados del plan
-   * @returns {Promise<Object>} - Plan actualizado
-   */
-  async updatePlan(planId, planData) {
-    try {
-      // Convertir el modelo al formato de API
-      const apiData = MaintenancePlanAssembler.toApiFormat(planData);
-      
-      const response = await this.apiService.put(`${this.endpoint}/${planId}`, apiData);
-      
-      // Transformar la respuesta al modelo
-      return MaintenancePlanAssembler.toModel(response);
-    } catch (error) {
-      console.error(`Error al actualizar plan de mantenimiento con ID ${planId}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Elimina un plan de mantenimiento
-   * @param {number} planId - ID del plan a eliminar
-   * @returns {Promise<void>}
-   */
+  /* -------- DELETE -------- */
   async deletePlan(planId) {
     try {
-      await this.apiService.delete(`${this.endpoint}/${planId}`);
+      // Primero, obtener los datos actuales
+      const currentData = await http.get('/');
+      
+      // Filtrar el plan a eliminar
+      const updatedData = {
+        ...currentData.data,
+        data: currentData.data.data.filter(p => p.planId !== planId)
+      };
+      
+      // Actualizar el contador de registros
+      if (updatedData.info && Array.isArray(updatedData.info) && updatedData.info.length > 0) {
+        updatedData.info[0].registers = updatedData.data.length;
+      }
+      
+      // Enviar la lista actualizada
+      await http.put('/', updatedData);
+      
+      return true;
     } catch (error) {
-      console.error(`Error al eliminar plan de mantenimiento con ID ${planId}:`, error);
+      console.error('Error al eliminar el plan de mantenimiento:', error);
       throw error;
     }
   }
-} 
+}
+
+export const maintenancePlanService = new MaintenancePlanService();

@@ -1,4 +1,3 @@
-
 <script>
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -13,6 +12,8 @@ export default {
     Dropdown
   },
 
+  emits: ['search', 'filter-change', 'action-click'],
+
   props: {
     placeholder: {
       type: String,
@@ -25,6 +26,10 @@ export default {
     newLabel: {
       type: String,
       default: ''
+    },
+    showNewButton: {
+      type: Boolean,
+      default: true
     }
   },
 
@@ -41,11 +46,18 @@ export default {
     };
 
     const onFilterChange = () => {
-      emit('filterChange', selectedFilters.value);
+      emit('filter-change', selectedFilters.value);
     };
 
     const onActionClick = () => {
-      emit('actionClick');
+      emit('action-click');
+    };
+
+    const clearFilters = () => {
+      searchText.value = '';
+      selectedFilters.value = {};
+      emit('search', '');
+      emit('filter-change', {});
     };
 
     return {
@@ -56,7 +68,8 @@ export default {
       computedPlaceholder,
       onSearchChange,
       onFilterChange,
-      onActionClick
+      onActionClick,
+      clearFilters
     };
   }
 }
@@ -89,7 +102,7 @@ export default {
         </button-component>
       </div>
 
-      <div class="search-action">
+      <div v-if="showNewButton" class="search-action">
         <button-component 
           variant="primary"
           size="md"
@@ -103,23 +116,37 @@ export default {
     </div>
 
     <div v-if="filters?.length && showFilters" class="search-filters">
-      <div 
-        v-for="filter in filters" 
-        :key="filter.value"
-        class="filter-group"
-      >
-        <span class="icon-filter">
-          <i class="pi pi-filter-fill"></i>
-        </span>
-        <label class="filter-label">{{ filter.label }}</label>
-        <Dropdown
-          v-model="selectedFilters[filter.value]"
-          :options="filter.options"
-          optionLabel="label"
-          optionValue="value"
-          @change="onFilterChange"
-          class="filter-dropdown"
-        />
+      <div class="filters-wrapper">
+        <div 
+          v-for="filter in filters" 
+          :key="filter.value"
+          class="filter-group"
+        >
+          <span class="icon-filter">
+            <i class="pi pi-filter-fill"></i>
+          </span>
+          <label class="filter-label">{{ filter.label }}</label>
+          <Dropdown
+            v-model="selectedFilters[filter.value]"
+            :options="filter.options"
+            optionLabel="label"
+            optionValue="value"
+            @change="onFilterChange"
+            class="filter-dropdown"
+          />
+        </div>
+      </div>
+
+      <div class="clear-filters" v-if="searchText || Object.keys(selectedFilters).length > 0">
+        <button-component 
+          variant="primary"
+        size="sm"
+          :icon-left="'pi pi-trash'"
+          @clicked="clearFilters"
+          class="clear-button"
+        >
+          Limpiar filtros
+        </button-component>
       </div>
     </div>
   </div>
@@ -132,7 +159,7 @@ export default {
   width: 100%;
   align-items: stretch;
   gap: 0;
-  padding: 1.2rem 2.5rem;
+  padding: 0.8rem 2rem;
   background: var(--clr-surface);
   border-radius: var(--radius-md);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -148,15 +175,15 @@ export default {
 }
 
 .search-input {
-  flex: 1;
+  flex: 4;
   min-width: 200px;
   display: flex;
   align-items: center;
   border: 1px solid var(--clr-bg);
   border-radius: var(--radius-md);
-  background: var(--clr-surface);
-  padding: 0.5rem 1rem;
-  height: 2.5rem;
+  background: var(--clr-bg);
+  padding: 0.3rem 0.8rem;
+  height: 2.2rem;
   transition: border 0.2s;
 
   input {
@@ -216,13 +243,20 @@ export default {
   background: var(--clr-surface);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-  padding: 1rem 1.5rem;
-  margin-top: 1.2rem;
+  padding: 0.8rem 1.2rem;
+  margin-top: 0.8rem;
   display: flex;
-  gap: 1.2rem;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 1rem;
   min-width: 220px;
   animation: fadeInDown 0.3s;
+}
+
+.filters-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  align-items: flex-start;
 }
 
 .toggle-filters-btn {
@@ -254,7 +288,7 @@ export default {
 .filter-group {
   background: var(--clr-surface);
   border-radius: var(--radius-md);
-  padding: 0.7rem 1.2rem;
+  padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
   gap: 0.7rem;
@@ -272,10 +306,27 @@ export default {
     
   }
   .filter-dropdown{
-    background: var(--clr-surface);
+    background: var(--clr-primary-300);
+    color: var(--clr-text);
   }
 }
 
+.clear-filters {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--clr-bg);
+  padding-top: 0.8rem;
+  margin-top: 0.2rem;
+
+  .clear-button {
+    color: var(--clr-gris2);
+    font-size: 0.9rem;
+    
+    &:hover {
+      color: var(--clr-primary-500);
+    }
+  }
+}
 
 @media (max-width: 900px) {
   .search-row {
@@ -291,12 +342,16 @@ export default {
   }
   
   .search-filters {
-    flex-wrap: wrap;
-    gap: 0.7rem;
-  }
+    .filters-wrapper {
+      flex-direction: column;
+      gap: 0.7rem;
+    }
 
-  .filter-group {
-    width: 100%;
+    .filter-group {
+      width: 100%;
+      
+
+    }
   }
 }
 </style>
