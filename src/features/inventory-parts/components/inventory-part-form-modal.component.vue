@@ -259,7 +259,8 @@ export default {
     border: 1px solid var(--clr-primary-100);
     border-radius: var(--radius-sm);
     font-size: 0.9rem;
-    background-color: var(--clr-bg);
+    color: var(--clr-text);
+    background-color: var(--clr-surface);
 }
 
 .form-group input:disabled {
