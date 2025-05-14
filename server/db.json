@@ -1,11 +1,4 @@
 {
-  "maintenancePlans": [
-    {
-      "id": 1,
-      "name": "Maintenance Plan 1",
-      "description": "Maintenance Plan 1 Description"
-    }
-  ],
   "plants": [
     {
       "id": 1,
@@ -197,6 +190,182 @@
       "status": "PENDING",
       "user_id": 0,
       "inventoryPart": null
+    }
+  ],
+  "maintenance-plan-data": {
+    "info": [
+      {
+        "registers": 2
+      }
+    ],
+    "data": [
+      {
+        "planId": 1,
+        "planName": "Plan de Mantenimiento 1",
+        "productionLineId": 2,
+        "startDate": "2025-05-13T23:41:36.137Z",
+        "durationDays": 3,
+        "userCreator": 1,
+        "items": [
+          {
+            "dayNumber": 1,
+            "tasks": [
+              {
+                "taskId": 1,
+                "taskName": "Verificación de niveles",
+                "taskDescription": "Revisar niveles de aceite",
+                "machineIds": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "taskId": 2,
+                "taskName": "Limpieza general",
+                "taskDescription": "Limpiar los filtros",
+                "machineIds": [
+                  3
+                ]
+              }
+            ]
+          },
+          {
+            "dayNumber": 2,
+            "tasks": [
+              {
+                "taskId": 3,
+                "taskName": "Chequeo de seguridad",
+                "taskDescription": "Revisar los sistemas de seguridad",
+                "machineIds": [
+                  2,
+                  4
+                ]
+              }
+            ]
+          },
+          {
+            "dayNumber": 3,
+            "tasks": [
+              {
+                "taskId": 4,
+                "taskName": "Inspección de equipos",
+                "taskDescription": "Inspeccionar la maquinaria de la línea",
+                "machineIds": [
+                  1,
+                  4
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "planId": 2,
+        "planName": "Hola",
+        "productionLineId": 1,
+        "startDate": "2025-04-30",
+        "durationDays": 1,
+        "userCreator": 1,
+        "items": [
+          {
+            "dayNumber": 1,
+            "tasks": [
+              {
+                "taskId": 5,
+                "taskName": "cuy",
+                "taskDescription": "cuyo",
+                "machineIds": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "maintenance-dynamic-plans": [
+    {
+      "id": 1,
+      "dynamicPlanId": 1,
+      "planName": "Plan Dinámico para Máquinas Hidráulicas",
+      "machineIds": [
+        102,
+        103
+      ],
+      "parameter": "Presión hidráulica > 200 PSI",
+      "userCreator": 2,
+      "tasks": [
+        {
+          "taskId": 1,
+          "taskName": "Revisión de sistema hidráulico",
+          "taskDescription": "Revisión completa del sistema hidráulico cuando se excede la presión",
+          "machineIds": [
+            102,
+            103,
+            105
+          ]
+        },
+        {
+          "taskId": 2,
+          "taskName": "Reemplazo de válvulas",
+          "taskDescription": "Cambiar válvulas si se detecta desgaste",
+          "machineIds": [
+            102
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "dynamicPlanId": 2,
+      "planName": "Plan Dinámico para Motores",
+      "machineIds": [
+        101,
+        105
+      ],
+      "parameter": "Temperatura > 85°C",
+      "userCreator": 1,
+      "tasks": [
+        {
+          "taskId": 1,
+          "taskName": "Diagnóstico de sobrecalentamiento",
+          "taskDescription": "Evaluar causas de alta temperatura en el motor",
+          "machineIds": [
+            101,
+            105
+          ]
+        },
+        {
+          "taskId": 2,
+          "taskName": "Revisión de sistema de enfriamiento",
+          "taskDescription": "Verificar funcionamiento de ventiladores y refrigerante",
+          "machineIds": [
+            101
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "dynamicPlanId": 3,
+      "planName": "Plan dinamico 1",
+      "machineIds": [
+        101,
+        102
+      ],
+      "parameter": "kilometraje: 500",
+      "userCreator": 1,
+      "tasks": [
+        {
+          "taskId": 1,
+          "taskName": "Tareita??",
+          "taskDescription": "Tope maximo???",
+          "machineIds": [
+            101,
+            102
+          ]
+        }
+      ]
     }
   ]
 }
