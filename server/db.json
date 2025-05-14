@@ -78,6 +78,23 @@
       "updated_at": "2025-04-20"
     }
   ],
+  "measurements": [
+    {
+      "id": 1,
+      "name": "Kilometers",
+      "unit": "km"
+    },
+    {
+      "id": 2,
+      "name": "Operation Hours",
+      "unit": "hours"
+    },
+    {
+      "id": 3,
+      "name": "Production Cycles",
+      "unit": "cycles"
+    }
+  ],
   "plant-production-lines": [
     {
       "plant_id": 1,
