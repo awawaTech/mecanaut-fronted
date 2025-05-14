@@ -2,6 +2,8 @@
 import { ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import ThemeToggle from './theme-toggle.component.vue';
+import LanguageSwitcher from './language-switcher.component.vue';
 
 const { t } = useI18n();
 
@@ -50,7 +52,7 @@ const menuOptions = [
         title: t('sidebar.menu.inventory.parts')
       },
       { 
-        path: '/inventario/ordenes-compra', 
+        path: '/purchase-orders', 
         title: t('sidebar.menu.inventory.purchaseOrders')
       }
     ]
@@ -76,7 +78,7 @@ const menuOptions = [
     icon: 'pi pi-file' 
   },
   { 
-    path: '/plan-mantenimiento', 
+    path: '/maintenance-plan', 
     title: t('sidebar.menu.maintenancePlan'), 
     icon: 'pi pi-wrench' 
   },
@@ -139,27 +141,38 @@ const collapseSidebar = () => {
     <div class="menu">
       <ul>
         <li v-for="option in menuOptions" :key="option.path">
-          <RouterLink :to="option.path" custom v-slot="{ isActive }">
-            <a :class="{ active: isActive }">
-              <i :class="option.icon"></i>
-              <span v-if="isExpanded">{{ option.title }}</span>
-            </a>
+          <RouterLink :to="option.path" class="menu-link">
+            <i :class="option.icon"></i>
+            <span v-if="isExpanded">{{ option.title }}</span>
           </RouterLink>
           <div v-if="isExpanded && option.submenu" class="submenu">
             <RouterLink 
               v-for="subItem in option.submenu" 
               :key="subItem.path"
               :to="subItem.path"
-              custom
-              v-slot="{ isActive }"
+              class="submenu-link"
             >
-              <a :class="{ active: isActive }">
-                <span>• {{ subItem.title }}</span>
-              </a>
+              <span>• {{ subItem.title }}</span>
             </RouterLink>
           </div>
         </li>
       </ul>
+    </div>
+
+    <!-- Nueva sección de configuración -->
+    <div class="settings-section">
+      <div class="settings-header" v-if="isExpanded">
+        <i class="pi pi-sliders-h"></i>
+        <span>{{ t('sidebar.settings.title') }}</span>
+      </div>
+      <div class="settings-content">
+        <div class="setting-item">
+          <ThemeToggle />
+        </div>
+        <div class="setting-item" v-if="isExpanded">
+          <LanguageSwitcher />
+        </div>
+      </div>
     </div>
 
     <div class="sidebar-footer">
@@ -252,7 +265,7 @@ const collapseSidebar = () => {
         margin: 4px;
         border-radius: 6px;
 
-        a {
+        .menu-link {
           padding: 12px 16px;
           display: flex;
           align-items: center;
@@ -282,7 +295,7 @@ const collapseSidebar = () => {
             color: var(--clr-bg);
           }
 
-          &.active {
+          &.router-link-active {
             background: var(--clr-primary-200);
             color: var(--clr-bg);
           }
@@ -292,17 +305,20 @@ const collapseSidebar = () => {
           margin-left: 48px;
           margin-top: 4px;
 
-          a {
+          .submenu-link {
             padding: 8px 12px;
             color: var(--clr-bg);
             opacity: 0.8;
+            text-decoration: none;
+            display: block;
+            border-radius: 8px;
 
             &:hover {
               opacity: 1;
               background: var(--clr-primary-200);
             }
 
-            &.active {
+            &.router-link-active {
               opacity: 1;
               background: var(--clr-primary-200);
             }
@@ -388,5 +404,95 @@ const collapseSidebar = () => {
       align-items: center;
     }
   }
+}
+
+.settings-section {
+  padding: 16px;
+  border-top: 1px solid var(--clr-primary-200);
+  border-bottom: 1px solid var(--clr-primary-200);
+  margin: 8px 0;
+
+  .settings-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    color: var(--clr-bg);
+    opacity: 0.9;
+
+    i {
+      font-size: 1.1rem;
+    }
+
+    span {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+  }
+
+  .settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+    
+
+
+    :deep(.pv-select-button) {
+      background: transparent;
+      border: none;
+      
+      .p-button {
+        background: transparent;
+        border: none;
+        color: var(--clr-bg);
+        
+        &:hover {
+          background: var(--clr-primary-300);
+        }
+      }
+    }
+  }
+}
+
+.theme-toggle-switch {
+  width: 48px;
+  height: 24px;
+  background: linear-gradient(90deg, #8e8cd8 0%, #3a336c 100%);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  position: relative;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.theme-toggle-switch .icon {
+  font-size: 1rem;
+  color: #fff;
+  z-index: 2;
+}
+
+.theme-toggle-switch .toggle-circle {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #cfcaf7;
+  border-radius: 50%;
+  transition: left 0.3s, right 0.3s;
+  z-index: 1;
 }
 </style>

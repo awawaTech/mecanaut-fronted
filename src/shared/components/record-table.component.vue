@@ -162,12 +162,14 @@ export default {
             </template>
 
             <template v-else-if="col.type === 'informacion'">
-              <button 
-                class="info-button"
-                @click="handleInfoClick(row)"
+              <Button 
+                :variant="col.ctaVariant || 'primary'"
+                size="sm"
+                radius="md"
+                @clicked="handleInfoClick(row)"
               >
-                <i class="pi pi-info-circle info-icon"></i>
-              </button>
+                {{ col.ctaLabel || 'Ver' }}
+              </Button>
             </template>
 
             <template v-else-if="col.type === 'cta'">
@@ -194,7 +196,7 @@ export default {
 
 <style scoped lang="scss">
 *{
-    font-family: var(--font-family-base);
+    font-family: var(--font-family-base) !important;
 }
 
 .record-table-container {
@@ -230,7 +232,7 @@ export default {
   color: var(--clr-bg);
   font-weight: 700;
   padding: 1.1rem 1.5rem;
-  text-align: left;
+  text-align: center;
   letter-spacing: 0.5px;
   font-size: 1.08rem;
   border-bottom: 2px solid var(--clr-primary-100);
@@ -238,6 +240,7 @@ export default {
 
 // Celdas
 .record-table td {
+  text-align: center;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--clr-color);
   color: var(--clr-text);

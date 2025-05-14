@@ -80,7 +80,7 @@
   
   <style scoped>
   .information-panel {
-    width: 40%;
+    width: 100%;
     padding: 2.3em 2.1em;
     border: 2px solid #F1E9F7;
     border-radius: 8px;
