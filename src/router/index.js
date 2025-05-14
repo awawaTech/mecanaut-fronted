@@ -1,17 +1,13 @@
 import { createRouter, createWebHistory } from "vue-router";
 import ComponentsDemo from '../shared/views/components-demo.vue'
-import CharacterView from '../features/character/views/character-view.component.vue'
-import CharacterDetailView from '@/features/character/views/character-detail.view.vue'
-import CharacterCreateView from '@/features/character/views/character-create.view.vue'
-import CharacterEditView from '@/features/character/views/character-edit.view.vue'
-import MaintenancePlanView from '@/features/maintenance-plan/views/maintenance-plan-view.component.vue'
-
+import MaintenancePlanView from '../features/maintenance-plan/views/maintenance-plan-view.component.vue'
+import InventoryPartsView from '../features/inventory-parts/views/inventory-parts.view.component.vue'
 const router = createRouter({
     history: createWebHistory(),
     routes: [
         { path: '/', component: ComponentsDemo, name: 'components-demo' },
         { path: '/maintenance-plan', component: MaintenancePlanView, name: 'maintenance-plan' },
-
+        { path: '/inventory-parts', component: InventoryPartsView, name: 'inventory-parts' },
  /*        { path: '/chi', component: Chi, name: 'chi' },
         { path: '/nio', component: Nio, name: 'nio' }, */
     ]

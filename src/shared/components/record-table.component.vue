@@ -1,11 +1,12 @@
-
 <script>
 import ButtonComponent from './button.component.vue';
+import SearchComponent from './search.component.vue';
 
 export default {
   name: 'RecordTable',
   components: {
-    Button: ButtonComponent
+    Button: ButtonComponent,
+    SearchComponent
   },
   props: {
     columns: {
@@ -22,14 +23,110 @@ export default {
     data: {
       type: Array,
       default: () => []
+    },
+    searchPlaceholder: {
+      type: String,
+      default: 'Buscar...'
+    },
+    searchableColumns: {
+      type: Array,
+      default: () => []
+    },
+    showNewButton: {
+      type: Boolean,
+      default: true
+    },
+    newLabel: {
+      type: String,
+      default: ''
     }
   },
 
-  emits: ['ctaClick'],
+  emits: ['ctaClick', 'info-click', 'new-click'],
+
+  data() {
+    return {
+      filteredData: [],
+      searchQuery: '',
+      activeFilters: {}
+    }
+  },
+
+  created() {
+    this.filteredData = [...this.data];
+  },
+
+  watch: {
+    data: {
+      handler(newData) {
+        this.applyFiltersAndSearch(newData);
+      },
+      immediate: true
+    }
+  },
 
   methods: {
     onCtaClick(row, column) {
       this.$emit('ctaClick', { row, column });
+    },
+
+    handleSearch(query) {
+      this.searchQuery = query;
+      this.applyFiltersAndSearch(this.data);
+    },
+
+    handleFilterChange(filters) {
+      this.activeFilters = filters;
+      this.applyFiltersAndSearch(this.data);
+    },
+
+    applyFiltersAndSearch(data) {
+      let result = [...data];
+
+      // Aplicar búsqueda
+      if (this.searchQuery) {
+        result = result.filter(row => {
+          return this.searchableColumns.some(colKey => {
+            const value = String(row[colKey]).toLowerCase();
+            return value.includes(this.searchQuery.toLowerCase());
+          });
+        });
+      }
+
+      // Aplicar filtros
+      Object.entries(this.activeFilters).forEach(([key, value]) => {
+        if (value) {
+          result = result.filter(row => String(row[key]) === String(value));
+        }
+      });
+
+      this.filteredData = result;
+    },
+
+    getSearchFilters() {
+      return this.columns
+        .filter(col => col.filterable)
+        .map(col => ({
+          label: col.label,
+          value: col.key,
+          options: this.getUniqueValues(col.key)
+        }));
+    },
+
+    getUniqueValues(key) {
+      const values = [...new Set(this.data.map(row => row[key]))];
+      return values.map(value => ({
+        label: String(value),
+        value: String(value)
+      }));
+    },
+
+    handleInfoClick(row) {
+      this.$emit('info-click', row);
+    },
+
+    handleNewClick() {
+      this.$emit('new-click');
     }
   }
 }
@@ -37,6 +134,16 @@ export default {
 
 <template>
   <div class="record-table-container">
+    <SearchComponent
+      :placeholder="searchPlaceholder"
+      :filters="getSearchFilters()"
+      :show-new-button="showNewButton"
+      :new-label="newLabel"
+      @search="handleSearch"
+      @filter-change="handleFilterChange"
+      @action-click="handleNewClick"
+    />
+    
     <table class="record-table">
       <thead>
         <tr>
@@ -48,16 +155,19 @@ export default {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in data" :key="row.id">
+        <tr v-for="row in filteredData" :key="row.id">
           <td v-for="col in columns" :key="col.key">
             <template v-if="col.type === 'texto' || col.type === 'numero'">
               {{ row[col.key] }}
             </template>
 
             <template v-else-if="col.type === 'informacion'">
-              <i class="pi pi-info-circle info-icon" 
-                 v-tooltip="row[col.key]">
-              </i>
+              <button 
+                class="info-button"
+                @click="handleInfoClick(row)"
+              >
+                <i class="pi pi-info-circle info-icon"></i>
+              </button>
             </template>
 
             <template v-else-if="col.type === 'cta'">
@@ -75,7 +185,7 @@ export default {
       </tbody>
     </table>
     
-    <div v-if="!data.length" class="empty-state">
+    <div v-if="!filteredData.length" class="empty-state">
       <i class="pi pi-frown"></i>
       <span>No hay datos para mostrar</span>
     </div>
@@ -83,17 +193,22 @@ export default {
 </template>
 
 <style scoped lang="scss">
+*{
+    font-family: var(--font-family-base);
+}
+
 .record-table-container {
   width: 100%;
-  padding: 2rem 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  gap: 1rem;
 }
 
 .record-table {
   width: 100%;
-  max-width: 900px;
+  max-width: none;
   border-collapse: separate;
   border-spacing: 0;
   background: var(--clr-bg);
@@ -188,5 +303,31 @@ export default {
   min-width: 90px;
   font-size: 0.9rem;
   padding: 6px 12px;
+}
+
+.info-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 100%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: var(--clr-primary-100);
+    
+    .info-icon {
+      color: var(--clr-primary-500);
+    }
+  }
+}
+
+.info-icon {
+  color: var(--clr-primary-400);
+  font-size: 1.3rem;
+  transition: color 0.2s;
 }
 </style>

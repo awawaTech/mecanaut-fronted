@@ -46,7 +46,7 @@ const menuOptions = [
     icon: 'pi pi-box',
     submenu: [
       { 
-        path: '/inventario/repuestos', 
+        path: '/inventory-parts', 
         title: t('sidebar.menu.inventory.parts')
       },
       { 
