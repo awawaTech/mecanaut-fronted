@@ -104,15 +104,15 @@
   ],
   "inventory-parts": [
     {
-      "id": 2,
-      "code": "1234567891",
-      "name": "Inventory Part 2",
-      "description": "Inventory Part 2 Description",
-      "current_stock": 20,
-      "min_stock": 10,
-      "unit_price": 20,
-      "stock_status": "OK",
-      "last_restock": "2021-01-02"
+      "id": 3,
+      "code": "560239",
+      "name": "asd",
+      "description": "AAAAAAAAAAA",
+      "current_stock": 3,
+      "min_stock": 3,
+      "unit_price": 15,
+      "stock_status": "MEDIUM",
+      "last_restock": "2025-05-14T01:13:14.129Z"
     }
   ],
   "purchase-orders": [

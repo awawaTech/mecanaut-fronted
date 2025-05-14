@@ -19,7 +19,7 @@ const http = axios.create({
 export class InventoryPartsApiService {
     static async getParts() {
         try {
-            const response = await http.get('/inventoryParts');
+            const response = await http.get('/inventory-parts');
             return InventoryPartAssembler.toEntitiesFromResponse(response);
         } catch (err) {
             console.error('Error cargando partes:', err);
@@ -31,10 +31,10 @@ export class InventoryPartsApiService {
     static async getPartById(id) {
         try {
             // Obtenemos la parte del inventario
-            const inventoryPartResponse = await http.get(`/inventoryParts/${id}`);
+            const inventoryPartResponse = await http.get(`/inventory-parts/${id}`);
             
             // Obtenemos las órdenes de compra relacionadas
-            const purchaseOrdersResponse = await http.get(`/purchaseOrders?inventory_part_id=${id}`);
+            const purchaseOrdersResponse = await http.get(`/purchase-orders?inventory_part_id=${id}`);
             
             // Combinamos la información
             const completeData = {
