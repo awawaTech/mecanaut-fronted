@@ -14,6 +14,67 @@
     "a":"Ver fuente original",
     "createdAt" : "Creado el",
     "movies" : "Peliculas"
-
+  },
+  "search": {
+    "placeholder": "Buscar...",
+    "filters": "Filtros",
+    "new": "Nuevo"
+  },
+  "table": {
+    "noData": "No hay datos para mostrar",
+    "action": "Acción"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "back": "Atrás",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "confirm": "Confirmar",
+    "close": "Cerrar"
+  },
+  "maintenance": {
+    "newPlan": "Nuevo Plan de Mantenimiento Estático",
+    "generalInfo": "Información General",
+    "detailedInfo": "Información Detallada",
+    "name": "Nombre",
+    "startDate": "Fecha Inicio",
+    "duration": "Duración",
+    "days": "días",
+    "repeatEvery": "Repetir cada",
+    "repeatHelpText": "0 significa que no se repite",
+    "repeatUnits": {
+      "days": "días",
+      "weeks": "semanas",
+      "months": "meses"
+    },
+    "detailedInfoComingSoon": "La planificación detallada estará disponible próximamente"
+  },
+  "sidebar": {
+    "menu": {
+      "home": "Inicio",
+      "calendar": "Calendario",
+      "inventory": {
+        "title": "Inventario",
+        "parts": "Repuestos",
+        "purchaseOrders": "Órdenes de Compra"
+      },
+      "assetManagement": {
+        "title": "Gestión de Activos",
+        "machinery": "Maquinarias",
+        "productionLines": "Líneas de Producción"
+      },
+      "workOrder": "Órdenes de Trabajo",
+      "maintenancePlan": "Plan de Mantenimiento",
+      "execution": "Ejecución",
+      "dashboard": "Dashboard",
+      "staffManagement": "Gestión de Personal",
+      "settings": "Configuración"
+    },
+    "user": {
+      "role": "Rol"
+    }
   }
 }

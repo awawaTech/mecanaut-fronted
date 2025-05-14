@@ -2,23 +2,29 @@
 @use '../variables' as *;
 
 :root {
+    // Colores primarios
     --clr-primary-100: #{$primary-100};
     --clr-primary-200: #{$primary-200};
     --clr-primary-300: #{$primary-300};
     --clr-primary-400: #{$primary-400};
     --clr-primary-500: #{$primary-500};
   
+    // Colores de fondo y superficie
     --clr-bg: #{$white};
     --clr-surface: #{$grey-050};
+    --clr-color: #{$grey-100};
+    --clr-gris2: #{$grey-200};
     --clr-text: #{$text-color};
   
+    // Colores de feedback
     --clr-danger: #{$danger-500};
-    --clr-danger-050: #{$danger-050};
+    --clr-danger-light: #{$danger-050};
     
-    --clr-color: #{$grey-100};
-    --clr-gris: #{$grey-050};
-    --clr-gris2: #{$grey-200};
-    
+    // Radios
+    --radius-none: 0;
+    --radius-sm: 0.25rem;
     --radius-md: #{$radius-md};
+    --radius-lg: 1rem;
+    --radius-full: 9999px;
 }
   
