@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import Button from '../../../shared/components/button.component.vue';
 
 export default {
-    name: 'InventoryPartFormModal',
+    name: 'PurchaseOrderFormModal',
     
     components: {
         Button
@@ -14,7 +14,7 @@ export default {
             type: Boolean,
             default: false
         },
-        partData: {
+        orderData: {
             type: Object,
             default: () => ({})
         }
@@ -24,18 +24,20 @@ export default {
 
     setup(props, { emit }) {
         const formData = ref({
-            code: '',
-            name: '',
-            description: '',
-            currentStock: 0,
-            minStock: 0,
-            unitPrice: 0
+            inventory_part_id: 0,
+            quantity: 0,
+            status: 'PENDING',
+            orderDate: new Date().toISOString().split('T')[0],
+            expectedDeliveryDate: '',
+            supplier: '',
+            unitPrice: 0,
+            totalPrice: 0
         });
 
         const handleSubmit = () => {
             emit('submit', {
                 ...formData.value,
-                id: props.partData?.id
+                id: props.orderData?.id
             });
         };
 
@@ -44,20 +46,22 @@ export default {
         };
 
         const handleDelete = () => {
-            if (confirm('¿Está seguro de eliminar este repuesto?')) {
-                emit('delete', props.partData.id);
+            if (confirm('¿Está seguro de eliminar esta orden de compra?')) {
+                emit('delete', props.orderData.id);
             }
         };
 
         onMounted(() => {
-            if (props.isEdit && props.partData) {
+            if (props.isEdit && props.orderData) {
                 formData.value = {
-                    code: props.partData.code,
-                    name: props.partData.name,
-                    description: props.partData.description,
-                    currentStock: props.partData.currentStock,
-                    minStock: props.partData.minStock,
-                    unitPrice: props.partData.unitPrice
+                    inventory_part_id: props.orderData.inventory_part_id,
+                    quantity: props.orderData.quantity,
+                    status: props.orderData.status,
+                    orderDate: props.orderData.orderDate?.split('T')[0],
+                    expectedDeliveryDate: props.orderData.expectedDeliveryDate?.split('T')[0],
+                    supplier: props.orderData.supplier,
+                    unitPrice: props.orderData.unitPrice,
+                    totalPrice: props.orderData.totalPrice
                 };
             }
         });
@@ -76,75 +80,100 @@ export default {
     <div class="modal-overlay">
         <div class="modal-container">
             <div class="modal-header">
-                <h2>{{ isEdit ? 'Editar Repuesto' : 'Nuevo Repuesto' }}</h2>
+                <h2>{{ isEdit ? 'Editar Orden de Compra' : 'Nueva Orden de Compra' }}</h2>
                 <button class="close-button" @click="handleCancel">×</button>
             </div>
             
             <div class="modal-content">
                 <form @submit.prevent="handleSubmit" class="form-container">
                     <div class="form-group">
-                        <label for="code">Código</label>
+                        <label for="inventory_part_id">ID del Repuesto</label>
                         <input 
-                            id="code"
-                            v-model="formData.code"
+                            id="inventory_part_id"
+                            v-model="formData.inventory_part_id"
                             type="text"
                             required
                             :disabled="isEdit"
-                            placeholder="Ingrese el código"
+                            placeholder="Ingrese el ID del repuesto"
                         />
                     </div>
                     <div class="form-group">
-                        <label for="name">Nombre</label>
+                        <label for="quantity">Cantidad</label>
                         <input 
-                            id="name"
-                            v-model="formData.name"
-                            type="text"
+                            id="quantity"
+                            v-model.number="formData.quantity"
+                            type="number"
                             required
-                            :disabled="isEdit"
-                            placeholder="Ingrese el nombre"
+                            min="1"
+                            placeholder="Ingrese la cantidad"
                         />
                     </div>
                     <div class="form-group">
-                        <label for="description">Descripción</label>
-                        <textarea 
-                            id="description"
-                            v-model="formData.description"
-                            rows="3"
-                            placeholder="Ingrese la descripción"
-                        ></textarea>
+                        <label for="status">Estado</label>
+                        <select 
+                            id="status"
+                            v-model="formData.status"
+                            required
+                        >
+                            <option value="PENDING">Pendiente</option>
+                            <option value="IN_PROGRESS">En Progreso</option>
+                            <option value="COMPLETED">Completada</option>
+                            <option value="CANCELLED">Cancelada</option>
+                        </select>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="currentStock">Stock Actual</label>
+                            <label for="orderDate">Fecha de Orden</label>
                             <input 
-                                id="currentStock"
-                                v-model.number="formData.currentStock"
-                                type="number"
+                                id="orderDate"
+                                v-model="formData.orderDate"
+                                type="date"
                                 required
-                                min="0"
                             />
                         </div>
                         <div class="form-group">
-                            <label for="minStock">Stock Mínimo</label>
+                            <label for="expectedDeliveryDate">Fecha Esperada de Entrega</label>
                             <input 
-                                id="minStock"
-                                v-model.number="formData.minStock"
-                                type="number"
+                                id="expectedDeliveryDate"
+                                v-model="formData.expectedDeliveryDate"
+                                type="date"
                                 required
-                                min="0"
                             />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="unitPrice">Precio Unitario</label>
+                        <label for="supplier">Proveedor</label>
                         <input 
-                            id="unitPrice"
-                            v-model.number="formData.unitPrice"
-                            type="number"
+                            id="supplier"
+                            v-model="formData.supplier"
+                            type="text"
                             required
-                            min="0"
-                            step="0.01"
+                            placeholder="Ingrese el proveedor"
                         />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="unitPrice">Precio Unitario</label>
+                            <input 
+                                id="unitPrice"
+                                v-model.number="formData.unitPrice"
+                                type="number"
+                                required
+                                min="0"
+                                step="0.01"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label for="totalPrice">Precio Total</label>
+                            <input 
+                                id="totalPrice"
+                                v-model.number="formData.totalPrice"
+                                type="number"
+                                required
+                                min="0"
+                                step="0.01"
+                            />
+                        </div>
                     </div>
                 </form>
             </div>
@@ -156,7 +185,7 @@ export default {
                 >
                     Cancelar
                 </Button>
-                <Button style="background-color: var(--clr-danger);"
+                <Button 
                     v-if="isEdit"
                     variant="danger"
                     @clicked="handleDelete"
@@ -174,10 +203,7 @@ export default {
     </div>
 </template>
 
-<style scoped lang="scss">
-*{
-    font-family: var(--font-family-base) !important;
-}
+<style scoped>
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -257,7 +283,7 @@ export default {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group select {
     padding: 0.5rem;
     border: 1px solid var(--clr-primary-100);
     border-radius: var(--radius-sm);
