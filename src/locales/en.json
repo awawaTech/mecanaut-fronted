@@ -46,7 +46,10 @@
       "settings": "Settings"
     },
     "user": {
-      "role": "Role"
+      "role": "Rol"
+    },
+    "settings": {
+      "title": "Configuración"
     }
   }
 }

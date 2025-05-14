@@ -174,7 +174,10 @@ export default {
     </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+*{
+    font-family: var(--font-family-base) !important;
+}
 .modal-overlay {
     position: fixed;
     top: 0;

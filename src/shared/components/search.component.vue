@@ -153,6 +153,9 @@ export default {
 </template>
 
 <style scoped lang="scss">
+*{
+  font-family: var(--clr-text);
+}
 .search-container {
   display: flex;
   flex-direction: column;
