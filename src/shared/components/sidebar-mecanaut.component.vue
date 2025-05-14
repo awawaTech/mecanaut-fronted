@@ -63,7 +63,7 @@ const menuOptions = [
     icon: 'pi pi-cog',
     submenu: [
       { 
-        path: '/gestion-activos/maquinarias', 
+        path: '/machinery', 
         title: t('sidebar.menu.assetManagement.machinery')
       },
       { 
