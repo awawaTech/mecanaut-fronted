@@ -12,7 +12,7 @@ import Button from '../components/button.component.vue';
 import Search from '../components/search.component.vue';
 import RecordTable from '../components/record-table.component.vue';
 import SidebarMecanaut from '../components/sidebar-mecanaut.component.vue';
-
+ 
 export default {
     name: 'ComponentsDemo',
     components: {

@@ -24,6 +24,34 @@
     "noData": "No data to display",
     "action": "Action"
   },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "back": "Back",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "confirm": "Confirm",
+    "close": "Close"
+  },
+  "maintenance": {
+    "newPlan": "New Static Maintenance Plan",
+    "generalInfo": "General Information",
+    "detailedInfo": "Detailed Information",
+    "name": "Name",
+    "startDate": "Start Date",
+    "duration": "Duration",
+    "days": "days",
+    "repeatEvery": "Repeat every",
+    "repeatHelpText": "0 means no repetition",
+    "repeatUnits": {
+      "days": "days",
+      "weeks": "weeks",
+      "months": "months"
+    },
+    "detailedInfoComingSoon": "Detailed planning will be available soon"
+  },
   "sidebar": {
     "menu": {
       "home": "Home",
