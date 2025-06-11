@@ -94,6 +94,7 @@
 </template>
 
 <script setup>
+
 import { ref, onMounted, computed } from 'vue';
 import { maintenancePlanService } from '../services/maintenance-plan.service.js';
 import { maintenanceDynamicPlanService } from '../services/maintenance-dynamic-plan.service.js';

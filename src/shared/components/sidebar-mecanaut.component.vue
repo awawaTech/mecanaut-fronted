@@ -38,7 +38,7 @@ const menuOptions = [
     icon: 'pi pi-home' 
   },
   { 
-    path: '/calendario', 
+    path: '/maintenance-calendar',
     title: t('sidebar.menu.calendar'), 
     icon: 'pi pi-calendar' 
   },
