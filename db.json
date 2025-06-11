@@ -17,3 +17,30 @@
     "name": "typicode"
   }
 }
+    "inventory-parts": [
+        {
+            "id": 1,
+            "code": "PART001",
+            "name": "Filtro de Aceite",
+            "description": "Filtro de aceite para motor diésel",
+            "currentStock": 15,
+            "minStock": 5,
+            "unitPrice": 25.99,
+            "stockStatus": "OK",
+            "lastRestock": "2024-03-13T00:00:00.000Z"
+        }
+    ],
+    "purchase-orders": [
+        {
+            "id": 1,
+            "inventory_part_id": 1,
+            "quantity": 10,
+            "status": "PENDING",
+            "orderDate": "2024-03-13T00:00:00.000Z",
+            "expectedDeliveryDate": "2024-03-20T00:00:00.000Z",
+            "supplier": "AutoParts Inc",
+            "unitPrice": 23.50,
+            "totalPrice": 235.00
+        }
+    ]
+} 

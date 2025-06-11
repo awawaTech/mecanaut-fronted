@@ -5,7 +5,7 @@ export default {
     variant: {
       type: String,
       default: 'primary',
-      validator: value => ['primary', 'secondary', 'danger', 'success'].includes(value)
+      validator: value => ['primary', 'secondary', 'danger', 'success', 'outline'].includes(value)
     },
     size: {
       type: String,
@@ -20,6 +20,14 @@ export default {
     disabled: {
       type: Boolean,
       default: false
+    },
+    iconLeft: {
+      type: String,
+      default: ''
+    },
+    iconRight: {
+      type: String,
+      default: ''
     }
   },
   emits: ['clicked'],
@@ -43,7 +51,9 @@ export default {
     :disabled="disabled"
     @click="handleClick"
   >
+    <i v-if="iconLeft" :class="iconLeft" class="icon-left"></i>
     <slot></slot>
+    <i v-if="iconRight" :class="iconRight" class="icon-right"></i>
   </button>
 </template>
 
@@ -78,6 +88,18 @@ export default {
       color: var(--clr-bg);
     }
   }
+  
+  &-outline {
+    background: transparent;
+    color: var(--clr-primary-400);
+    border: 1px solid var(--clr-primary-400);
+    
+    &:hover:not(.disabled) {
+      background: var(--clr-primary-100);
+      color: var(--clr-bg);
+      border-color: var(--clr-primary-100);
+    }
+  }
 
   &-sm {
     padding: 0.5rem 1rem;
@@ -105,6 +127,14 @@ export default {
   &.disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+  
+  .icon-left {
+    margin-right: 0.3rem;
+  }
+  
+  .icon-right {
+    margin-left: 0.3rem;
   }
 }
 </style>
