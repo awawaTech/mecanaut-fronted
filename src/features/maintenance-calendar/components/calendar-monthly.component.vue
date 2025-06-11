@@ -10,7 +10,10 @@
     },
     computed: {
       monthName() {
-        return this.months[this.currentMonth] + ' - ' + this.currentYear;
+        return this.months[this.currentMonth];
+      },
+      yearName(){
+        return this.currentYear;
       },
       daysInMonth() {
         const firstDay = new Date(this.currentYear, this.currentMonth, 1).getDay();
@@ -61,6 +64,7 @@
       }
     }
   };
+
 </script>
 
 <template>
@@ -69,11 +73,14 @@
       <section class="calendar">
         <header class="calendar__header">
           <div class="header__container">
-            <button class="calendar__button calendar__button--previous" @click="prevMonth" aria-label="Ir al Anterior Mes">
+            <button class="calendar__button--previous" @click="prevMonth">
               <i class="ri-arrow-left-s-line"></i>
             </button>
-            <h3 class="container__heading" id="calendar-date">{{ monthName }}</h3>
-            <button class="calendar__button calendar__button--next" @click="nextMonth" aria-label="Ir al Siguiente Mes">
+            <div class="container__heading">
+              <h2 id="calendar__month">{{ monthName }}</h2>
+              <h3 id="calendar__year">{{ yearName }}</h3>
+            </div>
+            <button class="calendar__button--next" @click="nextMonth">
               <i class="ri-arrow-right-s-line"></i>
             </button>
           </div>
@@ -99,59 +106,78 @@
           </li>
         </ol>
       </section>
+  </div>
+  <footer>
+    <div class="plan">
+      <i class="pi pi-calendar" id="icon-calendar"></i>
+      <p>Plan de mantenimiento</p>
     </div>
+    <div class="order">
+      <i class="pi pi-bell" id="icon-bell"></i>
+      <p>Orden de trabajo</p>
+    </div>
+  </footer>
 </template>
 
 <style scoped>
-  .container-main{
+  .container-main, footer{
     overflow: hidden;
     width: 75%;
-    padding: 0;
+    padding: 2rem;
     container-name: main;
     container-type: inline-size;
+    background-color: var(--clr-bg);
+    border-radius: var(--radius-md);
   }
 
   .container__heading{
     color: var(--clr-primary-200);
     font-size: 1.25em;
+    display: inline-block;
+    text-align: center;
   }
 
   /* Calendar */
   .calendar__header{
-    background-color: var(--clr-primary-100);
-    height: 50px;
-    display: flex;
+    background-color: var(--clr-bg);
     justify-content: center;
     align-items: center;
     position: relative;
+  }
+
+  #calendar__year{
+    font-style: italic;
+    font-size: 0.8em;
+    font-weight: 400;
+    color: var(--clr-primary-500);
+  }
+
+  #calendar__month{
+    font-size: 1em;
+    color: var(--clr-primary-500);
   }
 
   .header__container{
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 9em;
   }
 
-  .calendar__button{
+  .calendar__button--previous, .calendar__button--next{
     width: 24px;
     height: 24px;
     border: none;
     border-radius: 50%;
-    background-color: var(--clr-bg);
-    color: var(--clr-primary-300);
-    display: grid;
-    place-items: center;
+    display: flex;
     font-size: 1.25em;
     cursor: pointer;
-    transition: .3s ease-in-out scale;
-  }
-
-  .calendar__button:hover, .calendar__button:focus{
-    scale: 1.05;
+    color: var(--clr-primary-500);
+    background-color: var(--clr-bg);
   }
 
   .calendar__weekdays, .calendar__days{
+
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     place-items: center;
@@ -159,6 +185,7 @@
 
   .calendar__weekday{
     padding: 10px 0;
+
   }
 
   .calendar__weekday h4{
@@ -166,7 +193,6 @@
   }
 
   .calendar__weekday abbr{
-    color: var(--clr-color);
     font-size: 0.875em;
   }
 
@@ -184,7 +210,8 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    border: 1px solid #E6E6E6;
+    border: 1px solid;
+    border-color: var(--clr-primary-300);
   }
 
   .day__info{
@@ -195,64 +222,14 @@
 
   .day__info h5{
     font-size: 0.9375em;
-    color: var(--clr-text);
+    color: var(--clr-primary-100);
     transition: .3s ease-in-out color;
-  }
-
-  .day__info button{
-    background: none;
-    border: none;
-    font-size: 1.125em;
-    color: var(--clr-primary-200);
-    cursor: pointer;
-    transition: .3s ease-in-out color;
-  }
-
-
-
-  .calendar__day--content:hover .day__info h5,
-  .calendar__day--content:focus .day__info h5,
-  .calendar__day--content:hover .day__info button,
-  .calendar__day--content:focus .day__info button{
-    color: var(--clr-text);
-  }
-
-  @container main (min-width: 400px){
-    .calendar__day{
-      padding: 10px;
-    }
-  }
-
-  @container main (min-width: 500px){
-    .calendar__header{
-      padding: 0 48px;
-    }
-
-    .calendar__day{
-      aspect-ratio: 1/1;
-      padding: 10px 16px;
-    }
-
-    .day__info h5{
-      font-size: 1.125em;
-    }
-
-    .day__info button{
-      font-size: 1.25em;
-    }
-
-    .calendar__button{
-      width: 28px;
-      height: 28px;
-      font-size: 24px;
-    }
   }
 
   @container main (min-width: 874px) {
     .calendar__day {
       min-height: 150px;
       max-height: none;
-      aspect-ratio: auto;
       gap: 20px;
     }
 
@@ -267,8 +244,8 @@
 
     .calendar__weekday h4 {
       display: block;
-      font-weight: 400;
-      color: var(--clr-text);
+      font-weight: 700;
+      color: var(--clr-primary-100);
     }
 
     .calendar__weekday abbr {
@@ -276,72 +253,33 @@
     }
 
     .day__info h5 {
-      font-size: 1.375em;
-    }
-
-    .day__info button {
-      display: none;
-    }
-
-
-    .calendar__day--content:hover .day__info h5,
-    .calendar__day--content:focus .day__info h5,
-    .calendar__day--content:hover .day__info button,
-    .calendar__day--content:focus .day__info button {
-      color: initial;
-    }
-
-    .calendar__appointments li {
-      padding: 4px 8px;
-      font-size: 0.75em;
-      color: var(--clr-primary-100);
-      border-radius: 12px;
-      transition: .3s ease-in-out transform, .3s ease-in-out box-shadow;
-    }
-
-    .calendar__appointments li button {
-      width: 100%;
-      max-width: 100px;
-      background: none;
-      border: none;
-      text-align: left;
-      display: flex;
-      gap: 4px;
-      overflow: hidden;
-      cursor: pointer;
-    }
-
-    .calendar__appointments li button .appointment-text {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .appointment__completada i {
-      color: var(--clr-primary-100);
-    }
-
-    .appointment__pendiente i {
-      color: var(--clr-primary-100);
-    }
-
-    .calendar__button {
-      width: 32px;
-      height: 32px;
-      font-size: 1.75em;
-    }
-
-    .drag__over .day__info h5 {
-      color: var(--clr-text);
+      font-size: 1em;
+      font-weight: 400;
     }
   }
+  /* Footer */
+  footer{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
 
-  @container main (min-width: 1080px){
-    .calendar__appointments li{
-      max-width: 3%;
-      font-size: 0.875em;
-    }
+  .plan, .order{
+    display: flex;
+    gap: 3em;
+    align-items: center;
+  }
+
+  #icon-bell, #icon-calendar{
+    color: var(--clr-bg);
+    border-radius: 20%;
+    padding: 0.5em;
+    font-size: 1.4em;
+  }
+  #icon-bell{
+    background-color: var(--clr-primary-500);
+  }
+  #icon-calendar{
+    background-color: var(--clr-primary-100);
   }
 </style>

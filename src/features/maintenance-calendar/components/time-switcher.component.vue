@@ -24,16 +24,13 @@ export default {
         option-value="value"
         class="uppercase"
         role="radiogroup"
-        aria-labelledby="lang-switcher-label"
     />
   </div>
 </template>
 
-
 <style scoped>
-
 .uppercase {
   display: flex;
-  background-color: var(--clr-primary-100);
+  background-color: var(--clr-primary-500);
 }
 </style>

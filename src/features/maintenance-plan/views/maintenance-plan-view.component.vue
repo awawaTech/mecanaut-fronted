@@ -1,10 +1,4 @@
-<template>
-    <Search 
-                        :filters="demoFilters"
-                        @search="handleSearch"
-                        @filter-change="handleFilterChange"
-                        @action-click="handleNewClick"
-                    />
+  <template>
   </template>
   
   <script>

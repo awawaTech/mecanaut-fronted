@@ -2,14 +2,11 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ButtonComponent from '../../../shared/components/button.component.vue';
-import Dropdown from 'primevue/dropdown';
-
 export default {
   name: 'SearchComponent',
 
   components: {
-    ButtonComponent,
-    Dropdown
+    ButtonComponent
   },
 
   emits: ['search', 'filter-change', 'action-click'],
