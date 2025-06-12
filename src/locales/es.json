@@ -76,5 +76,20 @@
     "user": {
       "role": "Rol"
     }
+  },
+  "authentication": {
+    "create": "Crear Cuenta",
+    "happy": "¡Estamos felices de que te nos unas!",
+    "company": "Nombre de la empresa",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "repeat": "Repetir",
+    "read": "He leído y acepto los",
+    "terms": "términos y condiciones",
+    "have": "¿Ya tienes una cuenta?",
+    "login": "Iniciar Sesión",
+    "back": "¡Nos alegra tenerte de vuelta!",
+    "forgot": "Olvidé mi contraseña",
+    "dont": "¿No tienes una cuenta?"
   }
 }
