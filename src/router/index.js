@@ -6,6 +6,8 @@ import CalendarViewComponent from "../features/maintenance-calendar/views/calend
 import PurchaseOrdersView from '../features/purchase-orders/views/purchase-orders.view.component.vue'
 import NotFoundView from '../shared/views/not-found.view.component.vue'
 import MachineryAssetView from '../features/asset-management/views/machinery-asset-view.component.vue'
+import LoginView from '../features/authentication/views/login.view.component.vue'
+import CreateAccountView from '../features/authentication/views/create-account.view.component.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -15,6 +17,8 @@ const router = createRouter({
         { path: '/maintenance-calendar', component: CalendarViewComponent, name: 'maintenance-calendar'},
         { path: '/purchase-orders', component: PurchaseOrdersView, name: 'purchase-orders' },
         { path: '/machinery', component: MachineryAssetView, name: 'machinery' },
+        { path: '/login', component: LoginView, name: 'login' },
+        {path: '/create-account',component:CreateAccountView,name: 'create-account'},
         { path: '/404', component: NotFoundView, name: 'not-found' }, 
         { path: '/:pathMatch(.*)*', redirect: '/404' }
     ]

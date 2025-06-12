@@ -79,5 +79,20 @@
     "settings": {
       "title": "Configuración"
     }
+  },
+  "authentication": {
+    "create": "Create Account",
+    "happy": "¡We're happy to have you join us!",
+    "company": "Name of the company",
+    "email": "Email",
+    "password": "Password",
+    "repeat": "Repeat",
+    "read": "I have read and accept the",
+    "terms": "terms and conditions",
+    "have": "¿Already have an account?",
+    "login": "Log In",
+    "back": "¡We're glad to have you back!",
+    "forgot": "I forgot my password",
+    "dont": "¿Don't have an account?"
   }
 }
