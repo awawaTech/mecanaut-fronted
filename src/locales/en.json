@@ -94,5 +94,77 @@
     "back": "¡We're glad to have you back!",
     "forgot": "I forgot my password",
     "dont": "¿Don't have an account?"
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "selectPlant": "Select Plant",
+    "newOrder": "New Order",
+    "completedTasks": "Completed Tasks",
+    "systemEfficiency": "System Efficiency",
+    "mainMetrics": "Main Metrics",
+    "generalEfficiency": "General Efficiency",
+    "downtime": "Downtime",
+    "ordersCompleted": "Orders Completed",
+    "maintenanceCosts": "Maintenance Costs",
+    "quickAccess": "Quick Access",
+    "maintenance": "Maintenance",
+    "inventory": "Inventory",
+    "reports": "Reports",
+    "equipmentStatus": "Equipment Status",
+    "viewAll": "View all",
+    "operational": "Operational",
+    "warning": "Attention Required",
+    "inMaintenance": "In Maintenance",
+    "inventoryHealth": "Inventory Health",
+    "critical": "Critical",
+    "normal": "Normal",
+    "recentActivity": "Recent Activity",
+    "personalSummary": "Personal Summary",
+    "teamPerformance": "Team Performance",
+    "goal": "Goal",
+    "inProgress": "In Progress",
+    "tip": "Tip",
+    "tipText": "Review pending high-priority orders to improve response time.",
+    "metrics": {
+      "availability": "Availability",
+      "performance": "Performance",
+      "quality": "Quality",
+      "maintenance": "Maintenance",
+      "breakdowns": "Breakdowns",
+      "setup": "Setup",
+      "onTime": "On Time",
+      "delayed": "Delayed",
+      "critical": "Critical",
+      "parts": "Parts",
+      "labor": "Labor",
+      "others": "Others"
+    }
+  },
+  "execution": {
+    "title": "Work Order Execution",
+    "workOrder": "Work Order",
+    "tasks": {
+      "title": "Tasks",
+      "drainOil": "Drain old oil to approved container",
+      "replaceFilter": "Replace hydraulic filter",
+      "refillOil": "Refill with new oil",
+      "testRun": "Test run and pressure verification",
+      "inspection": "Leak inspection for 5 min run"
+    },
+    "observations": {
+      "title": "Observations",
+      "placeholder": "Text"
+    },
+    "products": {
+      "title": "Products Used",
+      "product": "Product",
+      "quantity": "Quantity",
+      "addProduct": "Add Product",
+      "productPlaceholder": "Product name"
+    },
+    "actions": {
+      "finish": "Mark as Finished",
+      "save": "Save"
+    }
   }
 }

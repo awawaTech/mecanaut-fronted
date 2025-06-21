@@ -91,5 +91,77 @@
     "back": "¡Nos alegra tenerte de vuelta!",
     "forgot": "Olvidé mi contraseña",
     "dont": "¿No tienes una cuenta?"
+  },
+  "dashboard": {
+    "welcome": "¡Bienvenido",
+    "selectPlant": "Seleccionar Planta",
+    "newOrder": "Nueva Orden",
+    "completedTasks": "Tareas Completadas",
+    "systemEfficiency": "Eficiencia del Sistema",
+    "mainMetrics": "Métricas Principales",
+    "generalEfficiency": "Eficiencia General",
+    "downtime": "Tiempo de Inactividad",
+    "ordersCompleted": "Órdenes Completadas",
+    "maintenanceCosts": "Costos de Mantenimiento",
+    "quickAccess": "Accesos Rápidos",
+    "maintenance": "Mantenimientos",
+    "inventory": "Inventario",
+    "reports": "Reportes",
+    "equipmentStatus": "Estado de Equipos",
+    "viewAll": "Ver todos",
+    "operational": "Operativo",
+    "warning": "Atención Requerida",
+    "inMaintenance": "En Mantenimiento",
+    "inventoryHealth": "Salud del Inventario",
+    "critical": "Crítico",
+    "normal": "Normal",
+    "recentActivity": "Actividad Reciente",
+    "personalSummary": "Resumen Personal",
+    "teamPerformance": "Rendimiento del Equipo",
+    "goal": "Meta",
+    "inProgress": "En Progreso",
+    "tip": "Sugerencia",
+    "tipText": "Revisa las órdenes pendientes de alta prioridad para mejorar el tiempo de respuesta.",
+    "metrics": {
+      "availability": "Disponibilidad",
+      "performance": "Rendimiento",
+      "quality": "Calidad",
+      "maintenance": "Mantenimiento",
+      "breakdowns": "Averías",
+      "setup": "Configuración",
+      "onTime": "En Tiempo",
+      "delayed": "Retrasadas",
+      "critical": "Críticas",
+      "parts": "Repuestos",
+      "labor": "Mano de Obra",
+      "others": "Otros"
+    }
+  },
+  "execution": {
+    "title": "Ejecución de Órdenes de Trabajo",
+    "workOrder": "Orden de Trabajo",
+    "tasks": {
+      "title": "Tareas",
+      "drainOil": "Drenar aceite viejo al depósito aprobado",
+      "replaceFilter": "Reemplazar filtro hidráulico",
+      "refillOil": "Rellenar con aceite nuevo",
+      "testRun": "Arranque de prueba y verificación de presión",
+      "inspection": "Inspección de fugas en un recorrido de 5 min"
+    },
+    "observations": {
+      "title": "Observaciones",
+      "placeholder": "Texto"
+    },
+    "products": {
+      "title": "Productos utilizados",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "addProduct": "Agregar producto",
+      "productPlaceholder": "Nombre del producto"
+    },
+    "actions": {
+      "finish": "Marcar como Finalizada",
+      "save": "Guardar"
+    }
   }
 }
