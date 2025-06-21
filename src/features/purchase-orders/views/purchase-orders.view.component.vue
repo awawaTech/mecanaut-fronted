@@ -26,7 +26,7 @@ export default {
         
         const columns = [
             { key: 'id', label: 'ID Orden', type: 'texto' },
-            { key: 'inventory_part_name', label: 'Repuesto', type: 'texto' },
+            { key: 'inventory_part_id', label: 'ID Repuesto', type: 'texto' },
             { key: 'quantity', label: 'Cantidad', type: 'numero' },
             { key: 'status', label: 'Estado', type: 'texto', filterable: true },
             { key: 'info', label: 'Información', type: 'informacion' }

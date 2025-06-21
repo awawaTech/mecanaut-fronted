@@ -4,6 +4,7 @@ import Search from '../../../shared/components/search.component.vue'
 import RecordTable from '../../../shared/components/record-table.component.vue'
 import InformationPanel from '../../../shared/components/information-panel/information-panel.component.vue'
 import InfoSection from '../../../shared/components/information-panel/info-section.component.vue'
+import InfoContainer from '../../../shared/components/information-panel/info-container.component.vue'
 import { InventoryPartsApiService } from '../services/inventory-parts-api.service';
 import InventoryPartFormModal from '../components/inventory-part-form-modal.component.vue';
 import ButtonComponent from '../../../shared/components/button.component.vue';
@@ -14,6 +15,7 @@ export default {
         RecordTable,
         InformationPanel,
         InfoSection,
+        InfoContainer,
         InventoryPartFormModal,
         ButtonComponent
     },
@@ -23,6 +25,8 @@ export default {
         const showInfoPanel = ref(false);
         const showCreateModal = ref(false);
         const showEditModal = ref(false);
+        const infoData = ref([]);
+        const stockData = ref([]);
         
         // Simplificamos las columnas de la tabla
         const columns = [
@@ -30,8 +34,7 @@ export default {
             { key: 'name', label: 'Nombre', type: 'texto'},
             { key: 'current_stock', label: 'Stock Actual', type: 'numero' },
             { key: 'stock_status', label: 'Estado del Stock', type: 'texto', filterable: true},
-            { key: 'info', label: 'Información', type: 'informacion' },
-            { key: 'action', label: 'Acción', type: 'cta', ctaLabel: 'Solicitar', ctaVariant: 'primary' }
+            { key: 'info', label: 'Información', type: 'informacion' }
         ];
 
         const loadInventoryParts = async () => {
@@ -53,42 +56,50 @@ export default {
         };
 
         const handleInfoClick = async (item) => {
+            console.log('handleInfoClick called with:', item);
             try {
                 const completeData = await InventoryPartsApiService.getPartById(item.id);
-                selectedPart.value = {
-                    ...completeData,
-                    generalInfo: [
-                        { subtitle: 'Código', info: completeData.code },
-                        { subtitle: 'Nombre', info: completeData.name },
-                        { subtitle: 'Descripción', info: completeData.description }
-                    ],
-                    stockInfo: [
-                        { 
-                            subtitle: 'Estado de Stock',
-                            info: completeData.stockStatus,
-                            class: completeData.stockStatus.toLowerCase()
-                        },
-                        { 
-                            subtitle: 'Stock Actual / Mínimo',
-                            info: `${completeData.currentStock} / ${completeData.minStock} unidades`
-                        },
-                        {
-                            subtitle: 'Precio Unitario',
-                            info: `$${completeData.unitPrice.toFixed(2)}`
-                        },
-                        {
-                            subtitle: 'Último Restock',
-                            info: new Date(completeData.lastRestock).toLocaleDateString()
-                        }
-                    ],
-                    purchaseInfo: completeData.purchaseOrders.map(order => ({
-                        subtitle: `Orden #${order.id}`,
-                        info: `${order.quantity} unidades - ${order.status}`,
-                        subInfo: `Fecha de orden: ${new Date(order.orderDate).toLocaleDateString()}`,
-                        class: order.status.toLowerCase()
-                    }))
-                };
+                console.log('Fetched data:', completeData);
+                
+                selectedPart.value = completeData;
+                
+                // Preparar datos para las secciones de información
+                infoData.value = [
+                    { subtitle: 'Code', info: completeData.code },
+                    { subtitle: 'Name', info: completeData.name },
+                    { subtitle: 'Description', info: completeData.description }
+                ];
+
+                stockData.value = [
+                    { 
+                        subtitle: 'Current Stock',
+                        info: completeData.currentStock,
+                        class: completeData.stockStatus.toLowerCase()
+                    },
+                    { 
+                        subtitle: 'Minimum Stock',
+                        info: completeData.minStock
+                    },
+                    {
+                        subtitle: 'Unit Price',
+                        info: `$${completeData.unitPrice.toFixed(2)}`
+                    },
+                    {
+                        subtitle: 'Status',
+                        info: completeData.stockStatus,
+                        class: completeData.stockStatus.toLowerCase()
+                    },
+                    {
+                        subtitle: 'Last Restock',
+                        info: new Date(completeData.lastRestock).toLocaleDateString()
+                    }
+                ];
+
                 showInfoPanel.value = true;
+                console.log('Panel should be shown:', showInfoPanel.value);
+                console.log('Selected part:', selectedPart.value);
+                console.log('Info data:', infoData.value);
+                console.log('Stock data:', stockData.value);
             } catch (error) {
                 console.error('Error loading part details:', error);
             }
@@ -117,6 +128,7 @@ export default {
             } catch (error) {
                 console.error('Error al actualizar:', error);
             }
+            closePanel();
         };
 
         const handleDelete = async (id) => {
@@ -132,10 +144,12 @@ export default {
         };
 
         const closePanel = () => {
+            console.log('Closing panel');
             showInfoPanel.value = false;
-            // Opcional: limpiar la selección después de un pequeño delay para la animación
             setTimeout(() => {
                 selectedPart.value = null;
+                infoData.value = [];
+                stockData.value = [];
             }, 300);
         };
 
@@ -152,18 +166,13 @@ export default {
             handleEdit,
             handleDelete,
             columns,
-            closePanel
+            closePanel,
+            infoData,
+            stockData
         };
     },
     methods: {
-        handleCtaClick({ row }) {
-            console.log("holii");
-            if (row.current_stock < row.min_stock) {
-                // Abrimos el modal con los datos pre-cargados del repuesto
-                this.selectedPart = row;
-                this.showCreateModal = true;
-            }
-        }
+        // Eliminamos el método handleCtaClick ya que no se usará más
     }
 }
 </script>   
@@ -176,7 +185,7 @@ export default {
         </div>
 
         <div class="main-content">
-            <div class="left-container">
+            <div class="left-container" :class="{ 'panel-open': showInfoPanel }">
                 <RecordTable 
                     :columns="columns"
                     :data="inventoryParts"
@@ -184,70 +193,56 @@ export default {
                     search-placeholder="Buscar por código o nombre..."
                     :show-new-button="true"
                     :new-label="'Repuesto'"
-                    @action-click="handleCtaClick"
                     @info-click="handleInfoClick"
                     @new-click="() => showCreateModal = true"
                 />
             </div>
+
+            <!-- Panel de información -->
             <div class="right-container" :class="{ 'show-panel': showInfoPanel }">
-                <InformationPanel 
-                    v-if="showInfoPanel"
-                    :headerText="'Información Detallada del Repuesto'"
-                    class="info-panel"
-                >
-                    <template #header>
-                        <div class="panel-header">
-                            <h2>Información Detallada del Repuesto</h2>
-                            
+                <div v-if="showInfoPanel && selectedPart" class="panel-wrapper">
+                    <div class="panel-header">
+                        <h2>Part: {{ selectedPart.code }}</h2>
+                        <div class="panel-actions">
+                            <ButtonComponent
+                                variant="primary"
+                                size="sm"
+                                icon-left="pi pi-pencil"
+                                @clicked="showEditModal = true"
+                            >
+                                Edit
+                            </ButtonComponent>
+                            <ButtonComponent
+                                variant="warning"
+                                size="sm"
+                                icon-left="pi pi-times"
+                                @clicked="closePanel"
+                            >
+                                Close
+                            </ButtonComponent>
                         </div>
-                    </template>
+                    </div>
 
-                    <!-- Información General -->
-                    <InfoSection 
-                        v-if="selectedPart"
-                        :infoType="1"
-                        title="Información General"
-                        :data="selectedPart.generalInfo"
-                    />
-                    
-                    <!-- Información de Stock -->
-                    <InfoSection 
-                        v-if="selectedPart"
-                        :infoType="2"
-                        title="Información de Stock"
-                        :data="selectedPart.stockInfo"
-                    />
+                    <div class="panel-content">
+                        <InfoContainer title="General Information" :titleType="2">
+                            <InfoSection
+                                :infoType="2"
+                                :data="infoData"
+                            />
+                        </InfoContainer>
 
-                    <!-- Información de Órdenes de Compra -->
-                    <InfoSection 
-                        v-if="selectedPart && selectedPart.purchaseInfo?.length"
-                        :infoType="3"
-                        title="Órdenes de Compra"
-                        :data="selectedPart.purchaseInfo"
-                    />
-                </InformationPanel>
-                <div class="panel-actions">
-                                <button-component
-                                    variant="primary"
-                                    size="sm"
-                                    icon-left="pi pi-pencil"
-                                    @clicked="showEditModal = true"
-                                >
-                                    Editar
-                                </button-component>
-                                <button-component
-                                    variant="warning"
-                                    size="sm"
-                                    icon-left="pi pi-times"
-                                    @clicked="closePanel"
-                                >
-                                    Cerrar
-                                </button-component>
-                            </div>
+                        <InfoContainer title="Stock Information" :titleType="2">
+                            <InfoSection
+                                :infoType="2"
+                                :data="stockData"
+                            />
+                        </InfoContainer>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Modal de Crear -->
+        <!-- Modales -->
         <InventoryPartFormModal
             v-if="showCreateModal"
             :is-edit="false"
@@ -259,7 +254,6 @@ export default {
             }"
         />
 
-        <!-- Modal de Editar -->
         <InventoryPartFormModal
             v-if="showEditModal"
             :is-edit="true"
@@ -310,37 +304,65 @@ export default {
 
 .left-container {
     flex: 3;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    min-width: 0;
+    transition: flex 0.3s ease;
 }
 
-.search-section {
-    width: 100%;
+.left-container.panel-open {
+    flex: 2;
 }
 
 .right-container {
     flex: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    min-width: 0;
     overflow: hidden;
-    transition: all 0.3s ease;
-    width: 0;
+    transition: flex 0.3s ease;
+    background: var(--surface-card);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
 }
 
 .right-container.show-panel {
     flex: 1;
-    width: auto;
+    min-width: 400px;
+    max-width: 500px;
 }
 
-.info-panel {
+.panel-wrapper {
+    width: 100%;
     height: 100%;
-    transition: all 0.3s ease;
-    min-width: 350px;
-    background: var(--clr-surface);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-card);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--surface-border);
+    background: var(--surface-section);
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.panel-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.panel-content {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
 }
 
 /* Estados de stock */
@@ -354,29 +376,36 @@ export default {
 .completed { color: var(--clr-success); }
 .cancelled { color: var(--clr-danger); }
 
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--clr-border);
-}
-
-.panel-header h2 {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--clr-text);
-}
-
-.panel-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
 /* Asegurarse que los botones tengan el tamaño correcto */
 :deep(.button-component) {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .left-container {
+        flex: 1;
+    }
+
+    .left-container.panel-open {
+        flex: 1;
+    }
+
+    .right-container {
+        flex: 0;
+        min-width: 0;
+        max-width: 100%;
+        transition: flex 0.3s ease;
+    }
+
+    .right-container.show-panel {
+        flex: 1;
+        min-width: 100%;
+    }
 }
 </style>

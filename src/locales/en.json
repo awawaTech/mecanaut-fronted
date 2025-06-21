@@ -64,7 +64,8 @@
       "assetManagement": {
         "title": "Asset Management",
         "machinery": "Machinery",
-        "productionLines": "Production Lines"
+        "productionLines": "Production Lines",
+        "plants": "Plants"
       },
       "workOrder": "Work Orders",
       "maintenancePlan": "Maintenance Plan",
@@ -250,5 +251,124 @@
       },
       "confirmDelete": "Are you sure you want to delete this order?"
     }
+  },
+  "assetManagement": {
+    "breadcrumb": {
+      "plants": "Plants"
+    },
+    "search": {
+      "plants": {
+        "placeholder": "Search plant...",
+        "newButton": "New Plant"
+      }
+    },
+    "loading": {
+      "plants": "Loading plants...",
+      "plantInfo": "Loading plant information..."
+    },
+    "error": {
+      "retry": "Retry"
+    },
+    "plants": {
+      "columns": {
+        "name": "Name",
+        "address": "Address",
+        "city": "City",
+        "country": "Country",
+        "contactPhone": "Phone",
+        "contactEmail": "Email",
+        "status": "Status"
+      },
+      "details": {
+        "name": "Name",
+        "address": "Address",
+        "city": "City",
+        "country": "Country",
+        "contactPhone": "Phone",
+        "contactEmail": "Email",
+        "status": "Status",
+        "productionLines": "Production Lines"
+      },
+      "modal": {
+        "new": "New Plant",
+        "edit": "Edit Plant"
+      }
+    },
+    "buttons": {
+      "edit": "Edit",
+      "close": "Close",
+      "deactivate": "Deactivate",
+      "activate": "Activate"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "productionLines": {
+      "title": "Production Lines",
+      "selectPlant": "Select Plant",
+      "search": {
+        "placeholder": "Search production line...",
+        "newButton": "New Production Line"
+      },
+      "loading": {
+        "data": "Loading production lines...",
+        "details": "Loading production line details..."
+      },
+      "columns": {
+        "id": "ID",
+        "name": "Name",
+        "plant": "Plant",
+        "capacity": "Capacity",
+        "status": "Status",
+        "details": "Details",
+        "detailsButton": "View"
+      },
+      "details": {
+        "specifications": "Technical Specifications",
+        "description": "Description",
+        "capacity": "Capacity",
+        "currentStatus": "Current Status"
+      },
+      "modal": {
+        "new": "New Production Line",
+        "edit": "Edit Production Line"
+      }
+    },
+    "forms": {
+      "productionLine": {
+        "fields": {
+          "name": {
+            "label": "Name",
+            "placeholder": "Enter production line name",
+            "required": "Name is required"
+          },
+          "code": {
+            "label": "Code",
+            "placeholder": "Enter production line code",
+            "required": "Code is required"
+          },
+          "maxUnitsPerHour": {
+            "label": "Maximum Units per Hour",
+            "placeholder": "Enter maximum units per hour",
+            "required": "Maximum units per hour is required"
+          },
+          "unit": {
+            "label": "Unit",
+            "placeholder": "Enter unit of measurement",
+            "required": "Unit is required"
+          },
+          "plant": {
+            "label": "Plant",
+            "placeholder": "Select a plant",
+            "required": "Plant is required"
+          }
+        }
+      },
+      "buttons": {
+        "save": "Save",
+        "cancel": "Cancel"
+      }
+    }
   }
-  }
+}
