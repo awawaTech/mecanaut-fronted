@@ -83,7 +83,7 @@ const menuOptions = [
     icon: 'pi pi-wrench' 
   },
   { 
-    path: '/ejecucion', 
+    path: '/execution', 
     title: t('sidebar.menu.execution'), 
     icon: 'pi pi-play' 
   },
