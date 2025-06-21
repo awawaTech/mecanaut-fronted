@@ -69,6 +69,10 @@ const menuOptions = [
       { 
         path: '/gestion-activos/lineas-produccion', 
         title: t('sidebar.menu.assetManagement.productionLines')
+      },
+      { 
+        path: '/gestion-activos/plantas', 
+        title: t('sidebar.menu.assetManagement.plants')
       }
     ]
   },

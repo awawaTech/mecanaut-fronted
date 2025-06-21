@@ -12,6 +12,8 @@ import CreateAccountView from '../features/authentication/views/create-account.v
 import HomeView from '../public/pages/home-view.vue'
 import ExecutionView from '../features/execution/views/execution-view.component.vue'
 import WorkOrderView from '../features/work-order/views/work-order.component.vue'
+import PlantView from '../features/asset-management/views/plant-view.component.vue'
+import ProductionLineView from '../features/asset-management/views/production-line-view.component.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -24,8 +26,11 @@ const router = createRouter({
         { path: '/login', component: LoginView, name: 'login' },
         {path: '/create-account',component:CreateAccountView,name: 'create-account'},
         {path: '/orden-trabajo',component:WorkOrderView,name: 'orden-trabajo'},
-        { path: '/404', component: NotFoundView, name: 'not-found' },
+    
         {path:'/administracion-personal',component:PersonalView,name: 'personal'},
+        {path: '/gestion-activos/plantas',component:PlantView,name: 'plantas'},
+        {path: '/gestion-activos/lineas-produccion',component:ProductionLineView,name: 'lineas-produccion'},
+        { path: '/404', component: NotFoundView, name: 'not-found' }, 
         { path: '/:pathMatch(.*)*', redirect: '/404' },
         { path: '/', component: HomeView, name: 'home' },
         { path: '/execution', component: ExecutionView, name: 'execution' }
