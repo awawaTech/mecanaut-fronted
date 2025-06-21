@@ -13,7 +13,6 @@ import HomeView from '../public/pages/home-view.vue'
 import ExecutionView from '../features/execution/views/execution-view.component.vue'
 import WorkOrderView from '../features/work-order/views/work-order.component.vue'
 
-
 const router = createRouter({
     history: createWebHistory(),
     routes: [
