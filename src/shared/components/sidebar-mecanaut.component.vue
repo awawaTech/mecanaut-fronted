@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import ThemeToggle from './theme-toggle.component.vue';
@@ -30,8 +30,8 @@ watch(isExpanded, (newValue) => {
   emit('sidebar-toggle', newValue);
 });
 
-// Opciones del menú usando i18n
-const menuOptions = [
+// Opciones del menú usando computed para reactividad
+const menuOptions = computed(() => [
   { 
     path: '/', 
     title: t('sidebar.menu.home'), 
@@ -106,7 +106,7 @@ const menuOptions = [
     title: t('sidebar.menu.settings'), 
     icon: 'pi pi-cog' 
   }
-];
+]);
 
 // Métodos
 const toggleSidebar = () => {
@@ -163,7 +163,6 @@ const collapseSidebar = () => {
       </ul>
     </div>
 
-    <!-- Nueva sección de configuración -->
     <div class="settings-section">
       <div class="settings-header" v-if="isExpanded">
         <i class="pi pi-sliders-h"></i>

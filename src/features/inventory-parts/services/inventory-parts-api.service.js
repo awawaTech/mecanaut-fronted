@@ -34,7 +34,7 @@ export class InventoryPartsApiService {
             const inventoryPartResponse = await http.get(`https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/inventory-parts/${id}`);
             
             // Obtenemos las órdenes de compra relacionadas
-            const purchaseOrdersResponse = await http.get(`/purchase-orders?inventory_part_id=${id}`);
+            const purchaseOrdersResponse = await http.get(`${purchaseOrdersEndpoint}?inventory_part_id=${id}`);
             
             // Combinamos la información
             const completeData = {

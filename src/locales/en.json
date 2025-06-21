@@ -78,7 +78,7 @@
       "role": "Rol"
     },
     "settings": {
-      "title": "Configuración"
+      "title": "Settings"
     }
   },
   "authentication": {
@@ -369,6 +369,43 @@
         "save": "Save",
         "cancel": "Cancel"
       }
+    }
+  },
+  "inventoryParts": {
+    "title": "Parts Inventory",
+    "table": {
+      "code": "Code",
+      "name": "Name",
+      "currentStock": "Current Stock",
+      "stockStatus": "Stock Status",
+      "info": "Information",
+      "searchPlaceholder": "Search by code or name..."
+    },
+    "panel": {
+      "partPrefix": "Part: ",
+      "generalInfo": "General Information",
+      "stockInfo": "Stock Information",
+      "fields": {
+        "code": "Code",
+        "name": "Name",
+        "description": "Description",
+        "currentStock": "Current Stock",
+        "minStock": "Minimum Stock",
+        "unitPrice": "Unit Price",
+        "status": "Status",
+        "lastRestock": "Last Restock"
+      }
+    },
+    "buttons": {
+      "edit": "Edit",
+      "close": "Close",
+      "new": "New Part"
+    },
+    "stockStatus": {
+      "low": "Low",
+      "medium": "Medium",
+      "ok": "OK",
+      "outOfStock": "Out of Stock"
     }
   }
 }

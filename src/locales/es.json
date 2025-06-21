@@ -76,6 +76,9 @@
     },
     "user": {
       "role": "Rol"
+    },
+    "settings": {
+      "title": "Configuración"
     }
   },
   "authentication": {
@@ -367,6 +370,43 @@
         "save": "Guardar",
         "cancel": "Cancelar"
       }
+    }
+  },
+  "inventoryParts": {
+    "title": "Inventario de Repuestos",
+    "table": {
+      "code": "Código",
+      "name": "Nombre",
+      "currentStock": "Stock Actual",
+      "stockStatus": "Estado del Stock",
+      "info": "Información",
+      "searchPlaceholder": "Buscar por código o nombre..."
+    },
+    "panel": {
+      "partPrefix": "Repuesto: ",
+      "generalInfo": "Información General",
+      "stockInfo": "Información de Stock",
+      "fields": {
+        "code": "Código",
+        "name": "Nombre",
+        "description": "Descripción",
+        "currentStock": "Stock Actual",
+        "minStock": "Stock Mínimo",
+        "unitPrice": "Precio Unitario",
+        "status": "Estado",
+        "lastRestock": "Última Reposición"
+      }
+    },
+    "buttons": {
+      "edit": "Editar",
+      "close": "Cerrar",
+      "new": "Nuevo Repuesto"
+    },
+    "stockStatus": {
+      "low": "Bajo",
+      "medium": "Medio",
+      "ok": "OK",
+      "outOfStock": "Sin Stock"
     }
   }
 }
