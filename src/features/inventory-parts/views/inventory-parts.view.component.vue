@@ -58,6 +58,9 @@ export default {
         const handleInfoClick = async (item) => {
             console.log('handleInfoClick called with:', item);
             try {
+                // Activamos el panel primero
+                showInfoPanel.value = true;
+                
                 const completeData = await InventoryPartsApiService.getPartById(item.id);
                 console.log('Fetched data:', completeData);
                 
@@ -95,13 +98,13 @@ export default {
                     }
                 ];
 
-                showInfoPanel.value = true;
                 console.log('Panel should be shown:', showInfoPanel.value);
                 console.log('Selected part:', selectedPart.value);
                 console.log('Info data:', infoData.value);
                 console.log('Stock data:', stockData.value);
             } catch (error) {
                 console.error('Error loading part details:', error);
+                showInfoPanel.value = false;
             }
         };
 
@@ -208,7 +211,7 @@ export default {
                                 variant="primary"
                                 size="sm"
                                 icon-left="pi pi-pencil"
-                                @clicked="showEditModal = true"
+                                @click="showEditModal = true"
                             >
                                 Edit
                             </ButtonComponent>
@@ -216,7 +219,7 @@ export default {
                                 variant="warning"
                                 size="sm"
                                 icon-left="pi pi-times"
-                                @clicked="closePanel"
+                                @click="closePanel"
                             >
                                 Close
                             </ButtonComponent>
@@ -316,7 +319,10 @@ export default {
     flex: 0;
     min-width: 0;
     overflow: hidden;
-    transition: flex 0.3s ease;
+    transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(20px);
     background: var(--surface-card);
     border-radius: 8px;
     box-shadow: var(--card-shadow);
@@ -326,6 +332,9 @@ export default {
     flex: 1;
     min-width: 400px;
     max-width: 500px;
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
 }
 
 .panel-wrapper {
@@ -400,12 +409,13 @@ export default {
         flex: 0;
         min-width: 0;
         max-width: 100%;
-        transition: flex 0.3s ease;
+        transform: translateY(20px);
     }
 
     .right-container.show-panel {
         flex: 1;
         min-width: 100%;
+        transform: translateY(0);
     }
 }
 </style>
