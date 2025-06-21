@@ -163,5 +163,90 @@
       "finish": "Marcar como Finalizada",
       "save": "Guardar"
     }
+  },
+  "workOrder": {
+    "title": "Órdenes de Trabajo",
+    "search": {
+      "placeholder": "Buscar orden por código...",
+      "newOrder": "Nueva Orden",
+      "filters": {
+        "type": {
+          "label": "Tipo",
+          "options": {
+            "preventive": "Preventivo",
+            "corrective": "Correctivo"
+          }
+        }
+      }
+    },
+    "table": {
+      "code": "Código",
+      "date": "Fecha",
+      "type": "Tipo",
+      "assign": "Asignar",
+      "details": "Detalles"
+    },
+    "infoPanel": {
+      "orderPrefix": "Orden: ",
+      "edit": "Editar",
+      "close": "Cerrar",
+      "sections": {
+        "generalInfo": {
+          "title": "Información General",
+          "code": "Código",
+          "date": "Fecha",
+          "type": "Tipo",
+          "productionLine": "Línea de Producción"
+        },
+        "technicians": {
+          "title": "Técnicos Asignados",
+          "noTechnicians": "No hay técnicos asignados"
+        }
+      }
+    },
+    "form": {
+      "title": {
+        "new": "Nueva Orden de Trabajo",
+        "edit": "Editar Orden de Trabajo"
+      },
+      "fields": {
+        "code": {
+          "label": "Código",
+          "placeholder": "Ingrese el código"
+        },
+        "date": {
+          "label": "Fecha"
+        },
+        "productionLine": {
+          "label": "Línea de Producción",
+          "placeholder": "Seleccione una línea"
+        },
+        "type": {
+          "label": "Tipo",
+          "options": {
+            "preventive": "Preventivo",
+            "corrective": "Correctivo"
+          }
+        },
+        "technicians": {
+          "label": "Técnicos",
+          "add": "Agregar Técnico",
+          "remove": "Eliminar Técnico",
+          "emptyState": "No hay técnicos asignados",
+          "technician": "Técnico",
+          "select": "Seleccionar Técnico",
+          "selectPlaceholder": "Elegir un técnico",
+          "machines": "Máquinas Asignadas",
+          "machinesHint": "Seleccione las máquinas para este técnico"
+        }
+      },
+      "actions": {
+        "save": "Guardar",
+        "create": "Crear",
+        "cancel": "Cancelar",
+        "delete": "Eliminar"
+      },
+      "confirmDelete": "¿Está seguro que desea eliminar esta orden?"
+    }
   }
 }
