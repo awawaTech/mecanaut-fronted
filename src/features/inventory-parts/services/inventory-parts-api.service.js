@@ -5,8 +5,8 @@ import { InventoryPartAssembler } from '../../shared/services/inventory-part.ass
 import { PurchaseOrderAssembler } from '../../shared/services/purchase-order.assembler.js';
 
 const baseEndpoint = 'http://localhost:3000';
-const inventoryPartsEndpoint = `${baseEndpoint}/inventory-parts`;
-const purchaseOrdersEndpoint = `${baseEndpoint}/purchase-orders`;
+const inventoryPartsEndpoint = `https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/inventory-parts`;
+const purchaseOrdersEndpoint = `https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/purchase-orders`;
 
 const http = axios.create({
     baseURL: baseEndpoint
@@ -19,7 +19,7 @@ const http = axios.create({
 export class InventoryPartsApiService {
     static async getParts() {
         try {
-            const response = await http.get('/inventory-parts');
+            const response = await http.get('https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/inventory-parts');
             return InventoryPartAssembler.toEntitiesFromResponse(response);
         } catch (err) {
             console.error('Error cargando partes:', err);
@@ -31,10 +31,10 @@ export class InventoryPartsApiService {
     static async getPartById(id) {
         try {
             // Obtenemos la parte del inventario
-            const inventoryPartResponse = await http.get(`/inventory-parts/${id}`);
+            const inventoryPartResponse = await http.get(`https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/inventory-parts/${id}`);
             
             // Obtenemos las órdenes de compra relacionadas
-            const purchaseOrdersResponse = await http.get(`/purchase-orders?inventory_part_id=${id}`);
+            const purchaseOrdersResponse = await http.get(`${purchaseOrdersEndpoint}?inventory_part_id=${id}`);
             
             // Combinamos la información
             const completeData = {

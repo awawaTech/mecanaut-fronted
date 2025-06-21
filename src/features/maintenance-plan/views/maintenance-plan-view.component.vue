@@ -94,6 +94,7 @@
 </template>
 
 <script setup>
+
 import { ref, onMounted, computed } from 'vue';
 import { maintenancePlanService } from '../services/maintenance-plan.service.js';
 import { maintenanceDynamicPlanService } from '../services/maintenance-dynamic-plan.service.js';
@@ -151,6 +152,59 @@ const searchFilters = [
       { label: '1 día', value: 1 },
       { label: '2-3 días', value: '2-3' },
       { label: 'Más de 3 días', value: '4+' }
+    ]
+  }
+];
+
+// Datos hardcodeados para planes de mantenimiento
+const MOCK_PLANS_DATA = [
+  {
+    "planId": 1,
+    "planName": "Plan de Mantenimiento 1",
+    "productionLineId": 2,
+    "startDate": "2025-05-13T23:41:36.137Z",
+    "durationDays": 1,
+    "userCreator": 1,
+    "items": [
+      {
+        "dayNumber": 1,
+        "tasks": [
+          {
+            "taskId": 1,
+            "taskName": "Verificación de niveles",
+            "taskDescription": "Revisar niveles de aceite",
+            "machineIds": [1, 2]
+          },
+          {
+            "taskId": 2,
+            "taskName": "Limpieza general",
+            "taskDescription": "Limpiar los filtros",
+            "machineIds": [3]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "planId": 2,
+    "planName": "Hola",
+    "productionLineId": 1,
+    "startDate": "2025-04-30",
+    "durationDays": 1,
+    "userCreator": 1,
+    "items": [
+      {
+        "dayNumber": 1,
+        "tasks": [
+          {
+            "taskId": 5,
+            "taskName": "cuy",
+            "taskDescription": "cuyo",
+            "machineIds": []
+          }
+        ]
+      }
     ]
   }
 ];
@@ -257,7 +311,8 @@ const loadPlans = async () => {
   loading.value = true;
   error.value = '';
   try {
-    allPlansData.value = await maintenancePlanService.getAllPlans();
+    // Usar los datos hardcodeados en lugar de llamar al servicio
+    allPlansData.value = MOCK_PLANS_DATA;
     filterPlans(); // Aplicar filtros a los datos cargados
   } catch (err) {
     error.value = err?.message ?? 'Error inesperado';

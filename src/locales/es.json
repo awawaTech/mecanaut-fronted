@@ -64,7 +64,8 @@
       "assetManagement": {
         "title": "Gestión de Activos",
         "machinery": "Maquinarias",
-        "productionLines": "Líneas de Producción"
+        "productionLines": "Líneas de Producción",
+        "plants": "Plantas"
       },
       "workOrder": "Órdenes de Trabajo",
       "maintenancePlan": "Plan de Mantenimiento",
@@ -75,6 +76,337 @@
     },
     "user": {
       "role": "Rol"
+    },
+    "settings": {
+      "title": "Configuración"
+    }
+  },
+  "authentication": {
+    "create": "Crear Cuenta",
+    "happy": "¡Estamos felices de que te nos unas!",
+    "company": "Nombre de la empresa",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "repeat": "Repetir",
+    "read": "He leído y acepto los",
+    "terms": "términos y condiciones",
+    "have": "¿Ya tienes una cuenta?",
+    "login": "Iniciar Sesión",
+    "back": "¡Nos alegra tenerte de vuelta!",
+    "forgot": "Olvidé mi contraseña",
+    "dont": "¿No tienes una cuenta?"
+  },
+  "dashboard": {
+    "welcome": "¡Bienvenido",
+    "selectPlant": "Seleccionar Planta",
+    "newOrder": "Nueva Orden",
+    "completedTasks": "Tareas Completadas",
+    "systemEfficiency": "Eficiencia del Sistema",
+    "mainMetrics": "Métricas Principales",
+    "generalEfficiency": "Eficiencia General",
+    "downtime": "Tiempo de Inactividad",
+    "ordersCompleted": "Órdenes Completadas",
+    "maintenanceCosts": "Costos de Mantenimiento",
+    "quickAccess": "Accesos Rápidos",
+    "maintenance": "Mantenimientos",
+    "inventory": "Inventario",
+    "reports": "Reportes",
+    "equipmentStatus": "Estado de Equipos",
+    "viewAll": "Ver todos",
+    "operational": "Operativo",
+    "warning": "Atención Requerida",
+    "inMaintenance": "En Mantenimiento",
+    "inventoryHealth": "Salud del Inventario",
+    "critical": "Crítico",
+    "normal": "Normal",
+    "recentActivity": "Actividad Reciente",
+    "personalSummary": "Resumen Personal",
+    "teamPerformance": "Rendimiento del Equipo",
+    "goal": "Meta",
+    "inProgress": "En Progreso",
+    "tip": "Sugerencia",
+    "tipText": "Revisa las órdenes pendientes de alta prioridad para mejorar el tiempo de respuesta.",
+    "metrics": {
+      "availability": "Disponibilidad",
+      "performance": "Rendimiento",
+      "quality": "Calidad",
+      "maintenance": "Mantenimiento",
+      "breakdowns": "Averías",
+      "setup": "Configuración",
+      "onTime": "En Tiempo",
+      "delayed": "Retrasadas",
+      "critical": "Críticas",
+      "parts": "Repuestos",
+      "labor": "Mano de Obra",
+      "others": "Otros"
+    }
+  },
+  "execution": {
+    "title": "Ejecución de Órdenes de Trabajo",
+    "workOrder": "Orden de Trabajo",
+    "tasks": {
+      "title": "Tareas",
+      "drainOil": "Drenar aceite viejo al depósito aprobado",
+      "replaceFilter": "Reemplazar filtro hidráulico",
+      "refillOil": "Rellenar con aceite nuevo",
+      "testRun": "Arranque de prueba y verificación de presión",
+      "inspection": "Inspección de fugas en un recorrido de 5 min"
+    },
+    "observations": {
+      "title": "Observaciones",
+      "placeholder": "Texto"
+    },
+    "products": {
+      "title": "Productos utilizados",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "addProduct": "Agregar producto",
+      "productPlaceholder": "Nombre del producto"
+    },
+    "actions": {
+      "finish": "Marcar como Finalizada",
+      "save": "Guardar"
+    }
+  },
+  "workOrder": {
+    "title": "Órdenes de Trabajo",
+    "search": {
+      "placeholder": "Buscar orden por código...",
+      "newOrder": "Nueva Orden",
+      "filters": {
+        "type": {
+          "label": "Tipo",
+          "options": {
+            "preventive": "Preventivo",
+            "corrective": "Correctivo"
+          }
+        }
+      }
+    },
+    "table": {
+      "code": "Código",
+      "date": "Fecha",
+      "type": "Tipo",
+      "assign": "Asignar",
+      "details": "Detalles"
+    },
+    "infoPanel": {
+      "orderPrefix": "Orden: ",
+      "edit": "Editar",
+      "close": "Cerrar",
+      "sections": {
+        "generalInfo": {
+          "title": "Información General",
+          "code": "Código",
+          "date": "Fecha",
+          "type": "Tipo",
+          "productionLine": "Línea de Producción"
+        },
+        "technicians": {
+          "title": "Técnicos Asignados",
+          "noTechnicians": "No hay técnicos asignados"
+        }
+      }
+    },
+    "form": {
+      "title": {
+        "new": "Nueva Orden de Trabajo",
+        "edit": "Editar Orden de Trabajo"
+      },
+      "fields": {
+        "code": {
+          "label": "Código",
+          "placeholder": "Ingrese el código"
+        },
+        "date": {
+          "label": "Fecha"
+        },
+        "productionLine": {
+          "label": "Línea de Producción",
+          "placeholder": "Seleccione una línea"
+        },
+        "type": {
+          "label": "Tipo",
+          "options": {
+            "preventive": "Preventivo",
+            "corrective": "Correctivo"
+          }
+        },
+        "technicians": {
+          "label": "Técnicos",
+          "add": "Agregar Técnico",
+          "remove": "Eliminar Técnico",
+          "emptyState": "No hay técnicos asignados",
+          "technician": "Técnico",
+          "select": "Seleccionar Técnico",
+          "selectPlaceholder": "Elegir un técnico",
+          "machines": "Máquinas Asignadas",
+          "machinesHint": "Seleccione las máquinas para este técnico"
+        }
+      },
+      "actions": {
+        "save": "Guardar",
+        "create": "Crear",
+        "cancel": "Cancelar",
+        "delete": "Eliminar"
+      },
+      "confirmDelete": "¿Está seguro que desea eliminar esta orden?"
+    }
+  },
+  "assetManagement": {
+    "breadcrumb": {
+      "plants": "Plantas"
+    },
+    "search": {
+      "plants": {
+        "placeholder": "Buscar planta...",
+        "newButton": "Nueva Planta"
+      }
+    },
+    "loading": {
+      "plants": "Cargando plantas...",
+      "plantInfo": "Cargando información de la planta..."
+    },
+    "error": {
+      "retry": "Reintentar"
+    },
+    "plants": {
+      "columns": {
+        "name": "Nombre",
+        "address": "Dirección",
+        "city": "Ciudad",
+        "country": "País",
+        "contactPhone": "Teléfono",
+        "contactEmail": "Email",
+        "status": "Estado"
+      },
+      "details": {
+        "name": "Nombre",
+        "address": "Dirección",
+        "city": "Ciudad",
+        "country": "País",
+        "contactPhone": "Teléfono",
+        "contactEmail": "Email",
+        "status": "Estado",
+        "productionLines": "Líneas de Producción"
+      },
+      "modal": {
+        "new": "Nueva Planta",
+        "edit": "Editar Planta"
+      }
+    },
+    "buttons": {
+      "edit": "Editar",
+      "close": "Cerrar",
+      "deactivate": "Desactivar",
+      "activate": "Activar"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "productionLines": {
+      "title": "Líneas de Producción",
+      "selectPlant": "Seleccionar Planta",
+      "search": {
+        "placeholder": "Buscar línea de producción...",
+        "newButton": "Nueva Línea de Producción"
+      },
+      "loading": {
+        "data": "Cargando líneas de producción...",
+        "details": "Cargando detalles de la línea..."
+      },
+      "columns": {
+        "id": "ID",
+        "name": "Nombre",
+        "plant": "Planta",
+        "capacity": "Capacidad",
+        "status": "Estado",
+        "details": "Detalles",
+        "detailsButton": "Ver"
+      },
+      "details": {
+        "specifications": "Especificaciones Técnicas",
+        "description": "Descripción",
+        "capacity": "Capacidad",
+        "currentStatus": "Estado Actual"
+      },
+      "modal": {
+        "new": "Nueva Línea de Producción",
+        "edit": "Editar Línea de Producción"
+      }
+    },
+    "forms": {
+      "productionLine": {
+        "fields": {
+          "name": {
+            "label": "Nombre",
+            "placeholder": "Ingrese nombre de la línea de producción",
+            "required": "El nombre es requerido"
+          },
+          "code": {
+            "label": "Código",
+            "placeholder": "Ingrese código de la línea",
+            "required": "El código es requerido"
+          },
+          "maxUnitsPerHour": {
+            "label": "Unidades Máximas por Hora",
+            "placeholder": "Ingrese unidades máximas por hora",
+            "required": "Las unidades máximas por hora son requeridas"
+          },
+          "unit": {
+            "label": "Unidad",
+            "placeholder": "Ingrese unidad de medida",
+            "required": "La unidad es requerida"
+          },
+          "plant": {
+            "label": "Planta",
+            "placeholder": "Seleccione una planta",
+            "required": "La planta es requerida"
+          }
+        }
+      },
+      "buttons": {
+        "save": "Guardar",
+        "cancel": "Cancelar"
+      }
+    }
+  },
+  "inventoryParts": {
+    "title": "Inventario de Repuestos",
+    "table": {
+      "code": "Código",
+      "name": "Nombre",
+      "currentStock": "Stock Actual",
+      "stockStatus": "Estado del Stock",
+      "info": "Información",
+      "searchPlaceholder": "Buscar por código o nombre..."
+    },
+    "panel": {
+      "partPrefix": "Repuesto: ",
+      "generalInfo": "Información General",
+      "stockInfo": "Información de Stock",
+      "fields": {
+        "code": "Código",
+        "name": "Nombre",
+        "description": "Descripción",
+        "currentStock": "Stock Actual",
+        "minStock": "Stock Mínimo",
+        "unitPrice": "Precio Unitario",
+        "status": "Estado",
+        "lastRestock": "Última Reposición"
+      }
+    },
+    "buttons": {
+      "edit": "Editar",
+      "close": "Cerrar",
+      "new": "Nuevo Repuesto"
+    },
+    "stockStatus": {
+      "low": "Bajo",
+      "medium": "Medio",
+      "ok": "OK",
+      "outOfStock": "Sin Stock"
     }
   }
 }

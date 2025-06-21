@@ -1,9 +1,9 @@
 <script>
-import { RouterView } from 'vue-router'
+import {RouterView, useRoute} from 'vue-router'
 import HeaderComponent from './shared/components/header.component.vue'
 import Toast from 'primevue/toast'
 import SidebarMecanaut from './shared/components/sidebar-mecanaut.component.vue'
-import { ref, provide } from 'vue'
+import {ref, provide, computed} from 'vue'
 
 export default {
     name: 'App',
@@ -14,11 +14,17 @@ export default {
         SidebarMecanaut
     },
     setup() {
-        const sidebarExpanded = ref(false);
+      const route = useRoute();
+// Lista de rutas donde NO debe mostrarse el sidebar
+      const authRoutes = ['/login', '/create-account'];
+      const isAuthPage = computed(() => authRoutes.includes(route.path));
+
+      const sidebarExpanded = ref(false);
         provide('sidebarExpanded', sidebarExpanded);
         
         return {
-            sidebarExpanded
+            sidebarExpanded,
+            isAuthPage
         }
     }
 }
@@ -26,10 +32,10 @@ export default {
 
 <template>
     <div class="app">
-        <div class="sidebar-container" :class="{ 'expanded': sidebarExpanded }">
+        <div v-if="!isAuthPage" class="sidebar-container" :class="{ 'expanded': sidebarExpanded }">
             <SidebarMecanaut @sidebar-toggle="sidebarExpanded = $event" />
         </div>
-        <main class="main-content">
+        <main :class="{ 'no-padding': isAuthPage }" class="main-content">
             <RouterView />
         </main>
         <Toast />
@@ -67,5 +73,9 @@ export default {
     height: 100vh;
     box-sizing: border-box;
     transition: all 0.3s ease;
+}
+
+.main-content.no-padding {
+  padding: 0;
 }
 </style>
