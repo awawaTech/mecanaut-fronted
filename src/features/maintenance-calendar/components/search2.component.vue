@@ -57,6 +57,10 @@ export default {
       emit('filter-change', {});
     };
 
+    const onEnter = () => {
+      emit('enter', searchText.value);
+    };
+
     return {
       t,
       searchText,
@@ -66,7 +70,8 @@ export default {
       onSearchChange,
       onFilterChange,
       onActionClick,
-      clearFilters
+      clearFilters,
+      onEnter,
     };
   }
 }
@@ -84,6 +89,7 @@ export default {
             :placeholder="computedPlaceholder()"
             v-model="searchText"
             @input="onSearchChange"
+            @keyup.enter="onEnter"
         />
       </div>
 
