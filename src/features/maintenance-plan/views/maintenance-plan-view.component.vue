@@ -4,6 +4,44 @@
       <h1>Planes de Mantenimiento</h1>
     </header>
 
+    <!-- Selectores de filtrado -->
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="plant-selector">Planta:</label>
+        <select 
+          id="plant-selector" 
+          v-model="selectedPlantId" 
+          @change="onPlantChange"
+          class="filter-select">
+          <option value="">Todas las plantas</option>
+          <option 
+            v-for="plant in plants" 
+            :key="plant.id" 
+            :value="plant.id">
+            {{ plant.name }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="production-line-selector">Línea de Producción:</label>
+        <select 
+          id="production-line-selector" 
+          v-model="selectedProductionLineId" 
+          @change="onProductionLineChange"
+          class="filter-select"
+          :disabled="!selectedPlantId">
+          <option value="">Todas las líneas</option>
+          <option 
+            v-for="line in productionLines" 
+            :key="line.id" 
+            :value="line.id">
+            {{ line.name }} ({{ line.code }})
+          </option>
+        </select>
+      </div>
+    </div>
+
     <main class="main-container">
       <div class="search-container" :class="{'full-width': !showDetailPanel}">
         <!-- El componente app-record-table ya implementa la búsqueda internamente -->
@@ -23,7 +61,7 @@
             :data="filteredPlansData"
             :search-placeholder="'Buscar plan de mantenimiento...'"
             :new-label="'Plan'"
-            :searchable-columns="['planId', 'planName', 'productionLineId']"
+            :searchable-columns="['dynamicPlanId', 'planName', 'parameter', 'maxValue']"
             :show-new-button="true"
             @search="onSearch"
             @filter-change="onFilterChange"
@@ -47,7 +85,7 @@
         
         <div v-if="!loading && selectedPlan">
           <app-information-panel
-            :headerText="'Plan: ' + selectedPlan.planName + ' (ID: ' + selectedPlan.planId + ')'"
+            :headerText="'Plan: ' + selectedPlan.planName + ' (ID: ' + selectedPlan.dynamicPlanId + ')'"
             :showHeader="true"
             :showPrimaryButton="true"
             :primaryButtonText="'Editar'">
@@ -123,6 +161,12 @@ const planInfoData = ref([]);
 const loading = ref(false);
 const error = ref('');
 
+// Variables para los selectores
+const plants = ref([]);
+const productionLines = ref([]);
+const selectedPlantId = ref('');
+const selectedProductionLineId = ref('');
+
 // Estados para los modales
 const showChoosePlanModal = ref(false);
 const showDynamicForm = ref(false);
@@ -135,77 +179,64 @@ const activeFilters = ref({});
 // Configuración de filtros para el componente de búsqueda
 const searchFilters = [
   {
-    label: 'Línea de producción',
-    value: 'productionLineId',
+    label: 'Parámetro',
+    value: 'parameter',
     options: [
-      { label: 'Todas', value: '' },
-      { label: 'Línea 1', value: 1 },
-      { label: 'Línea 2', value: 2 },
-      { label: 'Línea 3', value: 3 }
+      { label: 'Todos', value: '' },
+      { label: 'Kilometraje', value: 'kilometraje' },
+      { label: 'Temperatura', value: 'temperatura' },
+      { label: 'Presión', value: 'presion' },
+      { label: 'Vibración', value: 'vibracion' }
     ]
   },
   {
-    label: 'Duración',
-    value: 'durationDays',
+    label: 'Número de tareas',
+    value: 'taskCount',
     options: [
-      { label: 'Todas', value: '' },
-      { label: '1 día', value: 1 },
-      { label: '2-3 días', value: '2-3' },
-      { label: 'Más de 3 días', value: '4+' }
+      { label: 'Todos', value: '' },
+      { label: '1 tarea', value: 1 },
+      { label: '2-3 tareas', value: '2-3' },
+      { label: 'Más de 3 tareas', value: '4+' }
     ]
   }
 ];
 
-// Datos hardcodeados para planes de mantenimiento
+// Datos hardcodeados para planes de mantenimiento dinámicos
 const MOCK_PLANS_DATA = [
   {
-    "planId": 1,
-    "planName": "Plan de Mantenimiento 1",
-    "productionLineId": 2,
-    "startDate": "2025-05-13T23:41:36.137Z",
-    "durationDays": 1,
-    "userCreator": 1,
-    "items": [
+    "dynamicPlanId": 1,
+    "planName": "Plan Dinámico - Kilometraje",
+    "parameter": "kilometraje",
+    "maxValue": "10000",
+    "machineIds": [101, 102],
+    "tasks": [
       {
-        "dayNumber": 1,
-        "tasks": [
-          {
-            "taskId": 1,
-            "taskName": "Verificación de niveles",
-            "taskDescription": "Revisar niveles de aceite",
-            "machineIds": [1, 2]
-          },
-          {
-            "taskId": 2,
-            "taskName": "Limpieza general",
-            "taskDescription": "Limpiar los filtros",
-            "machineIds": [3]
-          }
-        ]
+        "taskId": 1,
+        "taskName": "Verificación de niveles",
+        "taskDescription": "Revisar niveles de aceite"
+      },
+      {
+        "taskId": 2,
+        "taskName": "Limpieza general",
+        "taskDescription": "Limpiar los filtros"
       }
-    ]
+    ],
+    "userCreator": 1
   },
   {
-    "id": 2,
-    "planId": 2,
-    "planName": "Hola",
-    "productionLineId": 1,
-    "startDate": "2025-04-30",
-    "durationDays": 1,
-    "userCreator": 1,
-    "items": [
+    "dynamicPlanId": 2,
+    "planName": "Plan Dinámico - Temperatura",
+    "parameter": "temperatura",
+    "maxValue": "85",
+    "machineIds": [103, 104],
+    "tasks": [
       {
-        "dayNumber": 1,
-        "tasks": [
-          {
-            "taskId": 5,
-            "taskName": "cuy",
-            "taskDescription": "cuyo",
-            "machineIds": []
-          }
-        ]
+        "taskId": 3,
+        "taskName": "Control de temperatura",
+        "taskDescription": "Verificar sistema de refrigeración"
       }
-    ]
+    ],
+    "userCreator": 1
   }
 ];
 
@@ -223,33 +254,89 @@ const filterPlans = () => {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(plan => 
       plan.planName?.toLowerCase().includes(query) || 
-      plan.planId?.toString().includes(query)
+      plan.dynamicPlanId?.toString().includes(query) ||
+      plan.parameter?.toLowerCase().includes(query) ||
+      plan.maxValue?.toString().includes(query)
     );
   }
   
-  // Filtrar por línea de producción
-  if (activeFilters.value.productionLineId) {
+  // Filtrar por planta (si se selecciona una planta específica)
+  if (selectedPlantId.value) {
+    // Por ahora filtramos por línea de producción, pero en el futuro
+    // podríamos tener un campo plantId en los planes
+    if (selectedProductionLineId.value) {
+      // Para planes dinámicos, podríamos filtrar por máquinas que pertenezcan a la línea
+      // Por ahora no aplicamos este filtro ya que no tenemos esa relación
+    }
+  }
+  
+  // Filtrar por parámetro
+  if (activeFilters.value.parameter) {
     filtered = filtered.filter(plan => 
-      plan.productionLineId === parseInt(activeFilters.value.productionLineId)
+      plan.parameter?.toLowerCase().includes(activeFilters.value.parameter.toLowerCase())
     );
   }
   
-  // Filtrar por duración
-  if (activeFilters.value.durationDays) {
-    const durationFilter = activeFilters.value.durationDays;
+  // Filtrar por número de tareas
+  if (activeFilters.value.taskCount) {
+    const taskCountFilter = activeFilters.value.taskCount;
     
-    if (durationFilter === 1) {
-      filtered = filtered.filter(plan => plan.durationDays === 1);
-    } else if (durationFilter === '2-3') {
-      filtered = filtered.filter(plan => plan.durationDays >= 2 && plan.durationDays <= 3);
-    } else if (durationFilter === '4+') {
-      filtered = filtered.filter(plan => plan.durationDays >= 4);
+    if (taskCountFilter === 1) {
+      filtered = filtered.filter(plan => (plan.tasks ? plan.tasks.length : 0) === 1);
+    } else if (taskCountFilter === '2-3') {
+      filtered = filtered.filter(plan => {
+        const taskCount = plan.tasks ? plan.tasks.length : 0;
+        return taskCount >= 2 && taskCount <= 3;
+      });
+    } else if (taskCountFilter === '4+') {
+      filtered = filtered.filter(plan => (plan.tasks ? plan.tasks.length : 0) >= 4);
     }
   }
   
   filteredPlansData.value = filtered;
 };
 
+
+// Función para cargar plantas
+const loadPlants = async () => {
+  try {
+    const plantsData = await maintenanceDynamicPlanService.getPlants();
+    plants.value = plantsData;
+    console.log('Plantas cargadas:', plantsData);
+  } catch (error) {
+    console.error('Error al cargar plantas:', error);
+    plants.value = [];
+  }
+};
+
+// Función para cargar líneas de producción
+const loadProductionLines = async (plantId) => {
+  try {
+    if (!plantId) {
+      productionLines.value = [];
+      return;
+    }
+    
+    const linesData = await maintenanceDynamicPlanService.getProductionLines(plantId);
+    productionLines.value = linesData;
+    console.log('Líneas de producción cargadas:', linesData);
+  } catch (error) {
+    console.error('Error al cargar líneas de producción:', error);
+    productionLines.value = [];
+  }
+};
+
+// Manejador de cambio de planta
+const onPlantChange = async () => {
+  selectedProductionLineId.value = ''; // Resetear línea de producción
+  await loadProductionLines(selectedPlantId.value);
+  filterPlans(); // Reaplicar filtros
+};
+
+// Manejador de cambio de línea de producción
+const onProductionLineChange = () => {
+  filterPlans(); // Reaplicar filtros
+};
 
 const loadDynamicPlans = async () => {
   try {
@@ -287,11 +374,10 @@ const loadDynamicPlans = async () => {
 
 
 const tableColumns = ref([
-  { key: 'planId', label: 'ID', type: 'texto' },
+  { key: 'dynamicPlanId', label: 'ID', type: 'texto' },
   { key: 'planName', label: 'Nombre', type: 'texto' },
-  { key: 'productionLineId', label: 'Línea de Producción', type: 'texto', filterable: true },
-  { key: 'startDate', label: 'Fecha Inicio', type: 'texto' },
-  { key: 'durationDays', label: 'Duración (días)', type: 'texto', filterable: true },
+  { key: 'parameter', label: 'Parámetro', type: 'texto' },
+  { key: 'maxValue', label: 'Mantenimiento cada', type: 'texto' },
   { key: 'actions', label: 'Acciones', type: 'cta', ctaLabel: 'Ver', ctaVariant: 'primary' }
 ]);
 
@@ -325,7 +411,8 @@ const loadPlans = async () => {
 
 // Funciones para el manejo de modales
 const openNewPlanModal = () => {
-  showChoosePlanModal.value = true;
+  // Ir directamente al formulario de plan dinámico
+  showDynamicForm.value = true;
 };
 
 const closeChoosePlanModal = () => {
@@ -356,34 +443,26 @@ const onPlanCreated = async (plan) => {
   await loadDynamicPlans();
 };
 
-const onRowClick = ({ row }) => {
+const onRowClick = ({ row }) => { 
   selectedPlan.value = row;
   
   // Preparar datos para el panel de información
   planInfoData.value = [
-    { subtitle: 'ID del Plan', info: row.planId },
+    { subtitle: 'ID del Plan', info: row.dynamicPlanId },
     { subtitle: 'Nombre', info: row.planName },
-    { subtitle: 'Línea de Producción', info: row.productionLineId },
-    { subtitle: 'Fecha de Inicio', info: formatDate(row.startDate) },
-    { subtitle: 'Duración', info: `${row.durationDays} días` },
+    { subtitle: 'Parámetro', info: row.parameter },
+    { subtitle: 'Mantenimiento cada', info: row.maxValue },
+    { subtitle: 'Máquinas', info: row.machineIds ? row.machineIds.join(', ') : 'N/A' },
     { subtitle: 'Creado por', info: row.userCreator }
   ];
   
   // Preparar las tareas para el panel
   planTasksItems.value = [];
-  if (row.items) {
-    row.items.forEach(item => {
-      if (item.tasks && Array.isArray(item.tasks)) {
-        item.tasks.forEach(task => {
-          const machineInfo = task.machineIds && task.machineIds.length > 0 
-            ? ` - Máquinas: ${task.machineIds.join(', ')}`
-            : ' - Para todas las máquinas';
-            
-          planTasksItems.value.push({
-            model: `${task.taskName} - Día ${item.dayNumber}${machineInfo}`
-          });
-        });
-      }
+  if (row.tasks && Array.isArray(row.tasks)) {
+    row.tasks.forEach(task => {
+      planTasksItems.value.push({
+        model: task.taskName
+      });
     });
   }
   
@@ -404,6 +483,7 @@ const formatDate = (dateString) => {
 onMounted(() => {
   loadPlans();
   loadDynamicPlans(); // Cargar planes dinámicos al iniciar
+  loadPlants(); // Cargar plantas al iniciar
 });
 </script>
 
@@ -415,6 +495,55 @@ onMounted(() => {
   background: var(--clr-bg, #f5f7f9);
   transition: background 0.3s;
   padding: 1.5rem;
+}
+
+.filters-container {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--clr-surface, #fff);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--clr-shadow, rgba(0,0,0,0.1));
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 180px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: var(--clr-text, #333);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--clr-border, #ddd);
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--clr-surface, #fff);
+  color: var(--clr-text, #333);
+  font-size: 0.85rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-width: 120px;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--clr-primary, #007bff);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.filter-select:disabled {
+  background-color: var(--clr-disabled, #f5f5f5);
+  color: var(--clr-text-muted, #999);
+  cursor: not-allowed;
 }
 
 .breadcrumb-header {
@@ -524,6 +653,18 @@ onMounted(() => {
     margin-top: 0.5em;
     height: auto;
     min-height: 50vh;
+  }
+  
+  .filters-container {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+  
+  .filter-group {
+    min-width: unset;
+    width: 100%;
+    justify-content: space-between;
   }
 }
 

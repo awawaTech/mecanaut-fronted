@@ -111,12 +111,12 @@ const menuOptions = computed(() => [
     path: '/execution', 
     title: t('sidebar.menu.execution'), 
     icon: 'pi pi-play' 
-  },
+  },/*
   { 
     path: '/dashboard', 
     title: t('sidebar.menu.dashboard'), 
     icon: 'pi pi-chart-bar' 
-  },
+  },*/
   { 
     path: '/administracion-personal', 
     title: t('sidebar.menu.staffManagement'), 

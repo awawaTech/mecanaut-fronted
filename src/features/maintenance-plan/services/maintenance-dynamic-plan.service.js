@@ -6,6 +6,26 @@ const http = axios.create({
   timeout: 8000,
 });
 
+// Nueva instancia para la API externa
+const externalHttp = axios.create({
+  baseURL: 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api',
+  timeout: 8000,
+});
+
+// Función para obtener el token de autenticación
+const getAuthToken = () => {
+    return localStorage.getItem('token');
+};
+
+// Interceptor para agregar el token en cada petición a la API externa
+externalHttp.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 export class MaintenanceDynamicPlanService {
   /* -------- READ ALL -------- */
   async getAllPlans() {
@@ -117,6 +137,37 @@ export class MaintenanceDynamicPlanService {
     } catch (error) {
       console.error('Error al eliminar plan dinámico', error);
       return false;
+    }
+  }
+
+  /* -------- EXTERNAL API ENDPOINTS -------- */
+  
+  /**
+   * Obtiene todas las plantas disponibles
+   * @returns {Promise<Array>} - Lista de plantas
+   */
+  async getPlants() {
+    try {
+      const response = await externalHttp.get('/v1/plants');
+      return response.data;
+    } catch (err) {
+      console.error('Error cargando plantas:', err);
+      return [];
+    }
+  }
+
+  /**
+   * Obtiene las líneas de producción por plantId
+   * @param {number} plantId - ID de la planta
+   * @returns {Promise<Array>} - Lista de líneas de producción
+   */
+  async getProductionLines(plantId) {
+    try {
+      const response = await externalHttp.get(`/v1/production-lines?plantId=${plantId}`);
+      return response.data;
+    } catch (err) {
+      console.error('Error cargando líneas de producción:', err);
+      return [];
     }
   }
 }

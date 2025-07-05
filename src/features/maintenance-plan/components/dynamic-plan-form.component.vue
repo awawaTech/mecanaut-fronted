@@ -33,7 +33,7 @@
         </div>
         
         <div class="form-group">
-          <label>Tope máximo</label>
+          <label>Mantenimiento cada</label>
           <input 
             type="number" 
             v-model="formData.parameterThreshold" 
@@ -63,7 +63,6 @@
           
           <div class="tasks-header">
             <div class="task-column">Tarea</div>
-            <div class="machine-column">Máquina</div>
             <div class="actions-column"></div>
           </div>
           
@@ -85,23 +84,6 @@
                 placeholder="Descripción"
                 class="form-control description"
               />
-            </div>
-            <div class="machine-column">
-              <div class="machine-chips">
-                <div 
-                  v-for="machineId in task.machineIds" 
-                  :key="machineId"
-                  class="machine-chip selected small"
-                >
-                  {{ getMachineName(machineId) }}
-                  <span class="remove-icon" @click="removeMachineFromTask(index, machineId)">×</span>
-                </div>
-                <button 
-                  class="add-machine-btn" 
-                  @click="showMachineSelector(index)"
-                  v-if="task.machineIds.length < selectedMachines.length"
-                >+</button>
-              </div>
             </div>
             <div class="actions-column">
               <button class="remove-task-btn" @click="removeTask(index)">×</button>
@@ -150,8 +132,7 @@ const isFormValid = computed(() => {
          formData.value.tasks.length > 0 &&
          formData.value.tasks.every(task => 
            task.taskName.trim() !== '' && 
-           task.taskDescription.trim() !== '' &&
-           task.machineIds.length > 0
+           task.taskDescription.trim() !== ''
          );
 });
 
@@ -181,8 +162,7 @@ const addTask = () => {
   formData.value.tasks.push({
     taskId: null,
     taskName: '',
-    taskDescription: '',
-    machineIds: []
+    taskDescription: ''
   });
 };
 
@@ -190,24 +170,7 @@ const removeTask = (index) => {
   formData.value.tasks.splice(index, 1);
 };
 
-const showMachineSelector = (taskIndex) => {
-  const task = formData.value.tasks[taskIndex];
-  const availableMachinesForTask = selectedMachines.value.filter(
-    machineId => !task.machineIds.includes(machineId)
-  );
-  
-  if (availableMachinesForTask.length > 0) {
-    task.machineIds.push(availableMachinesForTask[0]);
-  }
-};
 
-const removeMachineFromTask = (taskIndex, machineId) => {
-  const task = formData.value.tasks[taskIndex];
-  const index = task.machineIds.indexOf(machineId);
-  if (index !== -1) {
-    task.machineIds.splice(index, 1);
-  }
-};
 
 const savePlan = async () => {
   try {
@@ -220,9 +183,7 @@ const savePlan = async () => {
       userCreator: 1, // Usuario ficticio
       tasks: formData.value.tasks.map(task => ({
         taskName: task.taskName,
-        taskDescription: task.taskDescription,
-        // Asegurarse de que machineIds de cada tarea sea un array de IDs exactos
-        machineIds: [...task.machineIds]
+        taskDescription: task.taskDescription
       }))
     };
     
@@ -387,11 +348,7 @@ h3 {
 }
 
 .task-column {
-  flex: 3;
-}
-
-.machine-column {
-  flex: 2;
+  flex: 1;
 }
 
 .actions-column {
@@ -406,13 +363,7 @@ h3 {
   align-items: center;
 }
 
-.machine-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.add-machine-btn, .remove-task-btn {
+.remove-task-btn {
   background: #f0f0f0;
   border: none;
   width: 28px;
@@ -423,10 +374,6 @@ h3 {
   justify-content: center;
   cursor: pointer;
   font-weight: bold;
-}
-
-.add-machine-btn:hover {
-  background: var(--clr-primary-200);
 }
 
 .remove-task-btn {
