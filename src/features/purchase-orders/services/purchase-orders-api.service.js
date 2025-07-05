@@ -3,79 +3,120 @@ import axios from 'axios';
 import { InventoryPartAssembler } from '../../shared/services/inventory-part.assembler.js';
 import { PurchaseOrderAssembler } from '../../shared/services/purchase-order.assembler.js';
 
-const baseEndpoint = 'http://localhost:3000';
-const purchaseOrdersEndpoint = `https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/purchase-orders`;
-const inventoryPartsEndpoint = `https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/inventory-parts`;
+const baseEndpoint = 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api';
+const purchaseOrdersEndpoint = `${baseEndpoint}/purchase-orders`;
 
+// Función para obtener el token de autenticación
+const getAuthToken = () => {
+    return localStorage.getItem('token');
+};
+
+// Función para crear headers con autenticación
+const getAuthHeaders = () => {
+    const token = getAuthToken();
+    return {
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+};
+
+// Instancia de axios configurada
 const http = axios.create({
-    baseURL: baseEndpoint
+    baseURL: baseEndpoint,
+    headers: getAuthHeaders()
+});
+
+// Interceptor para agregar el token en cada petición
+http.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
 });
 
 export class PurchaseOrdersApiService {
-    static async getPurchaseOrders() {
+    /**
+     * Obtiene todas las órdenes de compra por plantId
+     * @param {number} plantId - ID de la planta
+     * @returns {Promise<Array>} - Lista de órdenes de compra
+     */
+    static async getPurchaseOrders(plantId) {
         try {
-            const response = await http.get(purchaseOrdersEndpoint);
-            return PurchaseOrderAssembler.toEntitiesFromResponse(response);
+            const response = await http.get(`${purchaseOrdersEndpoint}?plantId=${plantId}`);
+            return response.data;
         } catch (err) {
             console.error('Error cargando órdenes de compra:', err);
             return [];
         }
     }
 
+    /**
+     * Obtiene una orden de compra específica por ID
+     * @param {number} id - ID de la orden de compra
+     * @returns {Promise<Object>} - Orden de compra
+     */
     static async getPurchaseOrderById(id) {
         try {
-            // Obtenemos la orden de compra
-            const purchaseOrderResponse = await http.get(`${purchaseOrdersEndpoint}/${id}`);
-            
-            // Obtenemos la parte de inventario relacionada
-            const inventoryPartResponse = await http.get(`${inventoryPartsEndpoint}/${purchaseOrderResponse.data.inventory_part_id}`);
-            
-            // Combinamos la información
-            const completeData = {
-                ...purchaseOrderResponse.data,
-                inventoryPart: InventoryPartAssembler.toEntityFromResource(inventoryPartResponse.data)
-            };
-            
-            return PurchaseOrderAssembler.toEntityFromResource(completeData);
+            const response = await http.get(`${purchaseOrdersEndpoint}/${id}`);
+            return response.data;
         } catch (err) {
             console.error(`Error cargando orden de compra ${id}:`, err);
             throw err;
         }
     }
 
+    /**
+     * Crea una nueva orden de compra
+     * @param {Object} purchaseOrderData - Datos de la orden de compra
+     * @returns {Promise<Object>} - Orden de compra creada
+     */
     static async createPurchaseOrder(purchaseOrderData) {
         try {
-            if (!purchaseOrderData.inventory_part_id || !purchaseOrderData.quantity) {
-                throw new Error("La parte de inventario y la cantidad son obligatorias");
+            if (!purchaseOrderData.orderNumber || !purchaseOrderData.inventoryPartId || !purchaseOrderData.quantity) {
+                throw new Error("El número de orden, parte de inventario y cantidad son obligatorios");
             }
             
-            const resourceData = PurchaseOrderAssembler.toResourceFromEntity(purchaseOrderData);
+            const requestData = {
+                orderNumber: purchaseOrderData.orderNumber,
+                inventoryPartId: purchaseOrderData.inventoryPartId,
+                quantity: purchaseOrderData.quantity,
+                totalPrice: purchaseOrderData.totalPrice || 0,
+                plantId: purchaseOrderData.plantId,
+                deliveryDate: purchaseOrderData.deliveryDate
+            };
+
+            console.log(requestData);
             
-            const response = await http.post(purchaseOrdersEndpoint, resourceData);
-            
-            return PurchaseOrderAssembler.toEntityFromResource(response.data);
+            const response = await http.post(purchaseOrdersEndpoint, requestData);
+            return response.data;
         } catch (err) {
             console.error('Error creando orden de compra:', err);
             throw err;
         }
     }
 
-    static async updatePurchaseOrder(id, purchaseOrderData) {
+    /**
+     * Marca una orden de compra como completada
+     * @param {number} id - ID de la orden de compra
+     * @returns {Promise<Object>} - Orden de compra actualizada
+     */
+    static async completePurchaseOrder(id) {
         try {
-            const resourceData = PurchaseOrderAssembler.toResourceFromEntity({
-                ...purchaseOrderData,
-                id
-            });
-            
-            const response = await http.put(`${purchaseOrdersEndpoint}/${id}`, resourceData);
-            
-            return PurchaseOrderAssembler.toEntityFromResource(response.data);
+            const response = await http.patch(`${purchaseOrdersEndpoint}/${id}/complete`);
+            return response.data;
         } catch (err) {
-            console.error(`Error actualizando orden de compra ${id}:`, err);
+            console.error(`Error completando orden de compra ${id}:`, err);
             throw err;
         }
     }
 
+    /**
+     * Elimina una orden de compra
+     * @param {number} id - ID de la orden de compra a eliminar
+     * @returns {Promise<boolean>} - true si se eliminó correctamente
+     */
     static async deletePurchaseOrder(id) {
         try {
             await http.delete(`${purchaseOrdersEndpoint}/${id}`);
@@ -83,6 +124,20 @@ export class PurchaseOrdersApiService {
         } catch (err) {
             console.error(`Error eliminando orden de compra ${id}:`, err);
             throw err;
+        }
+    }
+
+    /**
+     * Obtiene todas las plantas disponibles
+     * @returns {Promise<Array>} - Lista de plantas
+     */
+    static async getPlants() {
+        try {
+            const response = await http.get(`${baseEndpoint}/v1/plants`);
+            return response.data;
+        } catch (err) {
+            console.error('Error cargando plantas:', err);
+            return [];
         }
     }
 }
