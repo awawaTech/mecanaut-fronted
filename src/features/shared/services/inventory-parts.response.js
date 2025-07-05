@@ -4,21 +4,19 @@ export class InventoryPartResource {
         code = '',
         name = '',
         description = '',
-        current_stock = 0,
-        min_stock = 0,
-        unit_price = 0.00,
-        stock_status = '',
-        last_restock = ''
+        currentStock = 0,
+        minStock = 0,
+        unitPrice = 0.00,
+        stockStatus = ''
     } = {}) {
         this._id = id;
         this.code = code;
         this.name = name;
         this.description = description;
-        this.current_stock = current_stock;
-        this.min_stock = min_stock;
-        this.unit_price = unit_price;
-        this.stock_status = stock_status;
-        this.last_restock = last_restock;
+        this.currentStock = currentStock;
+        this.minStock = minStock;
+        this.unitPrice = unitPrice;
+        this.stockStatus = stockStatus;
     }
 }
 
