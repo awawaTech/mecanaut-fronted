@@ -1,127 +1,121 @@
 <template>
   <div class="modal-overlay" v-if="showModal" @click="onCancel">
     <div class="modal-container" @click.stop>
-      <div class="plant-form-container">
-        <h2 class="form-title">{{ title }}</h2>
+      <div class="modal-header">
+        <h2>{{ isEditMode ? t('assetManagement.plants.modal.new') : t('assetManagement.plants.modal.edit') }}</h2>
+        <button class="close-button" @click="onCancel">&times;</button>
+      </div>
 
-        <form @submit.prevent="onSubmit" class="plant-form">
-          <div class="form-row">
-            <label for="name">{{ $t('assetManagement.forms.plant.fields.name.label') }} <span class="required">*</span></label>
+      <div class="modal-content">
+        <form @submit.prevent="onSubmit" class="form-container">
+          <div class="form-group">
+            <label for="name">{{ t('assetManagement.plants.columns.name') }} <span class="required"></span></label>
             <input
-              type="text"
-              id="name"
-              v-model="form.name"
-              class="form-input"
-              :class="{ 'invalid': isFieldInvalid('name') }"
-            >
+                id="name"
+                v-model="form.name"
+                type="text"
+                :class="{ 'invalid': isFieldInvalid('name') }"
+                placeholder="Enter name"
+            />
             <div class="error-message" v-if="isFieldInvalid('name')">
-              {{ $t(getErrorMessage('name')) }}
+              {{ t(getErrorMessage('name')) }}
             </div>
           </div>
 
-          <div class="form-row">
-            <label for="address">{{ $t('assetManagement.forms.plant.fields.address.label') }} <span class="required">*</span></label>
+          <div class="form-group">
+            <label for="address">{{ t('assetManagement.plants.columns.address') }} <span class="required"></span></label>
             <input
-              type="text"
-              id="address"
-              v-model="form.address"
-              class="form-input"
-              :class="{ 'invalid': isFieldInvalid('address') }"
-            >
+                id="address"
+                v-model="form.address"
+                type="text"
+                :class="{ 'invalid': isFieldInvalid('address') }"
+                placeholder="Enter address"
+            />
             <div class="error-message" v-if="isFieldInvalid('address')">
-              {{ $t(getErrorMessage('address')) }}
+              {{ t(getErrorMessage('address')) }}
             </div>
           </div>
 
-          <div class="form-row">
-            <label for="city">{{ $t('assetManagement.forms.plant.fields.city.label') }} <span class="required">*</span></label>
+          <div class="form-group">
+            <label for="city">{{ t('assetManagement.plants.columns.city') }} <span class="required"></span></label>
             <input
-              type="text"
-              id="city"
-              v-model="form.city"
-              class="form-input"
-              :class="{ 'invalid': isFieldInvalid('city') }"
-            >
+                id="city"
+                v-model="form.city"
+                type="text"
+                :class="{ 'invalid': isFieldInvalid('city') }"
+                placeholder="Enter city"
+            />
             <div class="error-message" v-if="isFieldInvalid('city')">
-              {{ $t(getErrorMessage('city')) }}
+              {{ t(getErrorMessage('city')) }}
             </div>
           </div>
 
-          <div class="form-row">
-            <label for="country">{{ $t('assetManagement.forms.plant.fields.country.label') }} <span class="required">*</span></label>
+          <div class="form-group">
+            <label for="country">{{ t('assetManagement.plants.columns.country') }} <span class="required"></span></label>
             <input
-              type="text"
-              id="country"
-              v-model="form.country"
-              class="form-input"
-              :class="{ 'invalid': isFieldInvalid('country') }"
-            >
+                id="country"
+                v-model="form.country"
+                type="text"
+                :class="{ 'invalid': isFieldInvalid('country') }"
+                placeholder="Enter country"
+            />
             <div class="error-message" v-if="isFieldInvalid('country')">
-              {{ $t(getErrorMessage('country')) }}
+              {{ t(getErrorMessage('country')) }}
             </div>
           </div>
 
-          <div class="form-row">
-            <label for="contactPhone">{{ $t('assetManagement.forms.plant.fields.contactPhone.label') }} <span class="required">*</span></label>
+          <div class="form-group">
+            <label for="phone">{{ t('assetManagement.plants.columns.phone') }} <span class="required"></span></label>
             <input
-              type="tel"
-              id="contactPhone"
-              v-model="form.phone"
-              class="form-input"
-              :class="{ 'invalid': isFieldInvalid('contactPhone') }"
-            >
-            <div class="error-message" v-if="isFieldInvalid('contactPhone')">
-              {{ $t(getErrorMessage('contactPhone')) }}
+                id="phone"
+                v-model="form.phone"
+                type="tel"
+                :class="{ 'invalid': isFieldInvalid('phone') }"
+                placeholder="Enter phone"
+            />
+            <div class="error-message" v-if="isFieldInvalid('phone')">
+              {{ t(getErrorMessage('phone')) }}
             </div>
           </div>
 
-          <div class="form-row">
-            <label for="contactEmail">{{ $t('assetManagement.forms.plant.fields.contactEmail.label') }} <span class="required">*</span></label>
+          <div class="form-group">
+            <label for="email">{{ t('assetManagement.plants.columns.email') }} <span class="required"></span></label>
             <input
-              type="email"
-              id="contactEmail"
-              v-model="form.email"
-              class="form-input"
-              :class="{ 'invalid': isFieldInvalid('contactEmail') }"
-            >
-            <div class="error-message" v-if="isFieldInvalid('contactEmail')">
-              {{ $t(getErrorMessage('contactEmail')) }}
+                id="email"
+                v-model="form.email"
+                type="email"
+                :class="{ 'invalid': isFieldInvalid('email') }"
+                placeholder="Enter email"
+            />
+            <div class="error-message" v-if="isFieldInvalid('email')">
+              {{ t(getErrorMessage('email')) }}
             </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn-cancel" @click="onCancel">{{ $t('assetManagement.forms.buttons.cancel') }}</button>
-            <button type="submit" class="btn-save" :disabled="!isFormValid">{{ $t('assetManagement.forms.buttons.save') }}</button>
           </div>
         </form>
+      </div>
+
+      <div class="modal-footer">
+        <Button variant="outline" @clicked="onCancel">
+          {{ t('assetManagement.forms.buttons.cancel') }}
+        </Button>
+        <Button variant="primary" :disabled="!isFormValid" @clicked="onSubmit">
+          {{ isEditMode ? t('assetManagement.forms.buttons.create') : t('assetManagement.forms.buttons.save') }}
+        </Button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
+import Button from '../../../shared/components/button.component.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
 const props = defineProps({
-  showModal: {
-    type: Boolean,
-    default: false
-  },
-  plantToEdit: {
-    type: Object,
-    default: null
-  },
-  title: {
-    type: String,
-    default: ''
-  },
-  availableProductionLines: {
-    type: Array,
-    default: () => []
-  }
+  showModal: Boolean,
+  plantToEdit: Object,
 });
 
 const emit = defineEmits(['save', 'cancel']);
@@ -148,11 +142,11 @@ const isEditMode = computed(() => !!props.plantToEdit);
 
 const isFormValid = computed(() => {
   return form.value.name &&
-         form.value.address &&
-         form.value.city &&
-         form.value.country &&
-         form.value.phone &&
-         isValidEmail(form.value.email);
+      form.value.address &&
+      form.value.city &&
+      form.value.country &&
+      form.value.phone &&
+      isValidEmail(form.value.email);
 });
 
 const isValidEmail = (email) => {
@@ -162,84 +156,50 @@ const isValidEmail = (email) => {
 
 const isFieldInvalid = (field) => {
   if (!touched.value[field]) return false;
-  
-  if (field === 'contactEmail') {
-    return !form.value[field] || !isValidEmail(form.value[field]);
-  }
+  if (field === 'email') return !isValidEmail(form.value.email);
   return !form.value[field];
 };
 
 const getErrorMessage = (field) => {
-  if (!form.value[field]) {
-    return `assetManagement.forms.plant.fields.${field}.required`;
-  }
-  if (field === 'contactEmail' && !isValidEmail(form.value[field])) {
-    return 'assetManagement.forms.plant.fields.contactEmail.invalid';
-  }
+  if (!form.value[field]) return `assetManagement.forms.plant.fields.${field}.required`;
+  if (field === 'email' && !isValidEmail(form.value[field])) return 'assetManagement.forms.plant.fields.contactEmail.invalid';
   return '';
 };
 
 const onSubmit = () => {
-  Object.keys(form.value).forEach(key => {
-    touched.value[key] = true;
-  });
+  Object.keys(form.value).forEach(key => touched.value[key] = true);
+  if (!isFormValid.value) return;
 
-  if (isFormValid.value) {
-    const formData = {
-      name: form.value.name,
-      address: form.value.address,
-      city: form.value.city,
-      country: form.value.country,
-      phone: form.value.phone,
-      email: form.value.email,
-      active: true // default
-    };
-
-    if (isEditMode.value && props.plantToEdit) {
-      formData.id = props.plantToEdit.id;
-      formData.active = props.plantToEdit.active; // conserva el estado original si estás editando
-    }
-
-    emit('save', formData);
+  const formData = {
+    ...form.value,
+    active: true
+  };
+  if (isEditMode.value) {
+    formData.id = props.plantToEdit.id;
+    formData.active = props.plantToEdit.active;
   }
+  emit('save', formData);
 };
 
-const onCancel = () => {
-  emit('cancel');
-};
+const onCancel = () => emit('cancel');
 
-watch(() => props.plantToEdit, (newPlant) => {
-  if (newPlant) {
-    form.value = {
-      name: newPlant.name || '',
-      address: newPlant.address || '',
-      city: newPlant.city || '',
-      country: newPlant.country || '',
-      phone: newPlant.phone || '',
-      email: newPlant.email || ''
-    };
+watch(() => props.plantToEdit, (plant) => {
+  if (plant) {
+    form.value = { ...plant };
   }
 }, { immediate: true });
 
 watch(() => props.showModal, (show) => {
   if (!show) {
-    // Reset form when modal closes
     form.value = {
-      name: '',
-      address: '',
-      city: '',
-      country: '',
-      phone: '',
-      email: ''
+      name: '', address: '', city: '', country: '', phone: '', email: ''
     };
-    Object.keys(touched.value).forEach(key => {
-      touched.value[key] = false;
-    });
+    Object.keys(touched.value).forEach(key => touched.value[key] = false);
   }
 });
 </script>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -251,189 +211,80 @@ watch(() => props.showModal, (show) => {
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  animation: fadeIn 0.3s ease-in-out;
 }
 
 .modal-container {
+  background: var(--clr-bg);
+  border-radius: var(--radius-lg);
   width: 90%;
-  max-width: 600px;
-  background-color: var(--color-background);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  animation: slideDown 0.3s ease-in-out;
-}
-
-.plant-form-container {
-  width: 100%;
-  background-color: var(--clr-bg);
-  border-radius: var(--radius-md);
-  padding: 1.5em;
-  box-shadow: 0 2px 10px var(--clr-shadow);
-}
-
-* {
-  font-family: var(--font-family-primary);
-}
-
-.form-title {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: var(--clr-primary-400);
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.plant-form {
+  max-width: 500px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 }
 
-.form-row {
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--clr-text);
+  padding: 0.5rem;
+}
+
+.modal-content {
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid var(--clr-border);
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-
-  label {
-    color: var(--clr-text);
-    font-weight: 500;
-    font-size: 0.9rem;
-  }
 }
 
-.required {
-  color: var(--clr-danger, #e53935);
-  font-weight: bold;
-  margin-left: 2px;
-  font-size: 1em;
-}
-
-.form-input {
-  padding: 0.6rem 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  width: 100%;
-  background-color: var(--clr-bg);
-  color: var(--clr-text);
-  transition: border-color 0.2s, box-shadow 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: var(--clr-primary-300);
-    box-shadow: 0 0 0 2px rgba(var(--clr-primary-300), 0.1);
-  }
-
-  &.invalid {
-    border-color: var(--clr-danger, #e53935);
-    background-color: #fff6f6;
-  }
-}
-
-.error-message {
-  color: var(--clr-danger);
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.btn-cancel, .btn-save {
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
+.form-group label {
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex: 1;
-  
-  &:active {
-    transform: translateY(1px);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.btn-cancel {
-  background-color: transparent;
-  border: 1px solid #ddd;
   color: var(--clr-text);
-  
-  &:hover:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.05);
-  }
 }
 
-.btn-save {
-  background-color: var(--clr-primary-300);
-  border: none;
-  color: white;
-  
-  &:hover:not(:disabled) {
-    background-color: var(--clr-primary-400);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(-50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-// Soporte para tema oscuro
-[data-theme='dark'] {
-  .form-input {
-    border-color: #444;
-    
-    &:focus {
-      border-color: var(--clr-primary-200);
-    }
-    
-    &.invalid {
-      background-color: rgba(229, 57, 53, 0.1);
-    }
-  }
-  
-  .btn-cancel {
-    border-color: #444;
-    
-    &:hover:not(:disabled) {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-  }
-}
-
-// Media queries para responsive
-@media (max-width: 576px) {
-  .plant-form-container {
-    padding: 1.5rem;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
+.form-group input,
+.form-group select {
+  padding: 0.5rem;
+  border: 1px solid var(--clr-primary-100);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--clr-text);
+  background-color: var(--clr-surface);
 }
 </style>
