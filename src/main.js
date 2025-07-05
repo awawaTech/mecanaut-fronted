@@ -11,9 +11,16 @@ import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 import ToastService from 'primevue/toastservice';
 import Toast from 'primevue/toast';
+import ApiService from './core/services/api.service'
 
 const app = createApp(App)
 
+// Inicializar autenticación
+const apiService = new ApiService();
+apiService.initializeAuth();
+
+// Hacer el router disponible globalmente para el interceptor
+window.router = router;
 
 app.use(router)
 
