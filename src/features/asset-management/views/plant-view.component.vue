@@ -1,152 +1,152 @@
 <script>
-import { ref, onMounted, computed } from 'vue';
+import {ref, onMounted, computed} from 'vue';
 import { useI18n } from 'vue-i18n';
-import HeaderComponent from '@/shared/components/header.component.vue';
+import Search from '../../../shared/components/search.component.vue';
 import RecordTable from '@/shared/components/record-table.component.vue';
 import InformationPanel from '@/shared/components/information-panel/information-panel.component.vue';
 import InfoSection from '@/shared/components/information-panel/info-section.component.vue';
-import InfoContainer from '@/shared/components/information-panel/info-container.component.vue';
-import SearchComponent from '@/shared/components/search.component.vue';
-import InteractPlant from '../components/interact-plant.component.vue';
-import { PlantService } from '../services/plant.service';
-import { ProductionLineService } from '../services/production-line.service';
+import { PlantApiService } from '../services/plant-api.service';
+import ButtonComponent from "@/shared/components/button.component.vue";
+import PlantFormModal from '../components/interact-plant.component.vue';
+import AuthService from "../../authentication/services/auth.service.js";
 
 export default {
   name: 'PlantView',
   components: {
-    HeaderComponent,
+    Search,
     RecordTable,
     InformationPanel,
     InfoSection,
-    InfoContainer,
-    SearchComponent,
-    InteractPlant
+    PlantFormModal,
+    ButtonComponent
   },
   setup() {
     const { t } = useI18n();
-    const plantService = new PlantService();
-    const productionLineService = new ProductionLineService();
 
-    // Estado
-    const plants = ref([]);
-    const filteredPlants = ref([]);
+    const plantList = ref([]);
     const selectedPlant = ref(null);
-    const selectedPlantId = ref(null);
-    const loading = ref(true);
-    const error = ref(null);
-    const showDetailPanel = ref(false);
-    const showPlantModal = ref(false);
-    const isEditMode = ref(false);
-    const allProductionLines = ref([]);
+    const showInfoPanel = ref(false);
+    const showCreateModal = ref(false);
+    const showEditModal = ref(false);
 
     // Configuración de la tabla
-    const tableColumns = [
-      { key: 'name', label: t('assetManagement.plants.columns.name'), type: 'texto' },
-      { key: 'address', label: t('assetManagement.plants.columns.address'), type: 'texto' },
-      { key: 'city', label: t('assetManagement.plants.columns.city'), type: 'texto' },
-      { key: 'country', label: t('assetManagement.plants.columns.country'), type: 'texto' },
-      { key: 'contactPhone', label: t('assetManagement.plants.columns.contactPhone'), type: 'texto' },
-      { key: 'contactEmail', label: t('assetManagement.plants.columns.contactEmail'), type: 'texto' },
-      { key: 'active', label: t('assetManagement.plants.columns.status'), type: 'texto' },
-      { key: 'actions', label: t('common.actions'), type: 'informacion', ctaLabel: t('common.view') }
+    const columns = [
+
+      { key: 'name', label: 'Name', type: 'texto' },
+      { key: 'country', label: t('Country'), type: 'texto' },
+      { key: 'active', label: 'Active', type: 'texto', filterable: true },
+      { key: 'info', label: 'Info', type: 'informacion' }
     ];
 
-    // Métodos
-    const loadPlants = async () => {
-      loading.value = true;
-      error.value = null;
+
+    const loadPlant = async () => {
       try {
-        const response = await plantService.getAll();
-        plants.value = response;
-        filteredPlants.value = [...response];
-      } catch (err) {
-        console.error('Error al cargar plantas:', err);
-        error.value = 'Error al cargar plantas';
-      } finally {
-        loading.value = false;
+        const data = await PlantApiService.getPlants();
+        plantList.value = data.map(p => ({
+          id: p.id,
+          name: p.name,
+          address: p.address,
+          city: p.city,
+          country: p.country,
+          phone: p.phone,
+          email: p.email,
+          active: p.active
+        }));
+      } catch (error) {
+        console.error('Error loading plant:', error);
       }
     };
 
-    const showPlantDetails = async (plantId) => {
-      selectedPlantId.value = plantId;
-      loading.value = true;
+
+
+    const handleInfoClick = async (item) => {
       try {
-        const plant = await plantService.getById(plantId);
-        selectedPlant.value = plant;
-        showDetailPanel.value = true;
-      } catch (err) {
-        console.error(`Error al cargar la planta ${plantId}:`, err);
-        error.value = 'Error al cargar la planta';
-      } finally {
-        loading.value = false;
+        const plant = await PlantApiService.getPlantById(item.id);
+        selectedPlant.value = {
+          ...plant,
+          generalInfo: [
+            {subtitle: 'Name', info: plant.name},
+            {subtitle: 'Address', info: plant.address},
+            {subtitle: 'City', info: plant.city},
+            {subtitle: 'Country', info: plant.country},
+            {subtitle: 'Phone', info: plant.phone },
+            {subtitle: 'Email', info: plant.email },
+            {subtitle: 'Active', info: plant.active },
+          ]
+        };
+        showInfoPanel.value = true;
+      } catch (error) {
+        console.error('Error loading plant detail:', error);
       }
     };
 
-    const getStatusLabel = (status) => {
-      return status ? t('assetManagement.status.active') : t('assetManagement.status.inactive');
-    };
-
-    const closeDetailPanel = () => {
-      showDetailPanel.value = false;
-      selectedPlant.value = null;
-      selectedPlantId.value = null;
-    };
-
-    const handleTableAction = ({ row }) => {
-      showPlantDetails(row.id);
-    };
-
-    const newPlantAction = () => {
-      isEditMode.value = false;
-      showPlantModal.value = true;
-    };
-
-    const editPlant = () => {
-      isEditMode.value = true;
-      showPlantModal.value = true;
-    };
-
-    const closeModal = () => {
-      showPlantModal.value = false;
-    };
-
-    const onSavePlant = async (plantData) => {
+    const handleCreate = async (formData) => {
       try {
-        if (isEditMode.value && selectedPlantId.value) {
-          await plantService.update(selectedPlantId.value, {
-            ...plantData,
-            id: selectedPlantId.value
-          });
-        } else {
-          await plantService.create(plantData);
-        }
-        
-        showPlantModal.value = false;
-        await loadPlants();
-        
-        if (isEditMode.value && selectedPlantId.value) {
-          await showPlantDetails(selectedPlantId.value);
-        }
-      } catch (err) {
-        console.error('Error al guardar la planta:', err);
-        error.value = isEditMode.value ? 
-          'Error al actualizar la planta' : 
-          'Error al crear la planta';
+        await PlantApiService.createPlant(formData);
+        showCreateModal.value = false;
+        await loadPlant();
+      } catch (error) {
+        console.error('Error creating plant:', error);
       }
     };
 
+    const openCreateModal = () => {
+      console.log(showCreateModal.value)
+      selectedPlant.value = {
+        name: '',
+        address: '',
+        city: '',
+        country: '',
+        phone: '',
+        email: '',
+        active: true
+      };
+      showCreateModal.value = true;
+    };
+    const handleEdit = async (formData) => {
+      try {
+        await PlantApiService.updatePlant(formData.id, formData);
+        showEditModal.value = false;
+        selectedPlant.value = null;
+        await loadPlant();
+      } catch (error) {
+        console.error('Error updating plant:', error);
+      }
+    };
+
+    const handleDelete = async (id) => {
+      try {
+        await PlantApiService.deletePlant(id);
+        showEditModal.value = false;
+        selectedPlant.value = null;
+        await loadPlant();
+      } catch (error) {
+        console.error('Error deleting plant:', error);
+      }
+    };
+
+    const closePanel = () => {
+      showInfoPanel.value = false;
+      setTimeout(() => {
+        selectedPlant.value = null;
+      }, 300);
+    };
     const togglePlantStatus = async () => {
-      if (!selectedPlant.value || !selectedPlantId.value) return;
+      if (!selectedPlant.value) return;
 
       const newStatus = !selectedPlant.value.active;
+
       try {
-        await plantService.update(selectedPlantId.value, {
-          id: selectedPlantId.value,
+        await PlantApiService.updatePlant(selectedPlant.value.id, {
+          ...selectedPlant.value,
           active: newStatus
         });
-        await loadPlants();
-        if (selectedPlantId.value) {
-          await showPlantDetails(selectedPlantId.value);
+
+        await loadPlant(); // Recarga la lista
+
+        // Si el panel está abierto, vuelve a cargar los detalles
+        if (selectedPlant.value.id) {
+          await handleInfoClick({ id: selectedPlant.value.id });
         }
       } catch (err) {
         console.error('Error al actualizar el estado:', err);
@@ -154,394 +154,223 @@ export default {
       }
     };
 
-    // Ciclo de vida
-    onMounted(() => {
-      loadPlants();
+    onMounted(async () => {
+      try {
+        // Verifica si el usuario ya está autenticado
+        if (AuthService.isAuthenticated()) {
+          const token = AuthService.getToken();
+          AuthService.setAuthToken(token); // opcional si ya lo hizo en constructor
+          await loadPlant();
+        } else {
+          console.warn("🔐 Usuario no autenticado. Redirigiendo a login...");
+          // Redirige o muestra mensaje
+          window.location.href = '/authentication/sign-in'; // o usa tu router
+        }
+      } catch (error) {
+        console.error("❌ Error al cargar datos con usuario autenticado:", error.message);
+      }
     });
 
     return {
-      plants,
-      filteredPlants,
+      plantList,
       selectedPlant,
-      loading,
-      error,
-      showDetailPanel,
-      showPlantModal,
-      isEditMode,
-      tableColumns,
-      handleTableAction,
-      closeDetailPanel,
-      newPlantAction,
-      editPlant,
-      closeModal,
+      showInfoPanel,
+      showCreateModal,
+      showEditModal,
+      handleInfoClick,
+      handleCreate,
+      handleEdit,
+      handleDelete,
+      columns,
+      closePanel,
       togglePlantStatus,
-      getStatusLabel,
-      loadPlants,
-      onSavePlant
+      openCreateModal,
     };
+  },
+  methods: {
+    handleCtaClick({row}) {
+      this.selectedPlant = row;
+      this.showEditModal = true;
+    }
   }
 };
 </script>
 
+
 <template>
   <div class="container">
     <div class="header-main">
-      <h1>{{ $t('assetManagement.breadcrumb.plants') }}</h1>
+      <h1>Plant Management</h1>
       <div class="divider"></div>
     </div>
 
-    <main class="main-container">
-      <div class="search-container" :class="{'full-width': !showDetailPanel}">
-        <div class="search-actions">
-          <search-component
-            :placeholder="$t('assetManagement.search.plants.placeholder')"
-            :new-label="$t('assetManagement.search.plants.newButton')"
+    <div class="main-content">
+      <div class="left-container">
+        <RecordTable
+            :columns="columns"
+            :data="plantList"
+            :searchable-columns="['name']"
+            search-placeholder="Search by name..."
             :show-new-button="true"
-            @action-click="newPlantAction"
+            :new-label="'Plant'"
+            @action-click="handleCtaClick"
+            @info-click="handleInfoClick"
+            @new-click="openCreateModal"
+        />
+      </div>
+      <div class="right-container" :class="{ 'show-panel': showInfoPanel }">
+        <InformationPanel
+            v-if="showInfoPanel"
+            :headerText="'Detailed Information'"
+            class="info-panel"
+
+        >
+          <template #header>
+            <div class="panel-header">
+              <h2>Plant Details</h2>
+            </div>
+          </template>
+
+          <InfoSection
+              v-if="selectedPlant"
+              :infoType="1"
+              title="General Info"
+              :data="selectedPlant.generalInfo"
           />
-        </div>
-
-        <div v-if="loading && !showDetailPanel" class="loading-indicator">
-          {{ $t('assetManagement.loading.plants') }}
-        </div>
-
-        <div v-if="error && !showDetailPanel" class="error-message">
-          {{ error }}
-          <button @click="loadPlants">{{ $t('assetManagement.error.retry') }}</button>
-        </div>
-
-        <div v-if="!loading && !error" class="table-container">
-          <record-table
-            :columns="tableColumns"
-            :data="filteredPlants"
-            @info-click="handleTableAction"
-          />
+        </InformationPanel>
+        <div class="panel-actions">
+          <button-component
+              variant="primary"
+              size="sm"
+              icon-left="pi pi-pencil"
+              @clicked="showEditModal = true"
+          >
+            Edit
+          </button-component>
+          <button-component
+              variant="warning"
+              size="sm"
+              icon-left="pi pi-times"
+              @clicked="closePanel"
+          >
+            Close
+          </button-component>
+          <button-component
+              :variant="selectedPlant?.active ? 'danger' : 'outline'"
+              size="sm"
+              :icon-left="selectedPlant?.active ? 'pi pi-times' : 'pi pi-check'"
+              @clicked="togglePlantStatus"
+          >
+            {{ selectedPlant?.active ? 'Deactivate' : 'Activate' }}
+          </button-component>
         </div>
       </div>
+    </div>
 
-      <!-- Panel de información -->
-      <transition name="slide">
-        <div v-if="showDetailPanel" class="information-panel-container">
-          <div class="panel-header">
-            <button class="close-button" @click="closeDetailPanel">
-              <span aria-hidden="true">×</span>
-            </button>
-          </div>
+    <PlantFormModal
+        v-if="showCreateModal"
+        :show-modal="showCreateModal"
+        :is-edit="false"
+        :plant-to-edit="selectedPlant"
+        :title="'Create Plant'"
+        @save="handleCreate"
+        @cancel="() => { showCreateModal = false; selectedPlant = null; }"
+    />
 
-          <div v-if="loading" class="loading-indicator">
-            {{ $t('assetManagement.loading.plantInfo') }}
-          </div>
-
-          <div v-if="!loading && selectedPlant" class="panel-content">
-            <information-panel
-              :header-text="'ID: ' + selectedPlantId + ' | ' + selectedPlant.name"
-              :show-header="true"
-              :show-primary-button="true"
-              :primary-button-text="$t('assetManagement.buttons.edit')"
-              :show-secondary-button="true"
-              :secondary-button-text="selectedPlant.active ? $t('assetManagement.buttons.deactivate') : $t('assetManagement.buttons.activate')"
-              @primary-button-click="editPlant"
-              @secondary-button-click="togglePlantStatus"
-              @close-panel="closeDetailPanel"
-            >
-              <!-- Información básica -->
-              <info-section
-                :info-type="2"
-                :data="[
-                  { subtitle: $t('assetManagement.plants.details.name'), info: selectedPlant.name },
-                  { subtitle: $t('assetManagement.plants.details.address'), info: selectedPlant.address },
-                  { subtitle: $t('assetManagement.plants.details.city'), info: selectedPlant.city },
-                  { subtitle: $t('assetManagement.plants.details.country'), info: selectedPlant.country },
-                  { subtitle: $t('assetManagement.plants.details.contactPhone'), info: selectedPlant.contactPhone },
-                  { subtitle: $t('assetManagement.plants.details.contactEmail'), info: selectedPlant.contactEmail },
-                  { subtitle: $t('assetManagement.plants.details.status'), info: getStatusLabel(selectedPlant.active) }
-                ]"
-              />
-
-              <!-- Líneas de producción -->
-              <info-container
-                :title="$t('assetManagement.plants.details.productionLines')"
-                :title-type="2"
-              >
-              </info-container>
-            </information-panel>
-          </div>
-        </div>
-      </transition>
-    </main>
-
-    <!-- Modal para crear/editar plantas -->
-    <transition name="fade">
-      <div v-if="showPlantModal" class="modal-overlay" @click="closeModal">
-        <div class="modal-container" @click.stop>
-          <interact-plant
-            :show-modal="showPlantModal"
-            :plant-to-edit="isEditMode ? selectedPlant : null"
-            :title="isEditMode ? $t('assetManagement.plants.modal.edit') : $t('assetManagement.plants.modal.new')"
-            :available-production-lines="allProductionLines"
-            @save="onSavePlant"
-            @cancel="closeModal"
-          />
-        </div>
-      </div>
-    </transition>
+    <PlantFormModal
+        v-if="showEditModal"
+        :show-modal="showEditModal"
+        :is-edit="true"
+        :plant-to-edit="selectedPlant"
+        :title="'Edit Plant'"
+        @save="handleEdit"
+        @delete="handleDelete"
+        @cancel="() => { showEditModal = false; selectedPlant = null; }"
+    />
   </div>
 </template>
 
-<style scoped lang="scss">
+<style scoped>
 .container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
   height: 100%;
-  min-height: 100vh;
-  box-sizing: border-box;
-  background: var(--clr-bg);
-  transition: background 0.3s;
-  padding: 2rem;
 }
 
 .header-main {
-  align-items: center;
   width: 100%;
-  margin-bottom: 2.5rem;
-  padding: 0 1rem;
-
-  h1 {
-    color: var(--clr-text);
-    font-size: 1.75rem;
-    font-weight: 600;
-    margin: 0;
-    margin-bottom: 0.5rem;
-  }
-
-  .divider {
-    margin-top: 1rem;
-    height: 2px;
-    background: linear-gradient(90deg, var(--clr-primary-300) 0%, var(--clr-primary-100) 100%);
-    width: 100%;
-    border-radius: 2px;
-  }
 }
 
-.main-container {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 2.5rem;
-  min-height: calc(100vh - 200px);
+.header-main h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--clr-text);
+}
+
+.divider {
   width: 100%;
-  transition: gap 0.3s;
-  padding: 0 1rem;
+  height: 1px;
+  background-color: var(--clr-primary-100);
+  margin: 10px 0;
 }
 
-.search-container {
+.main-content {
+  display: flex;
+  gap: 20px;
+  height: calc(100% - 80px);
+}
+
+.left-container {
+  flex: 3;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  width: 72%;
-  height: 100%;
-  transition: width 0.3s ease;
-  
-  &.full-width {
-    width: 100% !important;
-  }
-
-  .search-actions {
-    margin-bottom: 1rem;
-  }
+  gap: 20px;
 }
 
-.table-container {
-  padding: 1.5rem;
-  border: 1px solid var(--clr-shadow);
-  border-radius: var(--radius-md);
-  background: var(--clr-surface);
-  height: 100%;
-  min-width: 0;
+.right-container {
+  flex: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   overflow: hidden;
-  transition: box-shadow 0.3s, border 0.3s;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  width: 0;
 }
 
-.information-panel-container {
-  width: 28%;
-  border-radius: var(--radius-md);
-  background: var(--clr-surface);
+.right-container.show-panel {
+  flex: 1;
+  width: auto;
+}
+
+.info-panel {
   height: 100%;
-  transition: box-shadow 0.3s, border 0.3s, width 0.3s;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-              0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  
-  .panel-header {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    z-index: 2;
-    
-    .close-button {
-      background: transparent;
-      border: none;
-      color: var(--clr-text);
-      font-size: 1.5rem;
-      cursor: pointer;
-      opacity: 0.6;
-      transition: opacity 0.2s;
-      padding: 0.5rem;
-      border-radius: 50%;
-      
-      &:hover {
-        opacity: 1;
-        background: rgba(0, 0, 0, 0.05);
-      }
-    }
-  }
-
-  .panel-content {
-    padding: 1.5rem;
-  }
+  transition: all 0.3s ease;
+  min-width: 350px;
+  background: var(--clr-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 }
 
-.loading-indicator {
+.panel-header {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  padding: 2em;
-  color: var(--clr-primary-400);
-  font-weight: 500;
+  padding: 1rem;
+  border-bottom: 1px solid var(--clr-border);
 }
 
-.error-message {
-  color: var(--clr-danger);
-  padding: 1em;
-  border: 1px solid var(--clr-danger);
-  border-radius: var(--radius-md);
-  background-color: var(--clr-danger-050);
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
+.panel-actions {
   display: flex;
-  flex-direction: column;
-  gap: 1em;
-  
-  button {
-    align-self: flex-end;
-    background-color: var(--clr-primary-300);
-    color: white;
-    border: none;
-    padding: 0.5em 1em;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: background-color 0.2s;
-    
-    &:hover {
-      background-color: var(--clr-primary-400);
-    }
-  }
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.modal-container {
-  position: relative;
-  max-width: 90%;
-  width: 650px;
-  max-height: 90vh;
-  overflow-y: auto;
-  background-color: var(--clr-bg);
-  border-radius: var(--radius-md);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  transform-origin: center center;
-  
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background-color: var(--clr-primary-200);
-    border-radius: 4px;
-  }
-}
-
-// Transiciones
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.slide-enter-from,
-.slide-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-@media (max-width: 1024px) {
-  .main-container {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1.5em;
-    min-height: unset;
-  }
-  
-  .search-container,
-  .information-panel-container {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-  
-  .information-panel-container {
-    margin-top: 0.5em;
-    height: auto;
-  }
-}
-
-@media (max-width: 600px) {
-  .container {
-    padding: 1em 0.2em;
-  }
-  
-  .main-container {
-    gap: 1em;
-  }
-  
-  .table-container,
-  .information-panel-container {
-    border-radius: 12px;
-    box-shadow: 0 1px 4px 0 var(--clr-shadow);
-  }
-  
-  .modal-container {
-    width: 95%;
-  }
+  gap: 0.5rem;
 }
 </style>

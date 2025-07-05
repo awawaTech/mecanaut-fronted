@@ -66,7 +66,7 @@
             <input
               type="tel"
               id="contactPhone"
-              v-model="form.contactPhone"
+              v-model="form.phone"
               class="form-input"
               :class="{ 'invalid': isFieldInvalid('contactPhone') }"
             >
@@ -80,7 +80,7 @@
             <input
               type="email"
               id="contactEmail"
-              v-model="form.contactEmail"
+              v-model="form.email"
               class="form-input"
               :class="{ 'invalid': isFieldInvalid('contactEmail') }"
             >
@@ -131,8 +131,8 @@ const form = ref({
   address: '',
   city: '',
   country: '',
-  contactPhone: '',
-  contactEmail: ''
+  phone: '',
+  email: ''
 });
 
 const touched = ref({
@@ -140,8 +140,8 @@ const touched = ref({
   address: false,
   city: false,
   country: false,
-  contactPhone: false,
-  contactEmail: false
+  phone: false,
+  email: false
 });
 
 const isEditMode = computed(() => !!props.plantToEdit);
@@ -151,8 +151,8 @@ const isFormValid = computed(() => {
          form.value.address &&
          form.value.city &&
          form.value.country &&
-         form.value.contactPhone &&
-         isValidEmail(form.value.contactEmail);
+         form.value.phone &&
+         isValidEmail(form.value.email);
 });
 
 const isValidEmail = (email) => {
@@ -186,11 +186,18 @@ const onSubmit = () => {
 
   if (isFormValid.value) {
     const formData = {
-      ...form.value
+      name: form.value.name,
+      address: form.value.address,
+      city: form.value.city,
+      country: form.value.country,
+      phone: form.value.phone,
+      email: form.value.email,
+      active: true // default
     };
 
     if (isEditMode.value && props.plantToEdit) {
       formData.id = props.plantToEdit.id;
+      formData.active = props.plantToEdit.active; // conserva el estado original si estás editando
     }
 
     emit('save', formData);
@@ -208,8 +215,8 @@ watch(() => props.plantToEdit, (newPlant) => {
       address: newPlant.address || '',
       city: newPlant.city || '',
       country: newPlant.country || '',
-      contactPhone: newPlant.contactPhone || '',
-      contactEmail: newPlant.contactEmail || ''
+      phone: newPlant.phone || '',
+      email: newPlant.email || ''
     };
   }
 }, { immediate: true });
@@ -222,8 +229,8 @@ watch(() => props.showModal, (show) => {
       address: '',
       city: '',
       country: '',
-      contactPhone: '',
-      contactEmail: ''
+      phone: '',
+      email: ''
     };
     Object.keys(touched.value).forEach(key => {
       touched.value[key] = false;

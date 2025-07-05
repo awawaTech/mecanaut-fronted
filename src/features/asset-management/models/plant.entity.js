@@ -8,8 +8,8 @@ export class PlantEntity {
         this.address = data.address;
         this.city = data.city;
         this.country = data.country;
-        this.contactPhone = data.contactPhone;
-        this.contactEmail = data.contactEmail;
+        this.phone = data.phone;
+        this.email = data.email;
         this.active = data.active;
     }
 }
