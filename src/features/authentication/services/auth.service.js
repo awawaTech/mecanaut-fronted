@@ -95,11 +95,24 @@ setAuthToken(token) {
       
       console.log('📥 Respuesta del backend:', response);
       
-      // Guardar token si existe
+      // Guardar datos de autenticación si existen
       if (response.data?.token) {
+        // Guardar token
         localStorage.setItem('token', response.data.token);
         this.setAuthToken(response.data.token);
-        console.log('✅ Token guardado en localStorage y configurado en headers');
+        
+        // Guardar información del usuario
+        const userData = {
+          id: response.data.id,
+          username: response.data.username
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        console.log('✅ Datos de autenticación guardados:', {
+          token: response.data.token.substring(0, 20) + '...',
+          userId: response.data.id,
+          username: response.data.username
+        });
       }
       
       return response.data;

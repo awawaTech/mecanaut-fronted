@@ -173,6 +173,7 @@ export default {
         </Button>
 
         <!-- Botón temporal para probar credenciales específicas -->
+        <!--
         <Button 
           @click="testCredentials"
           :disabled="loading"
@@ -180,6 +181,7 @@ export default {
         >
           🧪 Probar Credenciales
         </Button>
+        -->
 
 
 

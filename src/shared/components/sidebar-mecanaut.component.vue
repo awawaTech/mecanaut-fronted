@@ -1,9 +1,10 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import ThemeToggle from './theme-toggle.component.vue';
 import LanguageSwitcher from './language-switcher.component.vue';
+import AuthService from '../../features/authentication/services/auth.service.js';
 
 const { t } = useI18n();
 
@@ -108,6 +109,9 @@ const menuOptions = computed(() => [
   }
 ]);
 
+// Router
+const router = useRouter();
+
 // Métodos
 const toggleSidebar = () => {
   isExpanded.value = !isExpanded.value;
@@ -119,6 +123,12 @@ const expandSidebar = () => {
 
 const collapseSidebar = () => {
   isExpanded.value = false;
+};
+
+const handleLogout = () => {
+  console.log('🔄 Iniciando logout...');
+  AuthService.logout();
+  router.push('/login');
 };
 </script>
 
@@ -186,7 +196,7 @@ const collapseSidebar = () => {
           <small>{{ t('sidebar.user.role') }}: {{ userRole }}</small>
         </span>
       </a>
-      <a v-if="isExpanded" href="#">
+      <a v-if="isExpanded" href="#" @click.prevent="handleLogout">
         <i class="pi pi-sign-out"></i>
       </a>
     </div>
