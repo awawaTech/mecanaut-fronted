@@ -120,6 +120,7 @@ import InteractProductionLine from '../components/interact-production-line.compo
 import { ProductionLineApiService } from '../services/production-line-api.service.js';
 import AuthService from "@/features/authentication/services/auth.service.js";
 import {PlantApiService} from "@/features/asset-management/services/plant-api.service.js";
+import {$t} from "@primeuix/styled";
 
 
 const { t } = useI18n();

@@ -3,7 +3,6 @@
     <div class="form-header">
       <h2>{{ title }}</h2>
     </div>
-
     <form @submit.prevent="onSubmit" class="form-content">
       <div class="form-section">
         <div class="form-group">
