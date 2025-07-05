@@ -33,7 +33,8 @@
     "edit": "Edit",
     "view": "View",
     "confirm": "Confirm",
-    "close": "Close"
+    "close": "Close",
+    "next": "Next"
   },
   "maintenance": {
     "newPlan": "New Static Maintenance Plan",
@@ -75,7 +76,11 @@
       "settings": "Settings"
     },
     "user": {
-      "role": "Rol"
+      "role": "Role",
+      "roles": {
+        "admin": "Administrator",
+        "technical": "Technical"
+      }
     },
     "settings": {
       "title": "Settings"
@@ -85,8 +90,11 @@
     "create": "Create Account",
     "happy": "¡We're happy to have you join us!",
     "company": "Name of the company",
+    "username": "Username",
+    "username_placeholder": "Enter your username",
     "email": "Email",
     "password": "Password",
+    "password_placeholder": "Enter your password",
     "repeat": "Repeat",
     "read": "I have read and accept the",
     "terms": "terms and conditions",
@@ -94,7 +102,12 @@
     "login": "Log In",
     "back": "¡We're glad to have you back!",
     "forgot": "I forgot my password",
-    "dont": "¿Don't have an account?"
+    "dont": "¿Don't have an account?",
+    "logging_in": "Logging in...",
+    "errors": {
+      "all_fields": "Please complete all fields",
+      "invalid_credentials": "Invalid username or password"
+    }
   },
   "dashboard": {
     "welcome": "Welcome",
@@ -407,5 +420,51 @@
       "ok": "OK",
       "outOfStock": "Out of Stock"
     }
+  },
+  "auth": {
+    "createAccount": "Create Account",
+    "welcomeMessage": "We're happy to have you join us!",
+    "companyInfo": "Company Information",
+    "companyInfoDesc": "Fill in your company details to get started",
+    "personalInfo": "Personal Information",
+    "personalInfoDesc": "Complete your personal information to finish",
+    "ruc": "RUC",
+    "rucPlaceholder": "Enter your company's RUC",
+    "legalName": "Legal Name",
+    "legalNamePlaceholder": "Enter your company's legal name",
+    "commercialName": "Commercial Name",
+    "commercialNamePlaceholder": "Enter your company's commercial name",
+    "address": "Address",
+    "addressPlaceholder": "Enter your company's address",
+    "city": "City",
+    "cityPlaceholder": "Enter the city",
+    "country": "Country",
+    "countryPlaceholder": "Enter the country",
+    "phone": "Company Phone",
+    "phonePlaceholder": "E.g: +1 555-555-5555",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "website": "Website (optional)",
+    "websitePlaceholder": "https://www.yourcompany.com",
+    "username": "Username",
+    "usernamePlaceholder": "Choose a username",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "Enter your first name",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Enter your last name",
+    "password": "Password",
+    "passwordPlaceholder": "Enter a secure password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Repeat your password",
+    "acceptTerms": "I have read and accept the",
+    "termsLink": "Terms and Conditions",
+    "alreadyHaveAccount": "Already have an account?",
+    "login": "Log in",
+    "planSelection": "Subscription Plan",
+    "choosePlan": "Choose your Plan",
+    "choosePlanDesc": "Select the plan that best suits your needs",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "access": "Access"
   }
 }

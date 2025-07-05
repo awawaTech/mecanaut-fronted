@@ -1,9 +1,10 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import ThemeToggle from './theme-toggle.component.vue';
 import LanguageSwitcher from './language-switcher.component.vue';
+import AuthService from '../../features/authentication/services/auth.service.js';
 
 const { t } = useI18n();
 
@@ -17,6 +18,26 @@ const props = defineProps({
     type: String,
     default: ''
   }
+});
+
+// Computed para obtener datos del usuario desde localStorage
+const userData = computed(() => {
+  const userStr = localStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+});
+
+const displayUserName = computed(() => {
+  return userData.value?.username || '';
+});
+
+const displayUserRole = computed(() => {
+  const roles = userData.value?.roles || [];
+  if (roles.includes('RoleAdmin')) {
+    return t('sidebar.user.roles.admin');
+  } else if (roles.includes('RoleTechnical')) {
+    return t('sidebar.user.roles.technical');
+  }
+  return roles.join(', ') || '';
 });
 
 // Emits
@@ -108,6 +129,9 @@ const menuOptions = computed(() => [
   }
 ]);
 
+// Router
+const router = useRouter();
+
 // Métodos
 const toggleSidebar = () => {
   isExpanded.value = !isExpanded.value;
@@ -119,6 +143,12 @@ const expandSidebar = () => {
 
 const collapseSidebar = () => {
   isExpanded.value = false;
+};
+
+const handleLogout = () => {
+  console.log('🔄 Iniciando logout...');
+  AuthService.logout();
+  router.push('/login');
 };
 </script>
 
@@ -182,11 +212,11 @@ const collapseSidebar = () => {
       <a href="#">
         <i class="pi pi-user"></i>
         <span v-if="isExpanded">
-          {{ userName }}<br>
-          <small>{{ t('sidebar.user.role') }}: {{ userRole }}</small>
+          {{ displayUserName }}<br>
+          <small>{{ t('sidebar.user.role') }}: {{ displayUserRole }}</small>
         </span>
       </a>
-      <a v-if="isExpanded" href="#">
+      <a v-if="isExpanded" href="#" @click.prevent="handleLogout">
         <i class="pi pi-sign-out"></i>
       </a>
     </div>

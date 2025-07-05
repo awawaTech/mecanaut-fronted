@@ -4,8 +4,8 @@
       <section class="hero-section">
         <div class="hero-content">
           <div class="user-greeting">
-            <h1>{{ t('dashboard.welcome') }}, <span class="user-name">{{ userName }}</span>!</h1>
-            <p class="user-role">{{ userRole }}</p>
+            <h1>{{ t('dashboard.welcome') }}, <span class="user-name">{{ displayUserName }}</span>!</h1>
+            <p class="user-role">{{ displayUserRole }}</p>
   
             <div class="hero-actions">
               <select v-model="selectedPlant" class="plant-selector">
@@ -217,6 +217,7 @@
   
   <script>
   import { useI18n } from 'vue-i18n';
+  import { computed } from 'vue';
   import ButtonComponent from '@/shared/components/button.component.vue';
   import InformationPanel from '@/shared/components/information-panel/information-panel.component.vue';
   import NotificationContainer from '@/shared/components/notifications/notification-container.component.vue';
@@ -232,13 +233,36 @@
     },
     setup() {
       const { t } = useI18n();
-      return { t };
+      
+      // Computed para obtener datos del usuario desde localStorage
+      const userData = computed(() => {
+        const userStr = localStorage.getItem('user');
+        return userStr ? JSON.parse(userStr) : null;
+      });
+
+      const displayUserName = computed(() => {
+        return userData.value?.fullName || userData.value?.username || 'Usuario';
+      });
+
+      const displayUserRole = computed(() => {
+        const roles = userData.value?.roles || [];
+        if (roles.includes('RoleAdmin')) {
+          return t('sidebar.user.roles.admin');
+        } else if (roles.includes('RoleTechnical')) {
+          return t('sidebar.user.roles.technical');
+        }
+        return roles.join(', ') || 'Técnico';
+      });
+
+      return { 
+        t, 
+        displayUserName, 
+        displayUserRole 
+      };
     },
     data() {
     return {
-        // Datos del usuario y sistema
-      userName: 'Usuario',
-      userRole: 'Técnico',
+        // Datos del sistema
         systemHealth: 87,
         selectedPlant: null,
       plants: [
@@ -591,14 +615,7 @@
     },
 
     methods: {
-      loadUserFromLocalStorage() {
-        const userData = localStorage.getItem('userSession');
-        if (userData) {
-          const user = JSON.parse(userData);
-          this.userName = user.name || 'Usuario';
-          this.userRole = user.roles?.includes('ROLE_ADMIN') ? 'Administrador' : 'Técnico';
-        }
-      },
+
 
       createWorkOrder() {
         console.log('Crear orden de trabajo');
@@ -653,9 +670,7 @@
       }
     },
 
-    mounted() {
-      this.loadUserFromLocalStorage();
-    }
+
   };
   </script>
 
