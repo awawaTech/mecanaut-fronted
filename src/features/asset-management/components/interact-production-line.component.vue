@@ -108,6 +108,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {$t} from "@primeuix/styled";
 
 const props = defineProps({
   title: {
@@ -121,11 +122,16 @@ const props = defineProps({
   productionLine: {
     type: Object,
     default: null
+  },
+  productionLines: {
+    type: Array,
+    default: () => []
   }
 });
 
 const emit = defineEmits(['save', 'cancel']);
 const { t } = useI18n();
+
 
 const form = ref({
   name: '',
@@ -144,6 +150,10 @@ const errors = ref({
 });
 
 const isEditMode = computed(() => !!props.productionLine);
+
+const productionLinesForPlant = computed(() => {
+  return props.productionLines.filter(line => line.plantId === form.value.plantId);
+});
 
 const isFormValid = computed(() => {
   return form.value.name &&

@@ -4,7 +4,7 @@ import axios from 'axios';
 class AuthService extends ApiService {
   constructor() {
     super();
-    this.baseUrl = 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/authentication';
+    this.baseUrl = 'http://localhost:5128/api/v1';
     
     // Inicializar token desde localStorage si existe
     const token = localStorage.getItem('token');

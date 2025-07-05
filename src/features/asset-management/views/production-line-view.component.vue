@@ -117,12 +117,13 @@ import InformationPanel from '@/shared/components/information-panel/information-
 import InfoSection from '@/shared/components/information-panel/info-section.component.vue';
 import InfoContainer from '@/shared/components/information-panel/info-container.component.vue';
 import InteractProductionLine from '../components/interact-production-line.component.vue';
-import { ProductionLineService } from '../services/production-line.service';
-import { PlantService } from '../services/plant.service';
+import { ProductionLineApiService } from '../services/production-line-api.service.js';
+import AuthService from "@/features/authentication/services/auth.service.js";
+import {PlantApiService} from "@/features/asset-management/services/plant-api.service.js";
+
 
 const { t } = useI18n();
-const productionLineService = new ProductionLineService();
-const plantService = new PlantService();
+const productionLineService = new ProductionLineApiService();
 
 // Estado
 const selectedLineId = ref(null);
@@ -151,14 +152,50 @@ const tableColumns = [
 const infoData = ref([]);
 const techData = ref([]);
 
+
+
 // Métodos
+
+const loadData = async () => {
+  try {
+    const plantList = await PlantApiService.getPlants();
+    plants.value = plantList;
+
+    if (plantList.length === 0) return;
+
+    const selectedPlantId = 2; // usa el primer plant temporalmente
+    const lines = await ProductionLineApiService.getProductionLines(selectedPlantId);
+
+    productionLines.value = lines.map(l => {
+      const plantName = plantList.find(p => p.id === l.plantId)?.name || '';
+      return {
+        id: l.id,
+        name: l.name,
+        code: l.code,
+        capacity: l.capacityUnitsPerHour,
+        status: l.status,
+        plantId: l.plantId,
+        plantName,
+        info: l.id
+      };
+    });
+
+    console.log("✅ Datos cargados:", productionLines.value);
+
+    // ⬅️⬅️⬅️ ESTA LÍNEA ES CRUCIAL
+    prepareTableData();
+
+  } catch (error) {
+    console.error('Error loading production lines:', error);
+  }
+};
 const loadProductionLines = async () => {
   if (!selectedPlantId.value) return;
   loading.value = true;
   error.value = null;
 
   try {
-    const response = await productionLineService.getAllProductionLines(selectedPlantId.value);
+    const response = await productionLineService.getProductionLines(selectedPlantId.value);
     productionLines.value = response;
     prepareTableData();
   } catch (err) {
@@ -277,13 +314,13 @@ const saveLine = async (lineData) => {
       const created = await productionLineService.createProductionLine(newLine);
       productionLines.value.push(created);
     }
-    
+
     prepareTableData();
     showLineModal.value = false;
   } catch (err) {
     console.error('Error al guardar la línea:', err);
-    error.value = isEditMode.value ? 
-      'Error al actualizar la línea' : 
+    error.value = isEditMode.value ?
+      'Error al actualizar la línea' :
       'Error al crear la línea';
   } finally {
     loading.value = false;
@@ -301,7 +338,7 @@ const toggleLineStatus = async () => {
       selectedLine.value.id,
       newStatus
     );
-    
+
     const index = productionLines.value.findIndex(l => l.id === updatedLine.id);
     if (index >= 0) {
       productionLines.value[index] = updatedLine;
@@ -336,8 +373,21 @@ const onPlantChange = () => {
 };
 
 // Ciclo de vida
-onMounted(() => {
-  loadPlants();
+onMounted(async () => {
+  try {
+    // Verifica si el usuario ya está autenticado
+    if (AuthService.isAuthenticated()) {
+      const token = AuthService.getToken();
+      AuthService.setAuthToken(token); // opcional si ya lo hizo en constructor
+      await loadData();
+    } else {
+      console.warn("🔐 Usuario no autenticado. Redirigiendo a login...");
+      // Redirige o muestra mensaje
+      window.location.href = '/authentication/sign-in'; // o usa tu router
+    }
+  } catch (error) {
+    console.error("❌ Error al cargar datos con usuario autenticado:", error.message);
+  }
 });
 </script>
 
@@ -585,7 +635,7 @@ onMounted(() => {
     gap: 1.5em;
     min-height: unset;
   }
-  
+
   .search-container,
   .information-panel-container {
     width: 100%;
@@ -593,7 +643,7 @@ onMounted(() => {
     min-width: 0;
     box-sizing: border-box;
   }
-  
+
   .information-panel-container {
     margin-top: 0.5em;
     height: auto;
@@ -604,17 +654,17 @@ onMounted(() => {
   .container {
     padding: 1em 0.2em;
   }
-  
+
   .main-container {
     gap: 1em;
   }
-  
+
   .table-container,
   .information-panel-container {
     border-radius: 12px;
     box-shadow: 0 1px 4px 0 var(--clr-shadow);
   }
-  
+
   .modal-container {
     width: 95%;
   }
