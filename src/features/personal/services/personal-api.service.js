@@ -1,18 +1,45 @@
 import axios from 'axios';
-import { PersonalAssembler } from '../../shared/services/personal.assembler.js';
 
-const baseEndpoint = 'http://localhost:3000';
-const personalsEndpoint = `${baseEndpoint}/personals`;
+const baseEndpoint = 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1';
+const usersEndpoint = `${baseEndpoint}/users`;
 
 const http = axios.create({
-    baseURL: baseEndpoint
+    baseURL: baseEndpoint,
+    headers: {
+        'Content-Type': 'application/json',
+        'accept': 'application/json'
+    }
 });
+
+// Interceptor para agregar el token de autenticación
+http.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 export class PersonalApiService {
     static async getPersonals() {
         try {
-            const response = await http.get('/personals');
-            return PersonalAssembler.toEntitiesFromResponse(response);
+            const response = await http.get('/users');
+            return response.data.map(user => ({
+                id: user.id,
+                code: user.username,
+                firstName: user.fullName ? user.fullName.split(' ')[0] : '',
+                lastName: user.fullName ? user.fullName.split(' ').slice(1).join(' ') : '',
+                email: user.email,
+                phone: '', // Not available in the API response
+                role: user.roles && user.roles.length > 0 ? user.roles[0] : '',
+                dni: '', // Not available in the API response
+                note: '' // Not available in the API response
+            }));
         } catch (err) {
             console.error('Error loading personal list:', err);
             return [];
@@ -21,8 +48,19 @@ export class PersonalApiService {
 
     static async getPersonalById(id) {
         try {
-            const response = await http.get(`/personals/${id}`);
-            return PersonalAssembler.toEntityFromResource(response.data);
+            const response = await http.get(`/users/${id}`);
+            const user = response.data;
+            return {
+                id: user.id,
+                code: user.username,
+                firstName: user.fullName ? user.fullName.split(' ')[0] : '',
+                lastName: user.fullName ? user.fullName.split(' ').slice(1).join(' ') : '',
+                email: user.email,
+                phone: '', // Not available in the API response
+                role: user.roles && user.roles.length > 0 ? user.roles[0] : '',
+                dni: '', // Not available in the API response
+                note: '' // Not available in the API response
+            };
         } catch (err) {
             console.error(`Error loading personal with ID ${id}:`, err);
             throw err;
@@ -31,15 +69,33 @@ export class PersonalApiService {
 
     static async createPersonal(personalData) {
         try {
-            if (!personalData.firstName || !personalData.lastName || !personalData.email) {
-                throw new Error('First name, last name and email are required');
+            if (!personalData.code || !personalData.firstName || !personalData.lastName || !personalData.email || !personalData.password) {
+                throw new Error('Username, first name, last name, email and password are required');
             }
 
-            const resourceData = PersonalAssembler.toResourceFromEntity(personalData);
+            const requestData = {
+                username: personalData.code,
+                password: personalData.password,
+                email: personalData.email,
+                firstName: personalData.firstName,
+                lastName: personalData.lastName,
+                roles: personalData.role ? [personalData.role] : ['RoleTechnical']
+            };
+            console.log('requestData', requestData);
+            const response = await http.post('/users', requestData);
 
-            const response = await http.post(personalsEndpoint, resourceData);
-
-            return PersonalAssembler.toEntityFromResource(response.data);
+            const user = response.data;
+            return {
+                id: user.id,
+                code: user.username,
+                firstName: user.fullName ? user.fullName.split(' ')[0] : '',
+                lastName: user.fullName ? user.fullName.split(' ').slice(1).join(' ') : '',
+                email: user.email,
+                phone: '',
+                role: user.roles && user.roles.length > 0 ? user.roles[0] : '',
+                dni: '',
+                note: ''
+            };
         } catch (err) {
             console.error('Error creating personal:', err);
             throw err;
@@ -48,14 +104,28 @@ export class PersonalApiService {
 
     static async updatePersonal(id, personalData) {
         try {
-            const resourceData = PersonalAssembler.toResourceFromEntity({
-                ...personalData,
-                id
-            });
+            const requestData = {
+                email: personalData.email,
+                firstName: personalData.firstName,
+                lastName: personalData.lastName,
+                roles: personalData.role ? [personalData.role] : ['RoleTechnical']
+            };
 
-            const response = await http.put(`${personalsEndpoint}/${id}`, resourceData);
+            console.log('updatePersonal requestData', requestData);
+            const response = await http.put(`/users/${id}`, requestData);
 
-            return PersonalAssembler.toEntityFromResource(response.data);
+            const user = response.data;
+            return {
+                id: user.id,
+                code: user.username,
+                firstName: user.fullName ? user.fullName.split(' ')[0] : '',
+                lastName: user.fullName ? user.fullName.split(' ').slice(1).join(' ') : '',
+                email: user.email,
+                phone: '',
+                role: user.roles && user.roles.length > 0 ? user.roles[0] : '',
+                dni: '',
+                note: ''
+            };
         } catch (err) {
             console.error(`Error updating personal ${id}:`, err);
             throw err;
@@ -64,7 +134,7 @@ export class PersonalApiService {
 
     static async deletePersonal(id) {
         try {
-            await http.delete(`${personalsEndpoint}/${id}`);
+            await http.delete(`/users/${id}`);
             return true;
         } catch (err) {
             console.error(`Error deleting personal ${id}:`, err);

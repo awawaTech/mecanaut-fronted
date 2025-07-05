@@ -25,8 +25,8 @@ export default {
     const showEditModal = ref(false);
 
     const columns = [
-      { key: 'code', label: 'Code', type: 'texto' },
-      { key: 'name', label: 'Name', type: 'texto' },
+      { key: 'code', label: 'Username', type: 'texto' },
+      { key: 'name', label: 'Full Name', type: 'texto' },
       { key: 'email', label: 'Email', type: 'texto' },
       { key: 'role', label: 'Role', type: 'texto', filterable: true },
       { key: 'info', label: 'Info', type: 'informacion' }
@@ -39,10 +39,7 @@ export default {
           code: p.code,
           name: `${p.firstName} ${p.lastName}`,
           email: p.email,
-          phone: p.phone,
-          role: p.role,
-          dni: p.dni,
-          note: p.note
+          role: p.role
         }));
       } catch (error) {
         console.error('Error loading personal:', error);
@@ -55,13 +52,10 @@ export default {
         selectedPerson.value = {
           ...person,
           generalInfo: [
-            { subtitle: 'Code', info: person.code },
+            { subtitle: 'Username', info: person.code },
             { subtitle: 'Full Name', info: `${person.firstName} ${person.lastName}` },
-            { subtitle: 'DNI', info: person.dni },
             { subtitle: 'Email', info: person.email },
-            { subtitle: 'Phone', info: person.phone },
-            { subtitle: 'Role', info: person.role },
-            { subtitle: 'Note', info: person.note || '—' }
+            { subtitle: 'Role', info: person.role }
           ]
         };
         showInfoPanel.value = true;
@@ -147,7 +141,7 @@ export default {
             :columns="columns"
             :data="personalList"
             :searchable-columns="['code', 'name']"
-            search-placeholder="Search by code or name..."
+            search-placeholder="Search by username or full name..."
             :show-new-button="true"
             :new-label="'Personal'"
             @action-click="handleCtaClick"

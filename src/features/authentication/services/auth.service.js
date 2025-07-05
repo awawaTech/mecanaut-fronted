@@ -53,9 +53,8 @@ setAuthToken(token) {
         lastName: registrationData.lastName
       };
 
-      console.log('Datos enviados al backend:', dataToSend);
       
-      return await this.post('/sign-up', dataToSend, { skipAuth: true });
+      return await this.post('/authentication/sign-up', dataToSend, { skipAuth: true });
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al registrar usuario');
     }
@@ -71,8 +70,6 @@ setAuthToken(token) {
 
   async login(loginData) {
     try {
-      console.log('🚀 === INICIANDO LOGIN ===');
-      console.log('📤 LoginData recibido:', loginData);
       
       // Verificar que los datos no estén vacíos
       if (!loginData.username || !loginData.password) {
@@ -83,17 +80,8 @@ setAuthToken(token) {
         username: loginData.username.trim(),
         password: loginData.password
       };
-      
-      console.log('📤 Datos a enviar al backend:', {
-        username: dataToSend.username,
-        password: '***' // Ocultar contraseña en logs
-      });
-      console.log('🌐 URL del endpoint:', this.baseUrl + '/authentication/sign-in'); 
 
-      // Para el login, NO enviar el token de autorización
       const response = await this.post('/authentication/sign-in', dataToSend, { skipAuth: true });
-      
-      console.log('📥 Respuesta del backend:', response);
       
       // Guardar datos de autenticación si existen
       if (response.data?.token) {
@@ -108,16 +96,11 @@ setAuthToken(token) {
         };
         localStorage.setItem('user', JSON.stringify(userData));
         
-        console.log('✅ Datos de autenticación guardados:', {
-          token: response.data.token.substring(0, 20) + '...',
-          userId: response.data.id,
-          username: response.data.username
-        });
+
 
         // Obtener información completa del usuario
         try {
           const userInfoResponse = await this.get(`/users/${response.data.id}`);
-          console.log('📥 Información completa del usuario:', userInfoResponse.data);
           
           // Actualizar datos del usuario con información completa
           const completeUserData = {
@@ -130,13 +113,7 @@ setAuthToken(token) {
           
           localStorage.setItem('user', JSON.stringify(completeUserData));
           
-          console.log('✅ Información completa del usuario guardada:', {
-            id: completeUserData.id,
-            username: completeUserData.username,
-            fullName: completeUserData.fullName,
-            email: completeUserData.email,
-            roles: completeUserData.roles
-          });
+
         } catch (userInfoError) {
           console.error('❌ Error al obtener información completa del usuario:', userInfoError);
           // No fallar el login si no se puede obtener la información completa
@@ -145,13 +122,6 @@ setAuthToken(token) {
       
       return response.data;
     } catch (error) {
-      console.error('❌ Error en login:', error);
-      console.error('❌ Detalles del error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-        config: error.config
-      });
       
       // Mensajes de error más específicos
       if (error.response?.status === 401) {
@@ -171,11 +141,9 @@ setAuthToken(token) {
    * Cierra la sesión del usuario
    */
   logout() {
-    console.log('🔄 Cerrando sesión...');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    this.setAuthToken(null); // Limpiar token de headers
-    console.log('✅ Logout completado');
+    this.setAuthToken(null); 
   }
 
   /**
@@ -185,7 +153,6 @@ setAuthToken(token) {
   isAuthenticated() {
     const token = localStorage.getItem('token');
     const isAuth = !!token;
-    console.log('🔍 Verificando autenticación:', isAuth ? '✅ Autenticado' : '❌ No autenticado');
     return isAuth;
   }
 
@@ -195,7 +162,6 @@ setAuthToken(token) {
    */
   getToken() {
     const token = localStorage.getItem('token');
-    console.log('🔑 Token obtenido:', token ? token.substring(0, 20) + '...' : 'null');
     return token;
   }
 
@@ -206,7 +172,6 @@ setAuthToken(token) {
   getUser() {
     const userStr = localStorage.getItem('user');
     const user = userStr ? JSON.parse(userStr) : null;
-    console.log('👤 Usuario obtenido:', user ? user.username || user.name : 'null');
     return user;
   }
 
@@ -216,20 +181,17 @@ setAuthToken(token) {
    */
   async checkBackendHealth() {
     try {
-      console.log('🏥 Verificando conectividad con el backend...');
       
       // Intentar hacer una petición simple al endpoint base para verificar conectividad
-      const response = await fetch('https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/authentication', {
+      const response = await fetch('https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/authentication/health', {
         method: 'HEAD',
         mode: 'cors'
       });
       
       if (response.ok || response.status === 401) {
         // Si responde 401, significa que el servidor está funcionando pero requiere auth
-        console.log('✅ Backend responde correctamente');
         return true;
       } else {
-        console.log('❌ Backend no responde');
         return false;
       }
     } catch (error) {
@@ -243,20 +205,15 @@ setAuthToken(token) {
    */
   async testSpecificCredentials() {
     try {
-      console.log('🧪 === PROBANDO CREDENCIALES ESPECÍFICAS ===');
       
       const testData = {
         username: 'admin_andina',
         password: 'andina2025'
       };
       
-      console.log('📤 Probando credenciales:', {
-        username: testData.username,
-        password: '***'
-      });
       
       const response = await this.post('/sign-in', testData, { skipAuth: true });
-      console.log('✅ Credenciales funcionan:', response.data);
+      
       return response.data;
     } catch (error) {
       console.error('❌ Credenciales no funcionan:', error.response?.status, error.response?.data);
