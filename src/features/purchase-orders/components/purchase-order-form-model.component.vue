@@ -1,6 +1,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import Button from '../../../shared/components/button.component.vue';
+import { InventoryPartsApiService } from '../../inventory-parts/services/inventory-parts-api.service';
 
 export default {
     name: 'PurchaseOrderFormModal',
@@ -17,6 +18,10 @@ export default {
         orderData: {
             type: Object,
             default: () => ({})
+        },
+        plantId: {
+            type: Number,
+            required: true
         }
     },
 
@@ -24,17 +29,35 @@ export default {
 
     setup(props, { emit }) {
         const formData = ref({
-            inventory_part_id: 0,
+            orderNumber: '',
+            inventoryPartId: '',
             quantity: 0,
-            status: 'PENDING',
-            orderDate: new Date().toISOString().split('T')[0],
-            expectedDeliveryDate: '',
-            supplier: '',
-            unitPrice: 0,
-            totalPrice: 0
+            totalPrice: 0,
+            deliveryDate: ''
         });
 
+        const inventoryParts = ref([]);
+        const loadingParts = ref(false);
+
+        const loadInventoryParts = async () => {
+            try {
+                loadingParts.value = true;
+                const data = await InventoryPartsApiService.getParts(props.plantId);
+                inventoryParts.value = data;
+            } catch (error) {
+                console.error('Error cargando partes de inventario:', error);
+            } finally {
+                loadingParts.value = false;
+            }
+        };
+
         const handleSubmit = () => {
+            // Validar que todos los campos requeridos estén completos
+            if (!formData.value.orderNumber || !formData.value.inventoryPartId || !formData.value.quantity || !formData.value.deliveryDate) {
+                alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+
             emit('submit', {
                 ...formData.value,
                 id: props.orderData?.id
@@ -51,23 +74,24 @@ export default {
             }
         };
 
-        onMounted(() => {
+        onMounted(async () => {
+            await loadInventoryParts();
+            
             if (props.isEdit && props.orderData) {
                 formData.value = {
-                    inventory_part_id: props.orderData.inventory_part_id,
+                    orderNumber: props.orderData.orderNumber,
+                    inventoryPartId: props.orderData.inventoryPartId,
                     quantity: props.orderData.quantity,
-                    status: props.orderData.status,
-                    orderDate: props.orderData.orderDate?.split('T')[0],
-                    expectedDeliveryDate: props.orderData.expectedDeliveryDate?.split('T')[0],
-                    supplier: props.orderData.supplier,
-                    unitPrice: props.orderData.unitPrice,
-                    totalPrice: props.orderData.totalPrice
+                    totalPrice: props.orderData.totalPrice,
+                    deliveryDate: props.orderData.deliveryDate?.split('T')[0] || ''
                 };
             }
         });
 
         return {
             formData,
+            inventoryParts,
+            loadingParts,
             handleSubmit,
             handleCancel,
             handleDelete
@@ -87,15 +111,36 @@ export default {
             <div class="modal-content">
                 <form @submit.prevent="handleSubmit" class="form-container">
                     <div class="form-group">
-                        <label for="inventory_part_id">ID del Repuesto</label>
+                        <label for="orderNumber">Número de Orden</label>
                         <input 
-                            id="inventory_part_id"
-                            v-model="formData.inventory_part_id"
+                            id="orderNumber"
+                            v-model="formData.orderNumber"
                             type="text"
                             required
                             :disabled="isEdit"
-                            placeholder="Ingrese el ID del repuesto"
+                            placeholder="Ingrese el número de orden"
                         />
+                    </div>
+                    <div class="form-group">
+                        <label for="inventoryPartId">Repuesto</label>
+                        <select 
+                            id="inventoryPartId"
+                            v-model="formData.inventoryPartId"
+                            required
+                            :disabled="isEdit || loadingParts"
+                            class="form-select"
+                        >
+                            <option value="" disabled>
+                                {{ loadingParts ? 'Cargando repuestos...' : 'Selecciona un repuesto' }}
+                            </option>
+                            <option 
+                                v-for="part in inventoryParts" 
+                                :key="part.id" 
+                                :value="part.id"
+                            >
+                                {{ part.code }} - {{ part.name }}
+                            </option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="quantity">Cantidad</label>
@@ -109,71 +154,24 @@ export default {
                         />
                     </div>
                     <div class="form-group">
-                        <label for="status">Estado</label>
-                        <select 
-                            id="status"
-                            v-model="formData.status"
-                            required
-                        >
-                            <option value="PENDING">Pendiente</option>
-                            <option value="IN_PROGRESS">En Progreso</option>
-                            <option value="COMPLETED">Completada</option>
-                            <option value="CANCELLED">Cancelada</option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="orderDate">Fecha de Orden</label>
-                            <input 
-                                id="orderDate"
-                                v-model="formData.orderDate"
-                                type="date"
-                                required
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="expectedDeliveryDate">Fecha Esperada de Entrega</label>
-                            <input 
-                                id="expectedDeliveryDate"
-                                v-model="formData.expectedDeliveryDate"
-                                type="date"
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="supplier">Proveedor</label>
+                        <label for="totalPrice">Precio Total</label>
                         <input 
-                            id="supplier"
-                            v-model="formData.supplier"
-                            type="text"
+                            id="totalPrice"
+                            v-model.number="formData.totalPrice"
+                            type="number"
                             required
-                            placeholder="Ingrese el proveedor"
+                            min="0"
+                            step="0.01"
                         />
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="unitPrice">Precio Unitario</label>
-                            <input 
-                                id="unitPrice"
-                                v-model.number="formData.unitPrice"
-                                type="number"
-                                required
-                                min="0"
-                                step="0.01"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="totalPrice">Precio Total</label>
-                            <input 
-                                id="totalPrice"
-                                v-model.number="formData.totalPrice"
-                                type="number"
-                                required
-                                min="0"
-                                step="0.01"
-                            />
-                        </div>
+                    <div class="form-group">
+                        <label for="deliveryDate">Fecha de Entrega</label>
+                        <input 
+                            id="deliveryDate"
+                            v-model="formData.deliveryDate"
+                            type="date"
+                            required
+                        />
                     </div>
                 </form>
             </div>
@@ -283,13 +281,20 @@ export default {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-select {
     padding: 0.5rem;
     border: 1px solid var(--clr-primary-100);
     border-radius: var(--radius-sm);
     font-size: 0.9rem;
     color: var(--clr-text);
     background-color: var(--clr-surface);
+    cursor: pointer;
+}
+
+.form-select:disabled {
+    background-color: var(--clr-disabled);
+    cursor: not-allowed;
 }
 
 .form-group input:disabled {

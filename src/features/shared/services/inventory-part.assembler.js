@@ -26,11 +26,10 @@ export class InventoryPartAssembler {
             code: resource.code,
             name: resource.name,
             description: resource.description,
-            current_stock: resource.current_stock || 0,
-            min_stock: resource.min_stock || 0,
-            unit_price: resource.unit_price || 0,
-            stock_status: resource.stock_status || this.calculateStockStatus(resource.current_stock, resource.min_stock),
-            last_restock: resource.last_restock || new Date().toISOString(),
+            currentStock: resource.currentStock || 0,
+            minStock: resource.minStock || 0,
+            unitPrice: resource.unitPrice || 0,
+            stockStatus: this.calculateStockStatus(resource.currentStock, resource.minStock),
             purchaseOrders: resource.purchaseOrders || []
         });
     }
@@ -43,11 +42,10 @@ export class InventoryPartAssembler {
             code: entity.code,
             name: entity.name,
             description: entity.description,
-            current_stock: entity.currentStock,
-            min_stock: entity.minStock,
-            unit_price: entity.unitPrice,
-            stock_status: this.calculateStockStatus(entity.currentStock, entity.minStock),
-            last_restock: entity.lastRestock || now
+            currentStock: entity.currentStock,
+            minStock: entity.minStock,
+            unitPrice: entity.unitPrice,
+            stockStatus: this.calculateStockStatus(entity.currentStock, entity.minStock)
         };
     }
 
