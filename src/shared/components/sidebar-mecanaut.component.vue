@@ -20,6 +20,26 @@ const props = defineProps({
   }
 });
 
+// Computed para obtener datos del usuario desde localStorage
+const userData = computed(() => {
+  const userStr = localStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+});
+
+const displayUserName = computed(() => {
+  return userData.value?.username || '';
+});
+
+const displayUserRole = computed(() => {
+  const roles = userData.value?.roles || [];
+  if (roles.includes('RoleAdmin')) {
+    return t('sidebar.user.roles.admin');
+  } else if (roles.includes('RoleTechnical')) {
+    return t('sidebar.user.roles.technical');
+  }
+  return roles.join(', ') || '';
+});
+
 // Emits
 const emit = defineEmits(['sidebar-toggle']);
 
@@ -192,8 +212,8 @@ const handleLogout = () => {
       <a href="#">
         <i class="pi pi-user"></i>
         <span v-if="isExpanded">
-          {{ userName }}<br>
-          <small>{{ t('sidebar.user.role') }}: {{ userRole }}</small>
+          {{ displayUserName }}<br>
+          <small>{{ t('sidebar.user.role') }}: {{ displayUserRole }}</small>
         </span>
       </a>
       <a v-if="isExpanded" href="#" @click.prevent="handleLogout">

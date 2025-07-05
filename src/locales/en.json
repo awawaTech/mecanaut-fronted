@@ -76,7 +76,11 @@
       "settings": "Settings"
     },
     "user": {
-      "role": "Rol"
+      "role": "Role",
+      "roles": {
+        "admin": "Administrator",
+        "technical": "Technical"
+      }
     },
     "settings": {
       "title": "Settings"

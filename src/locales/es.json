@@ -76,7 +76,11 @@
       "settings": "Configuración"
     },
     "user": {
-      "role": "Rol"
+      "role": "Rol",
+      "roles": {
+        "admin": "Administrador",
+        "technical": "Técnico"
+      }
     },
     "settings": {
       "title": "Configuración"

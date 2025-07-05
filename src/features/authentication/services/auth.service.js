@@ -101,7 +101,7 @@ setAuthToken(token) {
         localStorage.setItem('token', response.data.token);
         this.setAuthToken(response.data.token);
         
-        // Guardar información del usuario
+        // Guardar información básica del usuario
         const userData = {
           id: response.data.id,
           username: response.data.username
@@ -113,6 +113,34 @@ setAuthToken(token) {
           userId: response.data.id,
           username: response.data.username
         });
+
+        // Obtener información completa del usuario
+        try {
+          const userInfoResponse = await this.get(`/users/${response.data.id}`);
+          console.log('📥 Información completa del usuario:', userInfoResponse.data);
+          
+          // Actualizar datos del usuario con información completa
+          const completeUserData = {
+            id: userInfoResponse.data.id,
+            username: userInfoResponse.data.username,
+            fullName: userInfoResponse.data.fullName,
+            email: userInfoResponse.data.email,
+            roles: userInfoResponse.data.roles
+          };
+          
+          localStorage.setItem('user', JSON.stringify(completeUserData));
+          
+          console.log('✅ Información completa del usuario guardada:', {
+            id: completeUserData.id,
+            username: completeUserData.username,
+            fullName: completeUserData.fullName,
+            email: completeUserData.email,
+            roles: completeUserData.roles
+          });
+        } catch (userInfoError) {
+          console.error('❌ Error al obtener información completa del usuario:', userInfoError);
+          // No fallar el login si no se puede obtener la información completa
+        }
       }
       
       return response.data;
