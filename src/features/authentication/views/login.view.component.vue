@@ -41,14 +41,9 @@ export default {
       error.value = '';
 
       try {
-        console.log('🔐 Intentando login con:', {
-          username: loginForm.username,
-          password: '***'
-        });
+
         
         const result = await AuthService.login(loginForm);
-        console.log('✅ Login exitoso:', result);
-        
         // Redirigir después de un breve delay para mostrar el mensaje de éxito
         setTimeout(() => {
           router.push('/');

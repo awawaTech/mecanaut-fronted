@@ -31,17 +31,16 @@ class ApiService {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        console.log('🔍 Interceptor de respuesta - Error:', error.response?.status, error.message);
         
         if (error.response?.status === 401) {
-          console.log('❌ Error 401 - Token expirado o inválido');
+          
           // Token expirado o inválido
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           
           // Solo redirigir si no estamos ya en login
           if (window.location.pathname !== '/authentication/sign-in') {
-            console.log('🔄 Redirigiendo a login desde interceptor');
+            
             // Usar router en lugar de window.location para evitar reinicio
             if (window.router) {
               window.router.push('/authentication/sign-in');
@@ -109,10 +108,7 @@ class ApiService {
         };
         // Usar axios directamente sin el interceptor
         const fullUrl = this.client.defaults.baseURL + endpoint;
-        console.log('🌐 URL completa para POST:', fullUrl);
-        console.log('📤 Datos enviados:', data);
         const response = await axios.post(fullUrl, data, config);
-        console.log('📥 Respuesta recibida:', response.status, response.data);
         return response;
       } else {
         // Usar el cliente con interceptores
@@ -168,10 +164,8 @@ class ApiService {
   setAuthToken(token) {
     if (token) {
       this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      console.log('🔑 Token configurado en headers:', token.substring(0, 20) + '...');
     } else {
       delete this.client.defaults.headers.common['Authorization'];
-      console.log('🔑 Token removido de headers');
     }
   }
 
@@ -181,7 +175,6 @@ class ApiService {
   initializeAuth() {
     const token = localStorage.getItem('token');
     if (token) {
-      console.log('🔑 Inicializando token desde localStorage');
       this.setAuthToken(token);
     }
   }

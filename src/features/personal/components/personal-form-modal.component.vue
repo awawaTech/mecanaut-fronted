@@ -27,15 +27,16 @@ export default {
       code:'',
       firstName: '',
       lastName: '',
-      dni:'',
       email: '',
-      phone: '',
-      role: '',
-      note:''
+      password: '',
+      role: ''
     });
 
     const handleSubmit = () => {
-      const requiredFields = ['code', 'firstName', 'lastName', 'dni', 'email', 'phone', 'role', 'note'];
+      const requiredFields = props.isEdit 
+        ? ['firstName', 'lastName', 'email', 'role']
+        : ['code', 'firstName', 'lastName', 'email', 'password', 'role'];
+      
       const missing = requiredFields.filter(field => !formData.value[field] || formData.value[field].toString().trim() === '');
 
       if (missing.length > 0) {
@@ -65,11 +66,8 @@ export default {
           code: props.personalData.code || '',
           firstName: props.personalData.firstName,
           lastName: props.personalData.lastName,
-          dni: props.personalData.dni || '',
           email: props.personalData.email,
-          phone: props.personalData.phone,
-          role: props.personalData.role,
-          note: props.personalData.note || ''
+          role: props.personalData.role
         };
       }
     });
@@ -95,8 +93,8 @@ export default {
       <div class="modal-content">
         <form @submit.prevent="handleSubmit" class="form-container">
           <div class="form-group">
-            <label for="code">Code</label>
-            <input id="code" v-model="formData.code" type="text" required placeholder="Enter code" />
+            <label for="code">Username</label>
+            <input id="code" v-model="formData.code" type="text" required placeholder="Enter username" :readonly="isEdit" />
           </div>
           <div class="form-group">
             <label for="firstName">First Name</label>
@@ -107,28 +105,20 @@ export default {
             <input id="lastName" v-model="formData.lastName" type="text" required placeholder="Enter last name" />
           </div>
           <div class="form-group">
-            <label for="dni">DNI</label>
-            <input id="dni" v-model="formData.dni" type="text" required placeholder="Enter DNI" />
-          </div>
-          <div class="form-group">
             <label for="email">Email</label>
             <input id="email" v-model="formData.email" type="email" required placeholder="Enter email" />
           </div>
-          <div class="form-group">
-            <label for="phone">Phone</label>
-            <input id="phone" v-model="formData.phone" type="tel" required placeholder="Enter phone number" />
+          <div class="form-group" v-if="!isEdit">
+            <label for="password">Password</label>
+            <input id="password" v-model="formData.password" type="password" required placeholder="Enter password" />
           </div>
           <div class="form-group">
             <label for="role">Role</label>
             <select id="role" v-model="formData.role" required>
               <option disabled value="">Select role</option>
-              <option value="technician">Technician</option>
-              <option value="admin">Administrator</option>
+              <option value="RoleTechnical">Technical</option>
+              <option value="RoleAdmin">Administrator</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label for="note">Notes</label>
-            <textarea id="note" v-model="formData.note" rows="3" required placeholder="Enter notes"></textarea>
           </div>
         </form>
       </div>
@@ -240,5 +230,11 @@ export default {
   font-size: 0.9rem;
   color: var(--clr-text);
   background-color: var(--clr-surface);
+}
+
+.form-group input[readonly] {
+  background-color: var(--clr-surface-100);
+  color: var(--clr-text-muted);
+  cursor: not-allowed;
 }
 </style>

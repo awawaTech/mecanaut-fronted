@@ -146,7 +146,6 @@ const collapseSidebar = () => {
 };
 
 const handleLogout = () => {
-  console.log('🔄 Iniciando logout...');
   AuthService.logout();
   router.push('/login');
 };
