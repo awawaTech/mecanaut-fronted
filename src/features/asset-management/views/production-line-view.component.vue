@@ -89,6 +89,24 @@
           </div>
         </div>
       </transition>
+      <ProductionLineFormModal
+          v-if="showCreateModal"
+          :is-edit="false"
+          :production-line-data="{}"
+          :plants-list="plants"
+          @submit="handleCreate"
+          @cancel="() => { showCreateModal = false; selectedLine = null }"
+      />
+
+      <ProductionLineFormModal
+          v-if="showEditModal"
+          :is-edit="true"
+          :production-line-data="selectedLine"
+          :plants-list="plants"
+          @submit="handleEdit"
+          @delete="handleDelete"
+          @cancel="showEditModal = false"
+      />
     </main>
 
     <!-- Modal para crear/editar líneas de producción -->
@@ -120,7 +138,7 @@ import InteractProductionLine from '../components/interact-production-line.compo
 import { ProductionLineApiService } from '../services/production-line-api.service.js';
 import AuthService from "@/features/authentication/services/auth.service.js";
 import {PlantApiService} from "@/features/asset-management/services/plant-api.service.js";
-import {$t} from "@primeuix/styled";
+import ProductionLineFormModal from "@/features/asset-management/components/interact-production-line.component.vue";
 
 
 const { t } = useI18n();
@@ -138,9 +156,11 @@ const plants = ref([]);
 const selectedPlantId = ref(null);
 const productionLines = ref([]);
 const lines = ref([]);
+const showCreateModal = ref(false);
+const showEditModal = ref(false);
 
 // Columnas para la tabla
-const tableColumns = [
+const getTableColumns = () => [
   { key: 'id', label: t('assetManagement.productionLines.columns.id'), type: 'texto' },
   { key: 'name', label: t('assetManagement.productionLines.columns.name'), type: 'texto' },
   { key: 'plantName', label: t('assetManagement.productionLines.columns.plant'), type: 'texto' },
@@ -148,6 +168,8 @@ const tableColumns = [
   { key: 'status', label: t('assetManagement.productionLines.columns.status'), type: 'texto' },
   { key: 'details', label: t('assetManagement.productionLines.columns.details'), type: 'informacion', ctaLabel: t('assetManagement.productionLines.columns.detailsButton') }
 ];
+
+const tableColumns = computed(() => getTableColumns());
 
 // Datos para el panel de información
 const infoData = ref([]);
