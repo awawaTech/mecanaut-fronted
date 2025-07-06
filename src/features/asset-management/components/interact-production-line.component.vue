@@ -69,7 +69,8 @@ export default {
       formData,
       handleSubmit,
       handleCancel,
-      handleDelete
+      handleDelete,
+      plantsList: props.plantsList
     };
 
   }
@@ -101,8 +102,8 @@ export default {
             <label for="status">Status</label>
             <select id="status" v-model="formData.status" required>
               <option disabled value="">Select status</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
             </select>
           </div>
           <div class="form-group">

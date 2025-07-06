@@ -2,12 +2,18 @@ import {ProductionLineResponse} from "@/features/asset-management/services/produ
 import {ProductionLineEntity} from "@/features/asset-management/models/production-line.entity.js";
 export class ProductionLineAssembler {
   static toEntitiesFromResponse(response) {
-    if (!Array.isArray(response.data)) {
-      console.error('Expected an array in response.data but got:', response.data);
-      return [];
-    }
-
-    return response.data.map(resource => this.toEntityFromResource(resource));
+    return response.data.map(resource => {
+      const entity = this.toEntityFromResource(resource);
+      return {
+        id: entity.id,
+        name: entity.name,
+        code: entity.code,
+        capacityUnitsPerHour: entity.capacityUnitsPerHour,
+        unit: entity.unit,
+        status: entity.status,
+        plantId: entity.plantId
+      };
+    });
   }
 
   static toEntityFromResource(resource) {
@@ -20,6 +26,7 @@ export class ProductionLineAssembler {
       name: resource.name,
       code: resource.code,
       capacityUnitsPerHour: resource.capacityUnitsPerHour,
+      unit: resource.unit,
       status: resource.status,
       plantId: resource.plantId
     });
