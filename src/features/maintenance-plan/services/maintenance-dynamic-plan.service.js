@@ -2,13 +2,13 @@ import axios from 'axios';
 import { MaintenanceDynamicPlanAssembler } from './maintenance-dynamic-plan.assembler.js';
 
 const http = axios.create({
-  baseURL: 'http://localhost:3000/maintenance-dynamic-plans',
+  baseURL: 'http://localhost:5128/api',
   timeout: 8000,
 });
 
 // Nueva instancia para la API externa
 const externalHttp = axios.create({
-  baseURL: 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api',
+  baseURL: 'http://localhost:5128/api',
   timeout: 8000,
 });
 

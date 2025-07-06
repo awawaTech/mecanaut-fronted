@@ -72,6 +72,7 @@
       "maintenancePlan": "Plan de Mantenimiento",
       "execution": "Ejecución",
       "dashboard": "Dashboard",
+      "machineParameters": "Métricas de Máquina",
       "staffManagement": "Gestión de Personal",
       "settings": "Configuración"
     },

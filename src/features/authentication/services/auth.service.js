@@ -183,7 +183,7 @@ setAuthToken(token) {
     try {
       
       // Intentar hacer una petición simple al endpoint base para verificar conectividad
-      const response = await fetch('https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/authentication/health', {
+      const response = await fetch('http://localhost:5128/api/v1/authentication/health', {
         method: 'HEAD',
         mode: 'cors'
       });

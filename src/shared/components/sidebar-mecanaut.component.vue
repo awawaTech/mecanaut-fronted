@@ -51,83 +51,106 @@ watch(isExpanded, (newValue) => {
   emit('sidebar-toggle', newValue);
 });
 
+// Computed para verificar si el usuario es técnico
+const isTechnicalUser = computed(() => {
+  const roles = userData.value?.roles || [];
+  return roles.includes('RoleTechnical');
+});
+
 // Opciones del menú usando computed para reactividad
-const menuOptions = computed(() => [
+const menuOptions = computed(() => {
+  const allOptions = [
+    { 
+      path: '/', 
+      title: t('sidebar.menu.home'), 
+      icon: 'pi pi-home' 
+    },
+    { 
+      path: '/maintenance-calendar',
+      title: t('sidebar.menu.calendar'), 
+      icon: 'pi pi-calendar' 
+    },
+    {
+      path: '/inventario',
+      title: t('sidebar.menu.inventory.title'),
+      icon: 'pi pi-box',
+      submenu: [
+        { 
+          path: '/inventory-parts', 
+          title: t('sidebar.menu.inventory.parts')
+        },
+        { 
+          path: '/purchase-orders', 
+          title: t('sidebar.menu.inventory.purchaseOrders')
+        }
+      ]
+    },
+    {
+      path: '/gestion-activos',
+      title: t('sidebar.menu.assetManagement.title'),
+      icon: 'pi pi-cog',
+      submenu: [
+        { 
+          path: '/machinery', 
+          title: t('sidebar.menu.assetManagement.machinery')
+        },
+        { 
+          path: '/gestion-activos/lineas-produccion', 
+          title: t('sidebar.menu.assetManagement.productionLines')
+        },
+        { 
+          path: '/gestion-activos/plantas', 
+          title: t('sidebar.menu.assetManagement.plants')
+        }
+      ]
+    },
+    { 
+      path: '/orden-trabajo', 
+      title: t('sidebar.menu.workOrder'), 
+      icon: 'pi pi-file' 
+    },
+    { 
+      path: '/maintenance-plan', 
+      title: t('sidebar.menu.maintenancePlan'), 
+      icon: 'pi pi-wrench' 
+    },
+    { 
+      path: '/execution', 
+      title: t('sidebar.menu.execution'), 
+      icon: 'pi pi-play' 
+    },/*
+    { 
+      path: '/dashboard', 
+      title: t('sidebar.menu.dashboard'), 
+      icon: 'pi pi-chart-bar' 
+    },*/
   { 
-    path: '/', 
-    title: t('sidebar.menu.home'), 
-    icon: 'pi pi-home' 
+    path: '/machine-parameters', 
+    title: t('sidebar.menu.machineParameters'), 
+    icon: 'pi pi-sliders-h' 
   },
-  { 
-    path: '/maintenance-calendar',
-    title: t('sidebar.menu.calendar'), 
-    icon: 'pi pi-calendar' 
-  },
-  {
-    path: '/inventario',
-    title: t('sidebar.menu.inventory.title'),
-    icon: 'pi pi-box',
-    submenu: [
-      { 
-        path: '/inventory-parts', 
-        title: t('sidebar.menu.inventory.parts')
-      },
-      { 
-        path: '/purchase-orders', 
-        title: t('sidebar.menu.inventory.purchaseOrders')
-      }
-    ]
-  },
-  {
-    path: '/gestion-activos',
-    title: t('sidebar.menu.assetManagement.title'),
-    icon: 'pi pi-cog',
-    submenu: [
-      { 
-        path: '/machinery', 
-        title: t('sidebar.menu.assetManagement.machinery')
-      },
-      { 
-        path: '/gestion-activos/lineas-produccion', 
-        title: t('sidebar.menu.assetManagement.productionLines')
-      },
-      { 
-        path: '/gestion-activos/plantas', 
-        title: t('sidebar.menu.assetManagement.plants')
-      }
-    ]
-  },
-  { 
-    path: '/orden-trabajo', 
-    title: t('sidebar.menu.workOrder'), 
-    icon: 'pi pi-file' 
-  },
-  { 
-    path: '/maintenance-plan', 
-    title: t('sidebar.menu.maintenancePlan'), 
-    icon: 'pi pi-wrench' 
-  },
-  { 
-    path: '/execution', 
-    title: t('sidebar.menu.execution'), 
-    icon: 'pi pi-play' 
-  },/*
-  { 
-    path: '/dashboard', 
-    title: t('sidebar.menu.dashboard'), 
-    icon: 'pi pi-chart-bar' 
-  },*/
-  { 
-    path: '/administracion-personal', 
-    title: t('sidebar.menu.staffManagement'), 
-    icon: 'pi pi-users' 
-  },
-  { 
-    path: '/configuracion', 
-    title: t('sidebar.menu.settings'), 
-    icon: 'pi pi-cog' 
-  }
-]);
+    { 
+      path: '/administracion-personal', 
+      title: t('sidebar.menu.staffManagement'), 
+      icon: 'pi pi-users',
+      requiresAdmin: true
+    },
+    { 
+      path: '/configuracion', 
+      title: t('sidebar.menu.settings'), 
+      icon: 'pi pi-cog' 
+    }
+  ];
+
+  // Filtrar opciones según el rol del usuario
+  return allOptions.filter(option => {
+    // Si la opción requiere admin y el usuario es técnico, no mostrarla
+    if (option.requiresAdmin && isTechnicalUser.value) {
+      return false;
+    }
+    return true;
+  });
+});
 
 // Router
 const router = useRouter();
