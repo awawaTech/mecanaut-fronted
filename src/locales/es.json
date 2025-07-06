@@ -289,8 +289,8 @@
         "address": "Dirección",
         "city": "Ciudad",
         "country": "País",
-        "contactPhone": "Teléfono",
-        "contactEmail": "Email",
+        "phone": "Teléfono",
+        "email": "Email",
         "status": "Estado"
       },
       "details": {
@@ -381,7 +381,8 @@
       },
       "buttons": {
         "save": "Guardar",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "create": "Crear"
       }
     }
   },

@@ -26,6 +26,7 @@
             :new-label="$t('assetManagement.productionLines.search.newButton')"
             :show-new-button="true"
             @action-click="newLineAction"
+            @search="onSearchPlan"
           />
         </div>
 
@@ -42,6 +43,7 @@
           <record-table
             :columns="tableColumns"
             :data="lines"
+            :showSearch="false"
             @info-click="handleTableAction"
           />
         </div>
@@ -89,6 +91,24 @@
           </div>
         </div>
       </transition>
+      <ProductionLineFormModal
+          v-if="showCreateModal"
+          :is-edit="false"
+          :production-line-data="{}"
+          :plants-list="plants"
+          @submit="handleCreate"
+          @cancel="() => { showCreateModal = false; selectedLine = null }"
+      />
+
+      <ProductionLineFormModal
+          v-if="showEditModal"
+          :is-edit="true"
+          :production-line-data="selectedLine"
+          :plants-list="plants"
+          @submit="handleEdit"
+          @delete="handleDelete"
+          @cancel="showEditModal = false"
+      />
     </main>
 
     <!-- Modal para crear/editar líneas de producción -->
@@ -120,10 +140,10 @@ import InteractProductionLine from '../components/interact-production-line.compo
 import { ProductionLineApiService } from '../services/production-line-api.service.js';
 import AuthService from "@/features/authentication/services/auth.service.js";
 import {PlantApiService} from "@/features/asset-management/services/plant-api.service.js";
+import ProductionLineFormModal from "@/features/asset-management/components/interact-production-line.component.vue";
 
 
 const { t } = useI18n();
-const productionLineService = new ProductionLineApiService();
 
 // Estado
 const selectedLineId = ref(null);
@@ -137,9 +157,11 @@ const plants = ref([]);
 const selectedPlantId = ref(null);
 const productionLines = ref([]);
 const lines = ref([]);
+const showCreateModal = ref(false);
+const showEditModal = ref(false);
 
 // Columnas para la tabla
-const tableColumns = [
+const getTableColumns = () => [
   { key: 'id', label: t('assetManagement.productionLines.columns.id'), type: 'texto' },
   { key: 'name', label: t('assetManagement.productionLines.columns.name'), type: 'texto' },
   { key: 'plantName', label: t('assetManagement.productionLines.columns.plant'), type: 'texto' },
@@ -147,6 +169,8 @@ const tableColumns = [
   { key: 'status', label: t('assetManagement.productionLines.columns.status'), type: 'texto' },
   { key: 'details', label: t('assetManagement.productionLines.columns.details'), type: 'informacion', ctaLabel: t('assetManagement.productionLines.columns.detailsButton') }
 ];
+
+const tableColumns = computed(() => getTableColumns());
 
 // Datos para el panel de información
 const infoData = ref([]);
@@ -161,46 +185,61 @@ const loadData = async () => {
     const plantList = await PlantApiService.getPlants();
     plants.value = plantList;
 
-    if (plantList.length === 0) return;
+    // 🚨 Asignar la primera planta como default
+    if (plantList.length > 0) {
+      selectedPlantId.value = plantList[0].id;
+    } else {
+      return;
+    }
 
-    const selectedPlantId = 2; // usa el primer plant temporalmente
-    const lines = await ProductionLineApiService.getProductionLines(selectedPlantId);
+    // ✅ Usar selectedPlantId.value
+    const linesData = await ProductionLineApiService.getProductionLines(selectedPlantId.value);
 
-    productionLines.value = lines.map(l => {
+    productionLines.value = linesData.map(l => {
       const plantName = plantList.find(p => p.id === l.plantId)?.name || '';
       return {
         id: l.id,
         name: l.name,
         code: l.code,
-        capacity: l.capacityUnitsPerHour,
+        capacityUnitsPerHour: l.capacityUnitsPerHour,
+        unit: l.unit,
         status: l.status,
         plantId: l.plantId,
-        plantName,
-        info: l.id
+        plantName
       };
     });
 
-    console.log("✅ Datos cargados:", productionLines.value);
-
-    // ⬅️⬅️⬅️ ESTA LÍNEA ES CRUCIAL
     prepareTableData();
-
   } catch (error) {
     console.error('Error loading production lines:', error);
   }
 };
 const loadProductionLines = async () => {
   if (!selectedPlantId.value) return;
+
   loading.value = true;
   error.value = null;
 
   try {
-    const response = await productionLineService.getProductionLines(selectedPlantId.value);
-    productionLines.value = response;
+    const response = await ProductionLineApiService.getProductionLines(selectedPlantId.value);
+
+    if (!Array.isArray(response)) {
+      throw new Error('Respuesta inválida: no es un array');
+    }
+
+    productionLines.value = response.map(l => {
+      const plantName = getPlantName(l.plantId);
+      return {
+        ...l,
+        plantName
+      };
+    });
     prepareTableData();
   } catch (err) {
-    console.error('Error al cargar líneas de producción:', err);
-    error.value = 'Error al cargar las líneas de producción';
+    console.error('❌ Error al cargar líneas de producción:', err);
+    error.value = 'Error al cargar las líneas de producción. Ver consola para más detalles.';
+    productionLines.value = [];  // limpiar tabla si falla
+    lines.value = [];           // limpiar vista de tabla
   } finally {
     loading.value = false;
   }
@@ -211,7 +250,7 @@ const prepareTableData = () => {
     id: line.id,
     name: line.name,
     plantName: getPlantName(line.plantId),
-    capacity: `${line.maxUnitsPerHour} ${line.unit}/hora`,
+    capacity: `${line.capacityUnitsPerHour} ${line.unit}/hora`,
     status: getStatusText(line.status),
     details: line.id,
     original: line
@@ -235,7 +274,7 @@ const getStatusText = (status) => {
 const selectProductionLine = async (id) => {
   loading.value = true;
   try {
-    const line = await productionLineService.getProductionLineById(id);
+    const line = await ProductionLineApiService.getProductionLineById(id);
     selectedLine.value = line;
     selectedLineId.value = line.id;
     updateInfoPanel(line);
@@ -296,7 +335,7 @@ const saveLine = async (lineData) => {
         ...selectedLine.value,
         ...lineData
       };
-      const result = await productionLineService.updateProductionLine(updatedLine);
+      const result = await ProductionLineApiService.updateProductionLine(updatedLine);
       const index = productionLines.value.findIndex(l => l.id === result.id);
       if (index >= 0) {
         productionLines.value[index] = result;
@@ -311,8 +350,9 @@ const saveLine = async (lineData) => {
         plantId: selectedPlantId.value,
         status: 'ACTIVE'
       };
-      const created = await productionLineService.createProductionLine(newLine);
+      const created = await ProductionLineApiService.createProductionLine(newLine);
       productionLines.value.push(created);
+      await loadProductionLines();
     }
 
     prepareTableData();
@@ -334,7 +374,7 @@ const toggleLineStatus = async () => {
   loading.value = true;
 
   try {
-    const updatedLine = await productionLineService.changeProductionLineStatus(
+    const updatedLine = await ProductionLineApiService.changeProductionLineStatus(
       selectedLine.value.id,
       newStatus
     );
@@ -354,20 +394,6 @@ const toggleLineStatus = async () => {
   }
 };
 
-const loadPlants = async () => {
-  try {
-    const response = await plantService.getAll();
-    plants.value = response;
-    if (response.length > 0) {
-      selectedPlantId.value = response[0].id;
-      loadProductionLines();
-    }
-  } catch (err) {
-    console.error('Error al cargar las plantas:', err);
-    error.value = 'Error al cargar las plantas';
-  }
-};
-
 const onPlantChange = () => {
   loadProductionLines();
 };
@@ -375,15 +401,14 @@ const onPlantChange = () => {
 // Ciclo de vida
 onMounted(async () => {
   try {
-    // Verifica si el usuario ya está autenticado
+
     if (AuthService.isAuthenticated()) {
       const token = AuthService.getToken();
-      AuthService.setAuthToken(token); // opcional si ya lo hizo en constructor
+      AuthService.setAuthToken(token);
       await loadData();
     } else {
       console.warn("🔐 Usuario no autenticado. Redirigiendo a login...");
-      // Redirige o muestra mensaje
-      window.location.href = '/authentication/sign-in'; // o usa tu router
+      window.location.href = '/authentication/sign-in';
     }
   } catch (error) {
     console.error("❌ Error al cargar datos con usuario autenticado:", error.message);
