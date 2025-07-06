@@ -183,10 +183,10 @@ const searchFilters = [
     value: 'parameter',
     options: [
       { label: 'Todos', value: '' },
-      { label: 'Kilometraje', value: 'kilometraje' },
-      { label: 'Temperatura', value: 'temperatura' },
-      { label: 'Presión', value: 'presion' },
-      { label: 'Vibración', value: 'vibracion' }
+      { label: 'Kilometraje', value: '1' },
+      { label: 'Temperatura', value: '2' },
+      { label: 'Presión', value: '3' },
+      { label: 'Vibración', value: '4' }
     ]
   },
   {
@@ -201,44 +201,7 @@ const searchFilters = [
   }
 ];
 
-// Datos hardcodeados para planes de mantenimiento dinámicos
-const MOCK_PLANS_DATA = [
-  {
-    "dynamicPlanId": 1,
-    "planName": "Plan Dinámico - Kilometraje",
-    "parameter": "kilometraje",
-    "maxValue": "10000",
-    "machineIds": [101, 102],
-    "tasks": [
-      {
-        "taskId": 1,
-        "taskName": "Verificación de niveles",
-        "taskDescription": "Revisar niveles de aceite"
-      },
-      {
-        "taskId": 2,
-        "taskName": "Limpieza general",
-        "taskDescription": "Limpiar los filtros"
-      }
-    ],
-    "userCreator": 1
-  },
-  {
-    "dynamicPlanId": 2,
-    "planName": "Plan Dinámico - Temperatura",
-    "parameter": "temperatura",
-    "maxValue": "85",
-    "machineIds": [103, 104],
-    "tasks": [
-      {
-        "taskId": 3,
-        "taskName": "Control de temperatura",
-        "taskDescription": "Verificar sistema de refrigeración"
-      }
-    ],
-    "userCreator": 1
-  }
-];
+
 
 // Filtra los planes según la búsqueda y filtros activos
 const filterPlans = () => {
@@ -255,8 +218,8 @@ const filterPlans = () => {
     filtered = filtered.filter(plan => 
       plan.planName?.toLowerCase().includes(query) || 
       plan.dynamicPlanId?.toString().includes(query) ||
-      plan.parameter?.toLowerCase().includes(query) ||
-      plan.maxValue?.toString().includes(query)
+      getParameterName(plan.parameter)?.toLowerCase().includes(query) ||
+      plan.amount?.toString().includes(query)
     );
   }
   
@@ -273,7 +236,7 @@ const filterPlans = () => {
   // Filtrar por parámetro
   if (activeFilters.value.parameter) {
     filtered = filtered.filter(plan => 
-      plan.parameter?.toLowerCase().includes(activeFilters.value.parameter.toLowerCase())
+      plan.parameter === activeFilters.value.parameter
     );
   }
   
@@ -330,7 +293,7 @@ const loadProductionLines = async (plantId) => {
 const onPlantChange = async () => {
   selectedProductionLineId.value = ''; // Resetear línea de producción
   await loadProductionLines(selectedPlantId.value);
-  filterPlans(); // Reaplicar filtros
+  await loadPlans(); // Recargar planes con el nuevo filtro de planta
 };
 
 // Manejador de cambio de línea de producción
@@ -377,7 +340,7 @@ const tableColumns = ref([
   { key: 'dynamicPlanId', label: 'ID', type: 'texto' },
   { key: 'planName', label: 'Nombre', type: 'texto' },
   { key: 'parameter', label: 'Parámetro', type: 'texto' },
-  { key: 'maxValue', label: 'Mantenimiento cada', type: 'texto' },
+  { key: 'amount', label: 'Mantenimiento cada', type: 'texto' },
   { key: 'actions', label: 'Acciones', type: 'cta', ctaLabel: 'Ver', ctaVariant: 'primary' }
 ]);
 
@@ -397,8 +360,21 @@ const loadPlans = async () => {
   loading.value = true;
   error.value = '';
   try {
-    // Usar los datos hardcodeados en lugar de llamar al servicio
-    allPlansData.value = MOCK_PLANS_DATA;
+    // Usar el servicio real con el plantLineId seleccionado
+    const plantLineId = selectedPlantId.value || null;
+    const dynamicPlans = await maintenanceDynamicPlanService.getAllPlans(plantLineId);
+    
+    // Convertir los planes dinámicos al formato esperado por la tabla
+    allPlansData.value = dynamicPlans.map(plan => ({
+      dynamicPlanId: plan.dynamicPlanId,
+      planName: plan.planName,
+      parameter: plan.parameter,
+      amount: plan.amount,
+      machineIds: plan.machineIds,
+      tasks: plan.tasks,
+      userCreator: plan.userCreator
+    }));
+    
     filterPlans(); // Aplicar filtros a los datos cargados
   } catch (err) {
     error.value = err?.message ?? 'Error inesperado';
@@ -450,8 +426,8 @@ const onRowClick = ({ row }) => {
   planInfoData.value = [
     { subtitle: 'ID del Plan', info: row.dynamicPlanId },
     { subtitle: 'Nombre', info: row.planName },
-    { subtitle: 'Parámetro', info: row.parameter },
-    { subtitle: 'Mantenimiento cada', info: row.maxValue },
+    { subtitle: 'Parámetro', info: getParameterName(row.parameter) },
+    { subtitle: 'Mantenimiento cada', info: row.amount },
     { subtitle: 'Máquinas', info: row.machineIds ? row.machineIds.join(', ') : 'N/A' },
     { subtitle: 'Creado por', info: row.userCreator }
   ];
@@ -461,12 +437,23 @@ const onRowClick = ({ row }) => {
   if (row.tasks && Array.isArray(row.tasks)) {
     row.tasks.forEach(task => {
       planTasksItems.value.push({
-        model: task.taskName
+        model: task.taskDescription || task.taskName || 'Tarea sin descripción'
       });
     });
   }
   
   showDetailPanel.value = true;
+};
+
+// Función auxiliar para obtener el nombre del parámetro
+const getParameterName = (parameterId) => {
+  const parameterMap = {
+    '1': 'Kilometraje',
+    '2': 'Temperatura',
+    '3': 'Presión',
+    '4': 'Vibración'
+  };
+  return parameterMap[parameterId] || parameterId;
 };
 
 const closeDetailPanel = () => {
@@ -482,7 +469,6 @@ const formatDate = (dateString) => {
 
 onMounted(() => {
   loadPlans();
-  loadDynamicPlans(); // Cargar planes dinámicos al iniciar
   loadPlants(); // Cargar plantas al iniciar
 });
 </script>

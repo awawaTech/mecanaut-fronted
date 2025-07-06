@@ -185,21 +185,19 @@
     "title": "Work Orders",
     "search": {
       "placeholder": "Search order by code...",
-      "newOrder": "New Order",
-      "filters": {
-        "type": {
-          "label": "Type",
-          "options": {
-            "preventive": "Preventive",
-            "corrective": "Corrective"
-          }
-        }
-      }
+      "newOrder": "New Order"
+    },
+    "filters": {
+      "plant": "Plant",
+      "selectPlant": "Select Plant",
+      "productionLine": "Production Line",
+      "allLines": "All lines"
     },
     "table": {
       "code": "Code",
       "date": "Date",
       "type": "Type",
+      "status": "Status",
       "assign": "Assign",
       "details": "Details"
     },
@@ -213,6 +211,7 @@
           "code": "Code",
           "date": "Date",
           "type": "Type",
+          "status": "Status",
           "productionLine": "Production Line"
         },
         "technicians": {
@@ -236,7 +235,8 @@
         },
         "productionLine": {
           "label": "Production Line",
-          "placeholder": "Select a line"
+          "placeholder": "Select a line",
+          "hint": "Production line is automatically selected based on the filter"
         },
         "type": {
           "label": "Type",
@@ -245,17 +245,35 @@
             "corrective": "Corrective"
           }
         },
+        "machines": {
+          "label": "Machines",
+          "hint": "Select machines for this order",
+          "loading": "Loading machines...",
+          "noMachines": "No machines available for this production line"
+        },
         "technicians": {
           "label": "Technicians",
-          "add": "Add Technician",
-          "remove": "Remove Technician",
-          "emptyState": "No technicians assigned",
-          "technician": "Technician",
-          "select": "Select Technician",
-          "selectPlaceholder": "Choose a technician",
-          "machines": "Assigned Machines",
-          "machinesHint": "Select machines for this technician"
+          "hint": "Select technicians for this order"
+        },
+        "tasks": {
+          "label": "Tasks",
+          "placeholder": "Enter a new task",
+          "add": "Add",
+          "emptyState": "No tasks defined"
+        },
+        "type": {
+          "hint": "All orders are created as corrective"
         }
+      },
+      "assignTechnicians": {
+        "title": "Assign Technicians",
+        "orderInfo": "Order Information",
+        "selectTechnicians": "Select Technicians",
+        "hint": "Select the technicians who will work on this order",
+        "selectedCount": "{count} technician(s) selected",
+        "assign": "Assign Technicians",
+        "loading": "Loading technicians...",
+        "noTechnicians": "No technicians available"
       },
       "actions": {
         "save": "Save",
