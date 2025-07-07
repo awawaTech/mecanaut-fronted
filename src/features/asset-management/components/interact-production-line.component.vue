@@ -8,67 +8,67 @@ export default {
     Button
   },
   props: {
-    isEdit: {
+    showModal: {
       type: Boolean,
       default: false
     },
-    productionLineData: {
+    productionLine: {
       type: Object,
-      default: () => ({})
+      default: () => null
     },
-    plantsList: {
-      type: Array,
-      default: () => []
+    title: {
+      type: String,
+      required: true
     }
   },
-  emits: ['submit', 'cancel', 'delete'],
+  emits: ['submit', 'cancel'],
   setup(props, { emit }) {
     const formData = ref({
       name: '',
       code: '',
-      capacityUnitsPerHour: '',
-      status: '',
-      plantId: ''
+      capacityUnitsPerHour: null
     });
 
     const handleSubmit = () => {
-      const requiredFields = ['name', 'code', 'capacityUnitsPerHour', 'status', 'plantId'];
+      const requiredFields = ['name', 'code', 'capacityUnitsPerHour'];
       const missing = requiredFields.filter(
-          field => !formData.value[field] || formData.value[field].toString().trim() === ''
+          field => !formData.value[field] && formData.value[field] !== 0
       );
 
       if (missing.length > 0) {
-        alert('Please fill in all the required fields.');
+        alert('Por favor, complete todos los campos requeridos.');
         return;
       }
 
-      emit('submit', {
+      // Asegurarse de que capacityUnitsPerHour sea un número
+      const submitData = {
         ...formData.value,
-        id: props.productionLineData?.id
-      });
+        capacityUnitsPerHour: Number(formData.value.capacityUnitsPerHour)
+      };
+
+      emit('submit', submitData);
     };
 
     const handleCancel = () => {
       emit('cancel');
     };
 
-    const handleDelete = () => {
-      if (confirm('Are you sure you want to delete this production line?')) {
-        emit('delete', props.productionLineData.id);
-      }
-    };
-
-    // Precargar datos en modo edición
+    // Cargar datos si estamos en modo edición
     watch(
-        () => props.productionLineData,
+        () => props.productionLine,
         (newVal) => {
-          if (props.isEdit && newVal) {
+          if (newVal) {
             formData.value = {
               name: newVal.name || '',
               code: newVal.code || '',
-              capacityUnitsPerHour: newVal.capacityUnitsPerHour || '',
-              status: newVal.status || '',
-              plantId: newVal.plantId || ''
+              capacityUnitsPerHour: newVal.capacityUnitsPerHour || null
+            };
+          } else {
+            // Resetear el formulario
+            formData.value = {
+              name: '',
+              code: '',
+              capacityUnitsPerHour: null
             };
           }
         },
@@ -78,8 +78,7 @@ export default {
     return {
       formData,
       handleSubmit,
-      handleCancel,
-      handleDelete
+      handleCancel
     };
   }
 };
@@ -89,54 +88,51 @@ export default {
   <div class="modal-overlay">
     <div class="modal-container">
       <div class="modal-header">
-        <h2>{{ isEdit ? 'Edit Production Line' : 'New Production Line' }}</h2>
+        <h2>{{ title }}</h2>
         <button class="close-button" @click="handleCancel">×</button>
       </div>
 
       <div class="modal-content">
         <form @submit.prevent="handleSubmit" class="form-container">
           <div class="form-group">
-            <label for="name">Name</label>
-            <input id="name" v-model="formData.name" type="text" required placeholder="Enter name" />
+            <label for="name">Nombre</label>
+            <input 
+              id="name" 
+              v-model="formData.name" 
+              type="text" 
+              required 
+              placeholder="Ingrese el nombre" 
+            />
           </div>
 
           <div class="form-group">
-            <label for="code">Code</label>
-            <input id="code" v-model="formData.code" type="text" required placeholder="Enter code" />
+            <label for="code">Código</label>
+            <input 
+              id="code" 
+              v-model="formData.code" 
+              type="text" 
+              required 
+              placeholder="Ingrese el código" 
+            />
           </div>
 
           <div class="form-group">
-            <label for="capacity">Capacity (units/hour)</label>
-            <input id="capacity" v-model="formData.capacityUnitsPerHour" type="number" min="0" required />
-          </div>
-
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" v-model="formData.status" required>
-              <option disabled value="">Select status</option>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
-              <option value="READY">Ready</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="plant">Plant</label>
-            <select id="plant" v-model="formData.plantId" required>
-              <option disabled value="">Select a plant</option>
-              <option v-for="plant in plantsList" :key="plant.id" :value="plant.id">
-                {{ plant.name }}
-              </option>
-            </select>
+            <label for="capacity">Capacidad (unidades/hora)</label>
+            <input 
+              id="capacity" 
+              v-model="formData.capacityUnitsPerHour" 
+              type="number" 
+              min="0" 
+              required 
+            />
           </div>
         </form>
       </div>
 
       <div class="modal-footer">
-        <Button variant="outline" @clicked="handleCancel">Cancel</Button>
-        <Button v-if="isEdit" variant="danger" style="background-color: var(--clr-danger);" @clicked="handleDelete">Delete</Button>
+        <Button variant="outline" @clicked="handleCancel">Cancelar</Button>
         <Button variant="primary" @clicked="handleSubmit">
-          {{ isEdit ? 'Save Changes' : 'Create' }}
+          {{ productionLine ? 'Guardar Cambios' : 'Crear' }}
         </Button>
       </div>
     </div>
