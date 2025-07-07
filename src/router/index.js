@@ -15,6 +15,7 @@ import WorkOrderView from '../features/work-order/views/work-order.component.vue
 import PlantView from '../features/asset-management/views/plant-view.component.vue'
 import ProductionLineView from '../features/asset-management/views/production-line-view.component.vue'
 import { requireAuth, requireGuest } from './auth.guard'
+import MachineParametersView from '../features/machine-parameters/views/machine-parameters.view.component.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -31,13 +32,13 @@ const router = createRouter({
             component: InventoryPartsView, 
             name: 'inventory-parts',
             beforeEnter: requireAuth
-        },
+        },/*
         { 
             path: '/maintenance-calendar', 
             component: CalendarViewComponent, 
             name: 'maintenance-calendar',
             beforeEnter: requireAuth
-        },
+        },*/
         { 
             path: '/purchase-orders', 
             component: PurchaseOrdersView, 
@@ -78,6 +79,12 @@ const router = createRouter({
             path: '/execution', 
             component: ExecutionView, 
             name: 'execution',
+            beforeEnter: requireAuth
+        },
+        { 
+            path: '/machine-parameters', 
+            component: MachineParametersView, 
+            name: 'machine-parameters',
             beforeEnter: requireAuth
         },
         

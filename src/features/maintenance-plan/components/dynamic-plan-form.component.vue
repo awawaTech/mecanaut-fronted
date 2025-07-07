@@ -25,18 +25,18 @@
           <label>Parámetro</label>
           <select v-model="formData.parameter" class="form-control">
             <option value="">Seleccionar parámetro</option>
-            <option value="kilometraje">Kilometraje</option>
-            <option value="temperatura">Temperatura</option>
-            <option value="presion">Presión</option>
-            <option value="vibracion">Vibración</option>
+            <option value="1">Kilometraje</option>
+            <option value="2">Temperatura</option>
+            <option value="3">Presión</option>
+            <option value="4">Vibración</option>
           </select>
         </div>
         
         <div class="form-group">
-          <label>Tope máximo</label>
+          <label>Mantenimiento cada</label>
           <input 
             type="number" 
-            v-model="formData.parameterThreshold" 
+            v-model="formData.amount" 
             placeholder="10000"
             class="form-control"
           />
@@ -63,7 +63,6 @@
           
           <div class="tasks-header">
             <div class="task-column">Tarea</div>
-            <div class="machine-column">Máquina</div>
             <div class="actions-column"></div>
           </div>
           
@@ -86,23 +85,6 @@
                 class="form-control description"
               />
             </div>
-            <div class="machine-column">
-              <div class="machine-chips">
-                <div 
-                  v-for="machineId in task.machineIds" 
-                  :key="machineId"
-                  class="machine-chip selected small"
-                >
-                  {{ getMachineName(machineId) }}
-                  <span class="remove-icon" @click="removeMachineFromTask(index, machineId)">×</span>
-                </div>
-                <button 
-                  class="add-machine-btn" 
-                  @click="showMachineSelector(index)"
-                  v-if="task.machineIds.length < selectedMachines.length"
-                >+</button>
-              </div>
-            </div>
             <div class="actions-column">
               <button class="remove-task-btn" @click="removeTask(index)">×</button>
             </div>
@@ -121,39 +103,89 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { maintenanceDynamicPlanService } from '../services/maintenance-dynamic-plan.service.js';
+import { MachineParametersService } from '../../machine-parameters/services/machine-parameters.service.js';
 
 const emit = defineEmits(['close', 'planCreated']);
 
-// Lista simulada de máquinas disponibles
-const availableMachines = ref([
-  { id: 101, name: 'MT-430' },
-  { id: 102, name: 'MT-450' },
-  { id: 103, name: 'MT-490' },
-  { id: 104, name: 'MT-510' },
-]);
-
+// Variables para máquinas disponibles
+const availableMachines = ref([]);
 const selectedMachines = ref([]);
 const formData = ref({
   planName: '',
   parameter: '',
-  parameterThreshold: null,
+  amount: null,
   tasks: []
 });
 
 const isFormValid = computed(() => {
   return formData.value.planName.trim() !== '' &&
          formData.value.parameter !== '' &&
-         formData.value.parameterThreshold &&
+         formData.value.amount &&
          selectedMachines.value.length > 0 &&
          formData.value.tasks.length > 0 &&
          formData.value.tasks.every(task => 
            task.taskName.trim() !== '' && 
-           task.taskDescription.trim() !== '' &&
-           task.machineIds.length > 0
+           task.taskDescription.trim() !== ''
          );
 });
+
+// Función para cargar máquinas disponibles
+const loadMachines = async () => {
+  try {
+    // Obtener plantas primero
+    const plants = await MachineParametersService.getPlants();
+    
+    if (plants.length > 0) {
+      // Usar la primera planta por defecto
+      const firstPlant = plants[0];
+      
+      // Obtener líneas de producción de la primera planta
+      const productionLines = await MachineParametersService.getProductionLinesByPlant(firstPlant.id);
+      
+      if (productionLines.length > 0) {
+        // Usar la primera línea de producción por defecto
+        const firstProductionLine = productionLines[0];
+        
+        // Obtener máquinas de la primera línea de producción
+        const machines = await MachineParametersService.getMachineriesByProductionLine(firstProductionLine.id);
+        
+        availableMachines.value = machines.map(machine => ({
+          id: machine.id,
+          name: machine.name || `Máquina ${machine.id}`
+        }));
+      } else {
+        // Si no hay líneas de producción, usar datos simulados
+        availableMachines.value = [
+          { id: 101, name: 'MT-430' },
+          { id: 102, name: 'MT-450' },
+          { id: 103, name: 'MT-490' },
+          { id: 104, name: 'MT-510' },
+        ];
+      }
+    } else {
+      // Si no hay plantas, usar datos simulados
+      availableMachines.value = [
+        { id: 101, name: 'MT-430' },
+        { id: 102, name: 'MT-450' },
+        { id: 103, name: 'MT-490' },
+        { id: 104, name: 'MT-510' },
+      ];
+    }
+    
+    console.log('Máquinas cargadas:', availableMachines.value);
+  } catch (error) {
+    console.error('Error al cargar máquinas:', error);
+    // En caso de error, usar datos simulados
+    availableMachines.value = [
+      { id: 101, name: 'MT-430' },
+      { id: 102, name: 'MT-450' },
+      { id: 103, name: 'MT-490' },
+      { id: 104, name: 'MT-510' },
+    ];
+  }
+};
 
 const toggleMachine = (machineId) => {
   const index = selectedMachines.value.indexOf(machineId);
@@ -181,8 +213,7 @@ const addTask = () => {
   formData.value.tasks.push({
     taskId: null,
     taskName: '',
-    taskDescription: '',
-    machineIds: []
+    taskDescription: ''
   });
 };
 
@@ -190,39 +221,17 @@ const removeTask = (index) => {
   formData.value.tasks.splice(index, 1);
 };
 
-const showMachineSelector = (taskIndex) => {
-  const task = formData.value.tasks[taskIndex];
-  const availableMachinesForTask = selectedMachines.value.filter(
-    machineId => !task.machineIds.includes(machineId)
-  );
-  
-  if (availableMachinesForTask.length > 0) {
-    task.machineIds.push(availableMachinesForTask[0]);
-  }
-};
-
-const removeMachineFromTask = (taskIndex, machineId) => {
-  const task = formData.value.tasks[taskIndex];
-  const index = task.machineIds.indexOf(machineId);
-  if (index !== -1) {
-    task.machineIds.splice(index, 1);
-  }
-};
-
 const savePlan = async () => {
   try {
     // Crear el objeto de plan dinámico
     const dynamicPlan = {
       planName: formData.value.planName,
-      // Asegurarse de que machineIds sea un array de IDs exactos
+      parameter: formData.value.parameter,
+      amount: formData.value.amount,
       machineIds: [...selectedMachines.value],
-      parameter: `${formData.value.parameter}: ${formData.value.parameterThreshold}`,
-      userCreator: 1, // Usuario ficticio
       tasks: formData.value.tasks.map(task => ({
         taskName: task.taskName,
-        taskDescription: task.taskDescription,
-        // Asegurarse de que machineIds de cada tarea sea un array de IDs exactos
-        machineIds: [...task.machineIds]
+        taskDescription: task.taskDescription
       }))
     };
     
@@ -241,6 +250,11 @@ const savePlan = async () => {
 const close = () => {
   emit('close');
 };
+
+// Cargar máquinas al montar el componente
+onMounted(() => {
+  loadMachines();
+});
 </script>
 
 <style scoped>
@@ -387,11 +401,7 @@ h3 {
 }
 
 .task-column {
-  flex: 3;
-}
-
-.machine-column {
-  flex: 2;
+  flex: 1;
 }
 
 .actions-column {
@@ -406,13 +416,7 @@ h3 {
   align-items: center;
 }
 
-.machine-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.add-machine-btn, .remove-task-btn {
+.remove-task-btn {
   background: #f0f0f0;
   border: none;
   width: 28px;
@@ -423,10 +427,6 @@ h3 {
   justify-content: center;
   cursor: pointer;
   font-weight: bold;
-}
-
-.add-machine-btn:hover {
-  background: var(--clr-primary-200);
 }
 
 .remove-task-btn {

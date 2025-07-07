@@ -72,6 +72,7 @@
       "maintenancePlan": "Maintenance Plan",
       "execution": "Execution",
       "dashboard": "Dashboard",
+      "machineParameters": "Machine Metrics",
       "staffManagement": "Staff Management",
       "settings": "Settings"
     },
@@ -139,6 +140,38 @@
     "inProgress": "In Progress",
     "tip": "Tip",
     "tipText": "Review pending high-priority orders to improve response time.",
+    "loading": "Loading dashboard data...",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "noMetrics": "No metrics available",
+    "noEquipment": "No critical equipment",
+    "noInventoryIssues": "No inventory issues",
+    "noRecentActivity": "No recent activity",
+    "additionalMetrics": "Additional Metrics",
+    "plantPerformance": "Plant Performance",
+    "activePlants": "Active Plants",
+    "teamProductivity": "Team Productivity",
+    "thisWeek": "This Week",
+    "vsLastWeek": "vs Last Week",
+    "maintenanceSchedule": "Maintenance Schedule",
+    "thisMonth": "This Month",
+    "onTrack": "On Track",
+    "behindSchedule": "Behind Schedule",
+    "costSavings": "Cost Savings",
+    "thisQuarter": "This Quarter",
+    "vsLastQuarter": "vs Last Quarter",
+    "safetyScore": "Safety Score",
+    "incidentFree": "Incident Free",
+    "days": "days",
+    "energyEfficiency": "Energy Efficiency",
+    "powerOptimization": "Power Optimization",
+    "vsLastMonth": "vs Last Month",
+    "quickStats": "Quick Stats",
+    "equipmentMonitored": "Equipment Monitored",
+    "lowStockItems": "Low Stock Items",
+    "pendingOrders": "Pending Orders",
+    "activeTechnicians": "Active Technicians",
+    "systemHealth": "System Health",
     "metrics": {
       "availability": "Availability",
       "performance": "Performance",
@@ -157,17 +190,27 @@
   "execution": {
     "title": "Work Order Execution",
     "workOrder": "Work Order",
+    "selectOrder": "Select Order",
+    "loadingOrders": "Loading orders...",
+    "noMachineries": "No machinery assigned to this order",
+    "noOrders": "No assigned orders",
+    "noOrdersDescription": "You don't have any work orders assigned for the selected filters",
+    "machineries": "Machineries",
+    "filters": {
+      "workOrder": "Work order",
+      "allOrders": "All orders"
+    },
     "tasks": {
       "title": "Tasks",
-      "drainOil": "Drain old oil to approved container",
-      "replaceFilter": "Replace hydraulic filter",
-      "refillOil": "Refill with new oil",
-      "testRun": "Test run and pressure verification",
-      "inspection": "Leak inspection for 5 min run"
+      "drainOil": "Drain oil",
+      "replaceFilter": "Replace filter",
+      "refillOil": "Refill oil",
+      "testRun": "Test run",
+      "inspection": "Final inspection"
     },
     "observations": {
       "title": "Observations",
-      "placeholder": "Text"
+      "placeholder": "Enter your observations about the work order execution here..."
     },
     "products": {
       "title": "Products Used",
@@ -184,21 +227,19 @@
     "title": "Work Orders",
     "search": {
       "placeholder": "Search order by code...",
-      "newOrder": "New Order",
-      "filters": {
-        "type": {
-          "label": "Type",
-          "options": {
-            "preventive": "Preventive",
-            "corrective": "Corrective"
-          }
-        }
-      }
+      "newOrder": "New Order"
+    },
+    "filters": {
+      "plant": "Plant",
+      "selectPlant": "Select Plant",
+      "productionLine": "Production Line",
+      "allLines": "All lines"
     },
     "table": {
       "code": "Code",
       "date": "Date",
       "type": "Type",
+      "status": "Status",
       "assign": "Assign",
       "details": "Details"
     },
@@ -212,6 +253,7 @@
           "code": "Code",
           "date": "Date",
           "type": "Type",
+          "status": "Status",
           "productionLine": "Production Line"
         },
         "technicians": {
@@ -235,7 +277,8 @@
         },
         "productionLine": {
           "label": "Production Line",
-          "placeholder": "Select a line"
+          "placeholder": "Select a line",
+          "hint": "Production line is automatically selected based on the filter"
         },
         "type": {
           "label": "Type",
@@ -244,17 +287,35 @@
             "corrective": "Corrective"
           }
         },
+        "machines": {
+          "label": "Machines",
+          "hint": "Select machines for this order",
+          "loading": "Loading machines...",
+          "noMachines": "No machines available for this production line"
+        },
         "technicians": {
           "label": "Technicians",
-          "add": "Add Technician",
-          "remove": "Remove Technician",
-          "emptyState": "No technicians assigned",
-          "technician": "Technician",
-          "select": "Select Technician",
-          "selectPlaceholder": "Choose a technician",
-          "machines": "Assigned Machines",
-          "machinesHint": "Select machines for this technician"
+          "hint": "Select technicians for this order"
+        },
+        "tasks": {
+          "label": "Tasks",
+          "placeholder": "Enter a new task",
+          "add": "Add",
+          "emptyState": "No tasks defined"
+        },
+        "type": {
+          "hint": "All orders are created as corrective"
         }
+      },
+      "assignTechnicians": {
+        "title": "Assign Technicians",
+        "orderInfo": "Order Information",
+        "selectTechnicians": "Select Technicians",
+        "hint": "Select the technicians who will work on this order",
+        "selectedCount": "{count} technician(s) selected",
+        "assign": "Assign Technicians",
+        "loading": "Loading technicians...",
+        "noTechnicians": "No technicians available"
       },
       "actions": {
         "save": "Save",

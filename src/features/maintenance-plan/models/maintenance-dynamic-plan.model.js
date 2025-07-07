@@ -7,6 +7,7 @@ export class MaintenanceDynamicPlanModel {
     planName = '',
     machineIds = [],
     parameter = '',
+    amount = '',
     userCreator = 0,
     tasks = [],
   } = {}) {
@@ -16,6 +17,7 @@ export class MaintenanceDynamicPlanModel {
     // Asegurarse que machineIds es un array
     this.machineIds = Array.isArray(machineIds) ? machineIds : [];
     this.parameter = parameter;
+    this.amount = amount;
     this.userCreator = userCreator;
     
     // Asegurarse que tasks es un array y mapearlo correctamente

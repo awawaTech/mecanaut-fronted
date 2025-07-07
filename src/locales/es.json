@@ -72,6 +72,7 @@
       "maintenancePlan": "Plan de Mantenimiento",
       "execution": "Ejecución",
       "dashboard": "Dashboard",
+      "machineParameters": "Métricas de Máquina",
       "staffManagement": "Gestión de Personal",
       "settings": "Configuración"
     },
@@ -138,6 +139,38 @@
     "inProgress": "En Progreso",
     "tip": "Sugerencia",
     "tipText": "Revisa las órdenes pendientes de alta prioridad para mejorar el tiempo de respuesta.",
+    "loading": "Cargando datos del dashboard...",
+    "retry": "Reintentar",
+    "refresh": "Actualizar",
+    "noMetrics": "No hay métricas disponibles",
+    "noEquipment": "No hay equipos críticos",
+    "noInventoryIssues": "No hay problemas de inventario",
+    "noRecentActivity": "No hay actividad reciente",
+    "additionalMetrics": "Métricas Adicionales",
+    "plantPerformance": "Rendimiento de Plantas",
+    "activePlants": "Plantas Activas",
+    "teamProductivity": "Productividad del Equipo",
+    "thisWeek": "Esta Semana",
+    "vsLastWeek": "vs Semana Anterior",
+    "maintenanceSchedule": "Programa de Mantenimiento",
+    "thisMonth": "Este Mes",
+    "onTrack": "En Camino",
+    "behindSchedule": "Retrasado",
+    "costSavings": "Ahorro de Costos",
+    "thisQuarter": "Este Trimestre",
+    "vsLastQuarter": "vs Trimestre Anterior",
+    "safetyScore": "Puntuación de Seguridad",
+    "incidentFree": "Sin Incidentes",
+    "days": "días",
+    "energyEfficiency": "Eficiencia Energética",
+    "powerOptimization": "Optimización de Energía",
+    "vsLastMonth": "vs Mes Anterior",
+    "quickStats": "Estadísticas Rápidas",
+    "equipmentMonitored": "Equipos Monitoreados",
+    "lowStockItems": "Items con Stock Bajo",
+    "pendingOrders": "Órdenes Pendientes",
+    "activeTechnicians": "Técnicos Activos",
+    "systemHealth": "Estado del Sistema",
     "metrics": {
       "availability": "Disponibilidad",
       "performance": "Rendimiento",
@@ -156,24 +189,35 @@
   "execution": {
     "title": "Ejecución de Órdenes de Trabajo",
     "workOrder": "Orden de Trabajo",
+    "selectOrder": "Seleccionar Orden",
+    "loadingOrders": "Cargando órdenes de trabajo...",
+    "noMachineries": "No hay maquinarias asignadas a esta orden",
+    "noOrders": "No hay órdenes de trabajo asignadas",
+    "noOrdersDescription": "No tienes órdenes de trabajo asignadas para esta línea de producción.",
+    "machineries": "Maquinarias",
+    "filters": {
+      "workOrder": "Orden de trabajo",
+      "allOrders": "Todas las órdenes"
+    },
     "tasks": {
       "title": "Tareas",
-      "drainOil": "Drenar aceite viejo al depósito aprobado",
-      "replaceFilter": "Reemplazar filtro hidráulico",
-      "refillOil": "Rellenar con aceite nuevo",
-      "testRun": "Arranque de prueba y verificación de presión",
-      "inspection": "Inspección de fugas en un recorrido de 5 min"
+      "drainOil": "Drenar aceite",
+      "replaceFilter": "Reemplazar filtro",
+      "refillOil": "Rellenar aceite",
+      "testRun": "Prueba de funcionamiento",
+      "inspection": "Inspección final"
     },
     "observations": {
       "title": "Observaciones",
-      "placeholder": "Texto"
+      "placeholder": "Ingresa aquí tus observaciones sobre la ejecución de la orden de trabajo..."
     },
     "products": {
       "title": "Productos utilizados",
       "product": "Producto",
       "quantity": "Cantidad",
       "addProduct": "Agregar producto",
-      "productPlaceholder": "Nombre del producto"
+      "productPlaceholder": "Nombre del producto",
+      "selectProduct": "Seleccionar producto"
     },
     "actions": {
       "finish": "Marcar como Finalizada",
@@ -184,21 +228,19 @@
     "title": "Órdenes de Trabajo",
     "search": {
       "placeholder": "Buscar orden por código...",
-      "newOrder": "Nueva Orden",
-      "filters": {
-        "type": {
-          "label": "Tipo",
-          "options": {
-            "preventive": "Preventivo",
-            "corrective": "Correctivo"
-          }
-        }
-      }
+      "newOrder": "Nueva Orden"
+    },
+    "filters": {
+      "plant": "Planta",
+      "selectPlant": "Seleccionar Planta",
+      "productionLine": "Línea de Producción",
+      "allLines": "Todas las líneas"
     },
     "table": {
       "code": "Código",
       "date": "Fecha",
       "type": "Tipo",
+      "status": "Estado",
       "assign": "Asignar",
       "details": "Detalles"
     },
@@ -212,6 +254,7 @@
           "code": "Código",
           "date": "Fecha",
           "type": "Tipo",
+          "status": "Estado",
           "productionLine": "Línea de Producción"
         },
         "technicians": {
@@ -235,7 +278,8 @@
         },
         "productionLine": {
           "label": "Línea de Producción",
-          "placeholder": "Seleccione una línea"
+          "placeholder": "Seleccione una línea",
+          "hint": "La línea de producción se selecciona automáticamente según el filtro"
         },
         "type": {
           "label": "Tipo",
@@ -244,17 +288,35 @@
             "corrective": "Correctivo"
           }
         },
+        "machines": {
+          "label": "Máquinas",
+          "hint": "Seleccione las máquinas para esta orden",
+          "loading": "Cargando maquinarias...",
+          "noMachines": "No hay máquinas disponibles para esta línea de producción"
+        },
         "technicians": {
           "label": "Técnicos",
-          "add": "Agregar Técnico",
-          "remove": "Eliminar Técnico",
-          "emptyState": "No hay técnicos asignados",
-          "technician": "Técnico",
-          "select": "Seleccionar Técnico",
-          "selectPlaceholder": "Elegir un técnico",
-          "machines": "Máquinas Asignadas",
-          "machinesHint": "Seleccione las máquinas para este técnico"
+          "hint": "Seleccione los técnicos para esta orden"
+        },
+        "tasks": {
+          "label": "Tareas",
+          "placeholder": "Ingrese una nueva tarea",
+          "add": "Agregar",
+          "emptyState": "No hay tareas definidas"
+        },
+        "type": {
+          "hint": "Todas las órdenes se crean como correctivas"
         }
+      },
+      "assignTechnicians": {
+        "title": "Asignar Técnicos",
+        "orderInfo": "Información de la Orden",
+        "selectTechnicians": "Seleccionar Técnicos",
+        "hint": "Seleccione los técnicos que trabajarán en esta orden",
+        "selectedCount": "{count} técnico(s) seleccionado(s)",
+        "assign": "Asignar Técnicos",
+        "loading": "Cargando técnicos...",
+        "noTechnicians": "No hay técnicos disponibles"
       },
       "actions": {
         "save": "Guardar",

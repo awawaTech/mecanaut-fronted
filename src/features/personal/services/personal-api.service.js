@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseEndpoint = 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1';
+const baseEndpoint = 'http://localhost:5128/api/v1';
 const usersEndpoint = `${baseEndpoint}/users`;
 
 const http = axios.create({
@@ -35,10 +35,10 @@ export class PersonalApiService {
                 firstName: user.fullName ? user.fullName.split(' ')[0] : '',
                 lastName: user.fullName ? user.fullName.split(' ').slice(1).join(' ') : '',
                 email: user.email,
-                phone: '', // Not available in the API response
+                phone: '', 
                 role: user.roles && user.roles.length > 0 ? user.roles[0] : '',
-                dni: '', // Not available in the API response
-                note: '' // Not available in the API response
+                dni: '', 
+                note: '' 
             }));
         } catch (err) {
             console.error('Error loading personal list:', err);
