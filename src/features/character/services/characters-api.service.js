@@ -2,7 +2,7 @@ import axios from "axios";
 import {CharacterAssembler} from "./character.assembler.js";
 
 // URL base para json-server
-const baseEndpoint = "http://localhost:3000";
+const baseEndpoint = "https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1";
 const charactersEndpoint = "/characters";
 
 const http = axios.create({

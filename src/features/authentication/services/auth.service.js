@@ -34,6 +34,7 @@ setAuthToken(token) {
    * @returns {Promise} - Promesa con la respuesta
    */
   async register(registrationData) {
+    console.log('registrationData', registrationData);
     try {
       const dataToSend = {
         ruc: registrationData.ruc,

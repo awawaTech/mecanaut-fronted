@@ -2,16 +2,33 @@ import axios from 'axios';
 import { MaintenancePlanAssembler } from './maintenance-plan.assembler';
 
 const http = axios.create({
-  baseURL: 'http://localhost:3000/maintenance-plan-data',
+  baseURL: 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/dynamic-maintenance-plans',
   timeout: 8000,
 });
 
 export class MaintenancePlanService {
   /* -------- READ ALL -------- */
   async getAllPlans() {
-    const res = await http.get('/');
-    // res.data → { info, data }
-    return MaintenancePlanAssembler.toModelList(res.data);
+    const token = localStorage.getItem('token');
+    const response = await fetch(
+      'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/dynamic-maintenance-plans?plantLineId=1',
+      {
+        method: 'GET',
+        headers: {
+          'accept': 'text/plain',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Respuesta del backend:', errorText);
+      throw new Error('Error al obtener planes dinámicos');
+    }
+    // El backend responde con texto plano, pero es JSON en string
+    const text = await response.text();
+    const data = JSON.parse(text);
+    return MaintenancePlanAssembler.toModelList(data);
   }
 
   /* -------- READ ONE -------- */
