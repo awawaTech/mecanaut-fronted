@@ -9,6 +9,7 @@
           <label class="plant-label">{{ $t('assetManagement.productionLines.selectPlant') }}</label>
           <div class="plant-select-wrapper">
             <select v-model="selectedPlantId" @change="onPlantChange" class="plant-select">
+              <option disabled :value="null">Select a plant</option>
               <option v-for="plant in plants" :key="plant.id" :value="plant.id">
                 {{ plant.name }}
               </option>
@@ -26,7 +27,6 @@
             :new-label="$t('assetManagement.productionLines.search.newButton')"
             :show-new-button="true"
             @action-click="newLineAction"
-            @search="onSearchPlan"
           />
         </div>
 
@@ -91,24 +91,6 @@
           </div>
         </div>
       </transition>
-      <ProductionLineFormModal
-          v-if="showCreateModal"
-          :is-edit="false"
-          :production-line-data="{}"
-          :plants-list="plants"
-          @submit="handleCreate"
-          @cancel="() => { showCreateModal = false; selectedLine = null }"
-      />
-
-      <ProductionLineFormModal
-          v-if="showEditModal"
-          :is-edit="true"
-          :production-line-data="selectedLine"
-          :plants-list="plants"
-          @submit="handleEdit"
-          @delete="handleDelete"
-          @cancel="showEditModal = false"
-      />
     </main>
 
     <!-- Modal para crear/editar líneas de producción -->
@@ -116,11 +98,13 @@
       <div v-if="showLineModal" class="modal-overlay" @click="closeModal">
         <div class="modal-container" @click.stop>
           <interact-production-line
-            :show-modal="showLineModal"
-            :production-line="isEditMode ? selectedLine : null"
-            :title="isEditMode ? $t('assetManagement.productionLines.modal.edit') : $t('assetManagement.productionLines.modal.new')"
-            @save="saveLine"
-            @cancel="closeModal"
+              :show-modal="showLineModal"
+              :production-line="isEditMode ? selectedLine : null"
+              :title="isEditMode ? $t('assetManagement.productionLines.modal.edit') : $t('assetManagement.productionLines.modal.new')"
+              :plants="plants"
+              :plants-list="plants"
+              @submit="saveLine"
+              @cancel="closeModal"
           />
         </div>
       </div>
@@ -177,42 +161,14 @@ const infoData = ref([]);
 const techData = ref([]);
 
 
-
 // Métodos
 
 const loadData = async () => {
-  try {
-    const plantList = await PlantApiService.getPlants();
-    plants.value = plantList;
-
-    // 🚨 Asignar la primera planta como default
-    if (plantList.length > 0) {
-      selectedPlantId.value = plantList[0].id;
-    } else {
-      return;
-    }
-
-    // ✅ Usar selectedPlantId.value
-    const linesData = await ProductionLineApiService.getProductionLines(selectedPlantId.value);
-
-    productionLines.value = linesData.map(l => {
-      const plantName = plantList.find(p => p.id === l.plantId)?.name || '';
-      return {
-        id: l.id,
-        name: l.name,
-        code: l.code,
-        capacityUnitsPerHour: l.capacityUnitsPerHour,
-        unit: l.unit,
-        status: l.status,
-        plantId: l.plantId,
-        plantName
-      };
-    });
-
-    prepareTableData();
-  } catch (error) {
-    console.error('Error loading production lines:', error);
-  }
+  const plantList = await PlantApiService.getPlants();
+  console.log('🌱 Plantas cargadas:', plantList);
+  plants.value = plantList;
+  selectedPlantId.value = plantList[0]?.id ?? null;
+  await loadProductionLines();
 };
 const loadProductionLines = async () => {
   if (!selectedPlantId.value) return;
@@ -223,51 +179,70 @@ const loadProductionLines = async () => {
   try {
     const response = await ProductionLineApiService.getProductionLines(selectedPlantId.value);
 
-    if (!Array.isArray(response)) {
-      throw new Error('Respuesta inválida: no es un array');
-    }
+    // 🧠 Asegúrate de que response contiene id, name, plantId...
+    console.log('🔄 Línea de producción cruda:', response);
 
-    productionLines.value = response.map(l => {
-      const plantName = getPlantName(l.plantId);
-      return {
-        ...l,
-        plantName
-      };
-    });
+    productionLines.value = response.map(l => ({
+      id: l.id,
+      name: l.name,
+      code: l.code,
+      plantId: l.plantId,
+      capacityUnitsPerHour: l.capacityUnitsPerHour,
+      unit: l.unit,
+      status: l.status
+    }));
+
     prepareTableData();
   } catch (err) {
     console.error('❌ Error al cargar líneas de producción:', err);
     error.value = 'Error al cargar las líneas de producción. Ver consola para más detalles.';
-    productionLines.value = [];  // limpiar tabla si falla
-    lines.value = [];           // limpiar vista de tabla
+    productionLines.value = [];
+    lines.value = [];
   } finally {
     loading.value = false;
   }
 };
 
-const prepareTableData = () => {
-  lines.value = productionLines.value.map(line => ({
-    id: line.id,
-    name: line.name,
-    plantName: getPlantName(line.plantId),
-    capacity: `${line.capacityUnitsPerHour} ${line.unit}/hora`,
-    status: getStatusText(line.status),
-    details: line.id,
-    original: line
-  }));
-};
-
 const getPlantName = (plantId) => {
   const plant = plants.value.find(p => p.id === plantId);
-  return plant ? plant.name : '';
+  return plant ? plant.name : 'Desconocido';
+};
+
+const prepareTableData = () => {
+  console.log('⏳ Entrando a prepareTableData con:', productionLines.value);
+
+  lines.value = [];
+
+  for (const line of productionLines.value) {
+    console.log('📦 Procesando línea:', line);
+
+    try {
+      const processed = {
+        id: line.id,
+        name: line.name,
+        plantName: getPlantName(line.plantId),
+        capacity: `${line.capacityUnitsPerHour || 0} ${line.unit || 'unidades'}/hora`,
+        status: getStatusText(line.status),
+        details: line.id,
+        original: line
+      };
+
+      lines.value.push(processed);
+    } catch (err) {
+      console.error('❌ Error al procesar una línea:', err, line);
+    }
+  }
+
+  console.log('✅ Resultado final de lines.value:', lines.value);
 };
 
 const getStatusText = (status) => {
-  switch(status) {
+  switch(status.toUpperCase()) {
     case 'ACTIVE': return t('assetManagement.status.active');
     case 'INACTIVE': return t('assetManagement.status.inactive');
     case 'MAINTENANCE': return t('assetManagement.status.maintenance');
-    default: return 'Desconocido';
+    case 'READY': return 'Ready'; // o una traducción si tienes
+    default: return status || 'Desconocido';
   }
 };
 
@@ -347,7 +322,6 @@ const saveLine = async (lineData) => {
     } else {
       const newLine = {
         ...lineData,
-        plantId: selectedPlantId.value,
         status: 'ACTIVE'
       };
       const created = await ProductionLineApiService.createProductionLine(newLine);
@@ -359,14 +333,13 @@ const saveLine = async (lineData) => {
     showLineModal.value = false;
   } catch (err) {
     console.error('Error al guardar la línea:', err);
-    error.value = isEditMode.value ?
-      'Error al actualizar la línea' :
-      'Error al crear la línea';
+    error.value = isEditMode.value
+        ? 'Error al actualizar la línea'
+        : 'Error al crear la línea';
   } finally {
     loading.value = false;
   }
 };
-
 const toggleLineStatus = async () => {
   if (!selectedLine.value) return;
 

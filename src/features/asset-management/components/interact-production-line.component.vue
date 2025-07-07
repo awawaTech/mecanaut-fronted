@@ -1,8 +1,7 @@
-
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import Button from '../../../shared/components/button.component.vue';
-import { useI18n } from 'vue-i18n';
+
 export default {
   name: 'ProductionLineFormModal',
   components: {
@@ -17,7 +16,10 @@ export default {
       type: Object,
       default: () => ({})
     },
-    plantsList: { type: Array, default: () => [] }
+    plantsList: {
+      type: Array,
+      default: () => []
+    }
   },
   emits: ['submit', 'cancel', 'delete'],
   setup(props, { emit }) {
@@ -25,13 +27,15 @@ export default {
       name: '',
       code: '',
       capacityUnitsPerHour: '',
-      status:'',
+      status: '',
       plantId: ''
     });
 
     const handleSubmit = () => {
-      const requiredFields = ['name','code','capacityUnitsPerHour','status','plantId'];
-      const missing = requiredFields.filter(field => !formData.value[field] || formData.value[field].toString().trim() === '');
+      const requiredFields = ['name', 'code', 'capacityUnitsPerHour', 'status', 'plantId'];
+      const missing = requiredFields.filter(
+          field => !formData.value[field] || formData.value[field].toString().trim() === ''
+      );
 
       if (missing.length > 0) {
         alert('Please fill in all the required fields.');
@@ -54,28 +58,33 @@ export default {
       }
     };
 
-    onMounted(() => {
-      if (props.isEdit && props.productionLineData) {
-        formData.value = {
-          name: props.productionLineData.name || '',
-          code: props.productionLineData.code || '',
-          capacityUnitsPerHour: props.productionLineData.capacityUnitsPerHour || '',
-          status: props.productionLineData.status || '',
-          plantId: props.productionLineData.plantId || ''
-        };
-      }
-    });
+    // Precargar datos en modo edición
+    watch(
+        () => props.productionLineData,
+        (newVal) => {
+          if (props.isEdit && newVal) {
+            formData.value = {
+              name: newVal.name || '',
+              code: newVal.code || '',
+              capacityUnitsPerHour: newVal.capacityUnitsPerHour || '',
+              status: newVal.status || '',
+              plantId: newVal.plantId || ''
+            };
+          }
+        },
+        { immediate: true }
+    );
+
     return {
       formData,
       handleSubmit,
       handleCancel,
-      handleDelete,
-      plantsList: props.plantsList
+      handleDelete
     };
-
   }
-}
+};
 </script>
+
 <template>
   <div class="modal-overlay">
     <div class="modal-container">
@@ -90,22 +99,27 @@ export default {
             <label for="name">Name</label>
             <input id="name" v-model="formData.name" type="text" required placeholder="Enter name" />
           </div>
+
           <div class="form-group">
             <label for="code">Code</label>
             <input id="code" v-model="formData.code" type="text" required placeholder="Enter code" />
           </div>
+
           <div class="form-group">
             <label for="capacity">Capacity (units/hour)</label>
             <input id="capacity" v-model="formData.capacityUnitsPerHour" type="number" min="0" required />
           </div>
+
           <div class="form-group">
             <label for="status">Status</label>
             <select id="status" v-model="formData.status" required>
               <option disabled value="">Select status</option>
               <option value="ACTIVE">Active</option>
               <option value="INACTIVE">Inactive</option>
+              <option value="READY">Ready</option>
             </select>
           </div>
+
           <div class="form-group">
             <label for="plant">Plant</label>
             <select id="plant" v-model="formData.plantId" required>
@@ -121,12 +135,13 @@ export default {
       <div class="modal-footer">
         <Button variant="outline" @clicked="handleCancel">Cancel</Button>
         <Button v-if="isEdit" variant="danger" style="background-color: var(--clr-danger);" @clicked="handleDelete">Delete</Button>
-        <Button variant="primary" @clicked="handleSubmit">{{ isEdit ? 'Save Changes' : 'Create' }}</Button>
+        <Button variant="primary" @clicked="handleSubmit">
+          {{ isEdit ? 'Save Changes' : 'Create' }}
+        </Button>
       </div>
     </div>
   </div>
 </template>
-
 
 <style scoped lang="scss">
 .modal-overlay {
