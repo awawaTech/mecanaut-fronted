@@ -7,7 +7,10 @@ import InfoContainer from '@/shared/components/information-panel/info-container.
 import InfoSection from '@/shared/components/information-panel/info-section.component.vue';
 import ButtonComponent from '@/shared/components/button.component.vue';
 import WorkOrderFormModal from '../components/work-order-form-modal.component.vue';
+import AssignTechniciansModal from '../components/assign-technicians-modal.component.vue';
 import { WorkOrderService } from '../services/work-order.service';
+import { PlantApiService } from '@/features/asset-management/services/plant-api.service';
+import { ProductionLineApiService } from '@/features/asset-management/services/production-line-api.service';
 
 export default {
   components: {
@@ -16,7 +19,8 @@ export default {
     InfoContainer,
     InfoSection,
     ButtonComponent,
-    WorkOrderFormModal
+    WorkOrderFormModal,
+    AssignTechniciansModal
   },
   setup() {
     // Estado
@@ -25,6 +29,15 @@ export default {
     const showInfoPanel = ref(false);
     const showCreateModal = ref(false);
     const showEditModal = ref(false);
+    const showAssignTechniciansModal = ref(false);
+    const selectedPlant = ref(null);
+    const selectedProductionLine = ref(null);
+    const loading = ref(false);
+    const loadingInfoPanel = ref(false);
+
+    // Datos para filtros
+    const plants = ref([]);
+    const productionLines = ref([]);
 
     // Datos para el panel de información
     const infoData = ref([]);
@@ -36,38 +49,107 @@ export default {
       { key: 'code', label: t('workOrder.table.code'), type: 'texto', searchable: true },
       { key: 'date', label: t('workOrder.table.date'), type: 'texto' },
       { key: 'type', label: t('workOrder.table.type'), type: 'texto', filterable: true },
+      { key: 'status', label: t('workOrder.table.status'), type: 'texto', filterable: true },
       { key: 'assign', label: '', type: 'cta', ctaLabel: t('workOrder.table.assign'), ctaVariant: 'primary' },
       { key: 'details', label: '', type: 'cta', ctaLabel: t('workOrder.table.details'), ctaVariant: 'outline' }
     ];
 
     // Métodos
-    const loadWorkOrders = async () => {
+    const loadPlants = async () => {
       try {
-        const data = await WorkOrderService.getOrders();
-        workOrders.value = data;
+        const data = await PlantApiService.getPlants();
+        plants.value = data;
+        // Si hay plantas, seleccionar la primera por defecto
+        if (data.length > 0 && !selectedPlant.value) {
+          selectedPlant.value = data[0].id;
+        }
       } catch (error) {
-        console.error('Error loading work orders:', error);
+        console.error('Error loading plants:', error);
       }
     };
 
-    const updateInfoPanel = (order) => {
-      infoData.value = [
-        { subtitle: t('workOrder.infoPanel.sections.generalInfo.code'), info: order.code },
-        { subtitle: t('workOrder.infoPanel.sections.generalInfo.date'), info: order.date },
-        { subtitle: t('workOrder.infoPanel.sections.generalInfo.type'), info: order.type },
-        { subtitle: t('workOrder.infoPanel.sections.generalInfo.productionLine'), info: order.productionLine }
-      ];
+    const loadProductionLines = async (plantId) => {
+      try {
+        if (!plantId) {
+          productionLines.value = [];
+          return;
+        }
+        const data = await ProductionLineApiService.getProductionLines(plantId);
+        productionLines.value = data;
+        // Resetear la selección de línea de producción
+        selectedProductionLine.value = null;
+      } catch (error) {
+        console.error('Error loading production lines:', error);
+      }
+    };
 
-      if (order.technicians.length > 0) {
-        technicianData.value = order.technicians.map(tech => ({
-          subtitle: tech.name,
-          info: tech.machines.join(', ')
-        }));
-      } else {
-        technicianData.value = [{
-          subtitle: t('workOrder.infoPanel.sections.technicians.noTechnicians'),
-          info: ''
-        }];
+    const loadWorkOrders = async () => {
+      try {
+        loading.value = true;
+        let data;
+        
+        if (selectedProductionLine.value) {
+          // Si hay línea de producción seleccionada, filtrar por ella
+          data = await WorkOrderService.getOrders(selectedProductionLine.value);
+        } else {
+          // Si no hay línea seleccionada, cargar todas las órdenes
+          data = await WorkOrderService.getOrders();
+        }
+        
+        workOrders.value = data;
+      } catch (error) {
+        console.error('Error loading work orders:', error);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const updateInfoPanel = async (order) => {
+      loadingInfoPanel.value = true;
+      
+      try {
+        infoData.value = [
+          { subtitle: t('workOrder.infoPanel.sections.generalInfo.code'), info: order.code },
+          { subtitle: t('workOrder.infoPanel.sections.generalInfo.date'), info: order.date },
+          { subtitle: t('workOrder.infoPanel.sections.generalInfo.type'), info: order.type },
+          { subtitle: t('workOrder.infoPanel.sections.generalInfo.status'), info: order.status },
+          { subtitle: t('workOrder.infoPanel.sections.generalInfo.productionLine'), info: order.productionLine }
+        ];
+
+        // Obtener información completa de los técnicos
+        if (order.technicianIds && order.technicianIds.length > 0) {
+          try {
+            const allTechnicians = await WorkOrderService.getTechnicians();
+            const assignedTechnicians = allTechnicians.filter(tech => 
+              order.technicianIds.includes(tech.id)
+            );
+            
+            if (assignedTechnicians.length > 0) {
+              technicianData.value = assignedTechnicians.map(tech => ({
+                subtitle: tech.fullName,
+                info: `${tech.username} - ${tech.email}`
+              }));
+            } else {
+              technicianData.value = [{
+                subtitle: t('workOrder.infoPanel.sections.technicians.noTechnicians'),
+                info: ''
+              }];
+            }
+          } catch (error) {
+            console.error('Error obteniendo información de técnicos:', error);
+            technicianData.value = [{
+              subtitle: t('workOrder.infoPanel.sections.technicians.noTechnicians'),
+              info: ''
+            }];
+          }
+        } else {
+          technicianData.value = [{
+            subtitle: t('workOrder.infoPanel.sections.technicians.noTechnicians'),
+            info: ''
+          }];
+        }
+      } finally {
+        loadingInfoPanel.value = false;
       }
     };
 
@@ -93,6 +175,24 @@ export default {
         console.error('Error al actualizar:', error);
       }
       closePanel();
+    };
+
+    const handleAssignTechnicians = async (payload) => {
+      try {
+        console.log('Asignando técnicos:', payload);
+        console.log('Order ID:', payload.orderId);
+        console.log('Technician IDs:', payload.technicianIds);
+        
+        await WorkOrderService.assignTechnicians(payload.orderId, payload.technicianIds);
+        console.log('Técnicos asignados exitosamente');
+        
+        showAssignTechniciansModal.value = false;
+        selectedOrder.value = null;
+        await loadWorkOrders();
+      } catch (error) {
+        console.error('Error al asignar técnicos:', error);
+        console.error('Error details:', error.response?.data);
+      }
     };
 
     const handleDelete = async (id) => {
@@ -122,10 +222,10 @@ export default {
 
       if (columnKey === 'assign') {
         selectedOrder.value = item;
-        showEditModal.value = true;
+        showAssignTechniciansModal.value = true;
       } else if (columnKey === 'details') {
         selectedOrder.value = item;
-        updateInfoPanel(item);
+        await updateInfoPanel(item);
         showInfoPanel.value = true;
       }
     };
@@ -134,9 +234,22 @@ export default {
       showCreateModal.value = true;
     };
 
+    const handlePlantChange = async () => {
+      await loadProductionLines(selectedPlant.value);
+      await loadWorkOrders();
+    };
+
+    const handleProductionLineChange = async () => {
+      await loadWorkOrders();
+    };
+
     // Lifecycle hooks
-    onMounted(() => {
-      loadWorkOrders();
+    onMounted(async () => {
+      await loadPlants();
+      if (selectedPlant.value) {
+        await loadProductionLines(selectedPlant.value);
+      }
+      await loadWorkOrders();
     });
 
     return {
@@ -145,14 +258,24 @@ export default {
       showInfoPanel,
       showCreateModal,
       showEditModal,
+      showAssignTechniciansModal,
+      selectedPlant,
+      selectedProductionLine,
+      plants,
+      productionLines,
+      loading,
+      loadingInfoPanel,
       columns,
       infoData,
       technicianData,
       handleCreate,
       handleEdit,
+      handleAssignTechnicians,
       handleDelete,
       handleCtaClick,
       handleNewClick,
+      handlePlantChange,
+      handleProductionLineChange,
       closePanel
     };
   }
@@ -168,6 +291,40 @@ export default {
     
     <div class="main-content">
       <div class="left-container">
+        <!-- Filtros de Planta y Línea de Producción -->
+        <div class="filters-section">
+          <div class="filter-group">
+            <label for="plant">{{ $t('workOrder.filters.plant') }}</label>
+            <select 
+              id="plant" 
+              v-model="selectedPlant"
+              @change="handlePlantChange"
+              class="filter-select"
+            >
+              <option value="">{{ $t('workOrder.filters.selectPlant') }}</option>
+              <option v-for="plant in plants" :key="plant.id" :value="plant.id">
+                {{ plant.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="productionLine">{{ $t('workOrder.filters.productionLine') }}</label>
+            <select 
+              id="productionLine" 
+              v-model="selectedProductionLine"
+              @change="handleProductionLineChange"
+              class="filter-select"
+              :disabled="!selectedPlant"
+            >
+              <option value="">{{ $t('workOrder.filters.allLines') }}</option>
+              <option v-for="line in productionLines" :key="line.id" :value="line.id">
+                {{ line.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+
         <RecordTableComponent
           :columns="columns"
           :data="workOrders"
@@ -175,6 +332,7 @@ export default {
           :search-placeholder="$t('workOrder.search.placeholder')"
           :show-new-button="true"
           :new-label="$t('workOrder.search.newOrder')"
+          :loading="loading"
           @cta-click="handleCtaClick"
           @new-click="handleNewClick"
         />
@@ -185,9 +343,7 @@ export default {
           v-if="showInfoPanel && selectedOrder"
           :header-text="$t('workOrder.infoPanel.orderPrefix') + selectedOrder.code"
           :show-header="true"
-          :show-primary-button="true"
-          :primary-button-text="$t('workOrder.infoPanel.edit')"
-          @primary-button-click="showEditModal = true"
+          :show-primary-button="false"
         >
           <InfoContainer :title="$t('workOrder.infoPanel.sections.generalInfo.title')" :title-type="2">
             <InfoSection
@@ -197,7 +353,11 @@ export default {
           </InfoContainer>
 
           <InfoContainer :title="$t('workOrder.infoPanel.sections.technicians.title')" :title-type="2">
+            <div v-if="loadingInfoPanel" class="loading-technicians">
+              <span class="loading-text">{{ $t('workOrder.form.assignTechnicians.loading') }}</span>
+            </div>
             <InfoSection
+              v-else
               :info-type="2"
               :data="technicianData"
             />
@@ -212,14 +372,6 @@ export default {
             >
               {{ $t('workOrder.infoPanel.close') }}
             </ButtonComponent>
-            <ButtonComponent
-              variant="outline"
-              size="sm"
-              icon-left="pi pi-times"
-              @clicked="showEditModal = true"
-            >
-              {{ $t('workOrder.infoPanel.edit') }}
-            </ButtonComponent>
           </div>
         </InformationPanel>
       </div>
@@ -230,6 +382,7 @@ export default {
       v-if="showCreateModal"
       :is-edit="false"
       :order-data="null"
+      :selected-production-line="selectedProductionLine"
       @submit="handleCreate"
       @cancel="showCreateModal = false"
     />
@@ -238,9 +391,17 @@ export default {
       v-if="showEditModal"
       :is-edit="true"
       :order-data="selectedOrder"
+      :selected-production-line="selectedProductionLine"
       @submit="handleEdit"
       @delete="handleDelete"
       @cancel="showEditModal = false"
+    />
+
+    <AssignTechniciansModal
+      v-if="showAssignTechniciansModal"
+      :order-data="selectedOrder"
+      @submit="handleAssignTechnicians"
+      @cancel="showAssignTechniciansModal = false"
     />
   </div>
 </template>
@@ -292,6 +453,51 @@ export default {
   gap: 20px;
 }
 
+.filters-section {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-grey-200);
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 4px var(--clr-shadow);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+
+  label {
+    font-weight: 500;
+    color: var(--clr-text);
+    font-size: 14px;
+  }
+
+  .filter-select {
+    padding: 12px 16px;
+    border: 2px solid var(--clr-grey-200);
+    border-radius: 4px;
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    font-size: 14px;
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--clr-primary-500);
+      box-shadow: 0 0 0 2px var(--clr-primary-100);
+    }
+
+    &:disabled {
+      background: var(--clr-grey-050);
+      cursor: not-allowed;
+      color: var(--clr-grey-200);
+    }
+  }
+}
+
 .right-container {
   flex: 0;
   display: flex;
@@ -310,6 +516,21 @@ export default {
 .panel-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.loading-technicians {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-grey-200);
+  border-radius: var(--radius-md);
+
+  .loading-text {
+    color: var(--clr-grey-200);
+    font-size: 14px;
+  }
 }
 
 :deep(.button-component) {

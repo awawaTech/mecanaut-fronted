@@ -1,110 +1,103 @@
 <template>
   <div class="container">
-    <header class="breadcrumb-header">
+    <div class="header-main">
       <h1>{{ $t('assetManagement.productionLines.title') }}</h1>
+      <div class="divider"></div>
+    </div>
 
-      <!-- Selector de plantas -->
-      <div class="plant-selector-container">
-        <div class="plant-selector-group">
-          <label class="plant-label">{{ $t('assetManagement.productionLines.selectPlant') }}</label>
-          <div class="plant-select-wrapper">
-            <select v-model="selectedPlantId" @change="onPlantChange" class="plant-select">
-              <option v-for="plant in plants" :key="plant.id" :value="plant.id">
-                {{ plant.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </header>
+    <!-- Selector de plantas -->
+    <div class="plant-selector">
+      <label for="plant-select">{{ $t('assetManagement.productionLines.selectPlant') }}</label>
+      <select 
+        id="plant-select"
+        v-model="selectedPlantId" 
+        @change="onPlantChange"
+        class="plant-select"
+      >
+        <option disabled :value="null">Select a plant</option>
+        <option v-for="plant in plants" :key="plant.id" :value="plant.id">
+          {{ plant.name }}
+        </option>
+      </select>
+    </div>
 
-    <main class="main-container">
-      <div class="search-container" :class="{'full-width': !showDetailPanel}">
-        <div class="search-actions">
-          <search-component
-            :placeholder="$t('assetManagement.productionLines.search.placeholder')"
-            :new-label="$t('assetManagement.productionLines.search.newButton')"
-            :show-new-button="true"
-            @action-click="newLineAction"
-          />
-        </div>
-
-        <div v-if="loading && !showDetailPanel" class="loading-indicator">
+    <div class="main-content">
+      <div class="left-container">
+        <div v-if="loading" class="loading-indicator">
           {{ $t('assetManagement.productionLines.loading.data') }}
         </div>
 
-        <div v-if="error && !showDetailPanel" class="error-message">
+        <div v-if="error" class="error-message">
           {{ error }}
           <button @click="loadProductionLines">{{ $t('assetManagement.error.retry') }}</button>
         </div>
 
-        <div v-if="!loading && !error" class="table-container">
-          <record-table
+        <div v-if="!loading && !error">
+          <RecordTable
             :columns="tableColumns"
             :data="lines"
+            :searchable-columns="['name', 'code']"
+            search-placeholder="Buscar por nombre o código..."
+            :show-new-button="true"
+            :new-label="$t('assetManagement.productionLines.search.newButton')"
             @info-click="handleTableAction"
+            @new-click="newLineAction"
           />
         </div>
       </div>
 
-      <!-- Panel de información -->
-      <transition name="slide">
-        <div v-if="showDetailPanel" class="information-panel-container">
-          <div class="panel-header">
-            <button class="close-button" @click="closeDetailPanel">
-              <span aria-hidden="true">×</span>
-            </button>
-          </div>
-
-          <div v-if="loading" class="loading-indicator">
-            {{ $t('assetManagement.productionLines.loading.details') }}
-          </div>
-
-          <div v-if="!loading && selectedLine" class="panel-content">
-            <information-panel
-              :header-text="'ID: ' + selectedLineId + ' | ' + selectedLine.name"
-              :show-header="true"
-              :show-primary-button="true"
-              :primary-button-text="$t('assetManagement.buttons.edit')"
-              :show-secondary-button="true"
-              :secondary-button-text="selectedLine.status === 'ACTIVE' ? $t('assetManagement.buttons.deactivate') : $t('assetManagement.buttons.activate')"
-              @primary-button-click="editLine"
-              @secondary-button-click="toggleLineStatus"
-            >
-              <info-section
-                :info-type="2"
-                :data="infoData"
-              />
-
-              <info-container
-                :title="$t('assetManagement.productionLines.details.specifications')"
-                :title-type="2"
-              >
-                <info-section
-                  :info-type="2"
-                  :data="techData"
-                />
-              </info-container>
-            </information-panel>
-          </div>
+      <div class="right-container" :class="{ 'show-panel': showDetailPanel }">
+        <div v-if="loading" class="loading-indicator">
+          {{ $t('assetManagement.productionLines.loading.details') }}
         </div>
-      </transition>
-    </main>
+
+        <information-panel 
+          v-if="!loading && selectedLine"
+          class="info-panel"
+        >
+          <template #header>
+            <div class="panel-header">
+              <h2>{{ 'ID: ' + selectedLineId + ' | ' + selectedLine.name }}</h2>
+            </div>
+          </template>
+
+          <info-section
+            :info-type="2"
+            :title="$t('assetManagement.productionLines.details.general')"
+            :data="infoData"
+          />
+
+          <info-section
+            :info-type="2"
+            :title="$t('assetManagement.productionLines.details.specifications')"
+            :data="techData"
+          />
+
+          <div class="panel-actions">
+            <div class="actions-row">
+              <ButtonComponent
+                variant="secondary"
+                size="sm"
+                icon-left="pi pi-times"
+                @click="closeDetailPanel"
+              >
+                {{ $t('common.close') }}
+              </ButtonComponent>
+            </div>
+          </div>
+        </information-panel>
+      </div>
+    </div>
 
     <!-- Modal para crear/editar líneas de producción -->
-    <transition name="fade">
-      <div v-if="showLineModal" class="modal-overlay" @click="closeModal">
-        <div class="modal-container" @click.stop>
-          <interact-production-line
-            :show-modal="showLineModal"
-            :production-line="isEditMode ? selectedLine : null"
-            :title="isEditMode ? $t('assetManagement.productionLines.modal.edit') : $t('assetManagement.productionLines.modal.new')"
-            @save="saveLine"
-            @cancel="closeModal"
-          />
-        </div>
-      </div>
-    </transition>
+    <interact-production-line
+      v-if="showLineModal"
+      :show-modal="showLineModal"
+      :production-line="isEditMode ? selectedLine : null"
+      :title="isEditMode ? $t('assetManagement.productionLines.modal.edit') : $t('assetManagement.productionLines.modal.new')"
+      @submit="saveLine"
+      @cancel="closeModal"
+    />
   </div>
 </template>
 
@@ -117,12 +110,14 @@ import InformationPanel from '@/shared/components/information-panel/information-
 import InfoSection from '@/shared/components/information-panel/info-section.component.vue';
 import InfoContainer from '@/shared/components/information-panel/info-container.component.vue';
 import InteractProductionLine from '../components/interact-production-line.component.vue';
-import { ProductionLineService } from '../services/production-line.service';
-import { PlantService } from '../services/plant.service';
+import { ProductionLineApiService } from '../services/production-line-api.service.js';
+import AuthService from "@/features/authentication/services/auth.service.js";
+import {PlantApiService} from "@/features/asset-management/services/plant-api.service.js";
+import ProductionLineFormModal from "@/features/asset-management/components/interact-production-line.component.vue";
+import ButtonComponent from '@/shared/components/button.component.vue';
+
 
 const { t } = useI18n();
-const productionLineService = new ProductionLineService();
-const plantService = new PlantService();
 
 // Estado
 const selectedLineId = ref(null);
@@ -136,69 +131,115 @@ const plants = ref([]);
 const selectedPlantId = ref(null);
 const productionLines = ref([]);
 const lines = ref([]);
+const showCreateModal = ref(false);
+const showEditModal = ref(false);
 
 // Columnas para la tabla
-const tableColumns = [
+const getTableColumns = () => [
   { key: 'id', label: t('assetManagement.productionLines.columns.id'), type: 'texto' },
   { key: 'name', label: t('assetManagement.productionLines.columns.name'), type: 'texto' },
   { key: 'plantName', label: t('assetManagement.productionLines.columns.plant'), type: 'texto' },
-  { key: 'capacity', label: t('assetManagement.productionLines.columns.capacity'), type: 'texto' },
+  { key: 'capacityUnitsPerHour', label: t('assetManagement.productionLines.columns.capacity'), type: 'texto' },
   { key: 'status', label: t('assetManagement.productionLines.columns.status'), type: 'texto' },
   { key: 'details', label: t('assetManagement.productionLines.columns.details'), type: 'informacion', ctaLabel: t('assetManagement.productionLines.columns.detailsButton') }
 ];
+
+const tableColumns = computed(() => getTableColumns());
 
 // Datos para el panel de información
 const infoData = ref([]);
 const techData = ref([]);
 
+
 // Métodos
+
+const loadData = async () => {
+  const plantList = await PlantApiService.getPlants();
+  console.log('🌱 Plantas cargadas:', plantList);
+  plants.value = plantList;
+  selectedPlantId.value = plantList[0]?.id ?? null;
+  await loadProductionLines();
+};
 const loadProductionLines = async () => {
   if (!selectedPlantId.value) return;
+
   loading.value = true;
   error.value = null;
 
   try {
-    const response = await productionLineService.getAllProductionLines(selectedPlantId.value);
-    productionLines.value = response;
+    const response = await ProductionLineApiService.getProductionLines(selectedPlantId.value);
+
+    // 🧠 Asegúrate de que response contiene id, name, plantId...
+    console.log('🔄 Línea de producción cruda:', response);
+
+    productionLines.value = response.map(l => ({
+      id: l.id,
+      name: l.name,
+      code: l.code,
+      plantId: l.plantId,
+      capacityUnitsPerHour: l.capacityUnitsPerHour,
+      unit: l.unit,
+      status: l.status
+    }));
+
     prepareTableData();
   } catch (err) {
-    console.error('Error al cargar líneas de producción:', err);
-    error.value = 'Error al cargar las líneas de producción';
+    console.error('❌ Error al cargar líneas de producción:', err);
+    error.value = 'Error al cargar las líneas de producción. Ver consola para más detalles.';
+    productionLines.value = [];
+    lines.value = [];
   } finally {
     loading.value = false;
   }
 };
 
-const prepareTableData = () => {
-  lines.value = productionLines.value.map(line => ({
-    id: line.id,
-    name: line.name,
-    plantName: getPlantName(line.plantId),
-    capacity: `${line.maxUnitsPerHour} ${line.unit}/hora`,
-    status: getStatusText(line.status),
-    details: line.id,
-    original: line
-  }));
-};
-
 const getPlantName = (plantId) => {
   const plant = plants.value.find(p => p.id === plantId);
-  return plant ? plant.name : '';
+  return plant ? plant.name : 'Desconocido';
+};
+
+const prepareTableData = () => {
+  console.log('⏳ Entrando a prepareTableData con:', productionLines.value);
+
+  lines.value = [];
+
+  for (const line of productionLines.value) {
+    console.log('📦 Procesando línea:', line);
+
+    try {
+      const processed = {
+        id: line.id,
+        name: line.name,
+        plantName: getPlantName(line.plantId),
+        capacityUnitsPerHour: `${line.capacityUnitsPerHour || 0} unidades/hora`,
+        status: getStatusText(line.status),
+        details: line.id,
+        original: line
+      };
+
+      lines.value.push(processed);
+    } catch (err) {
+      console.error('❌ Error al procesar una línea:', err, line);
+    }
+  }
+
+  console.log('✅ Resultado final de lines.value:', lines.value);
 };
 
 const getStatusText = (status) => {
-  switch(status) {
+  switch(status.toUpperCase()) {
     case 'ACTIVE': return t('assetManagement.status.active');
     case 'INACTIVE': return t('assetManagement.status.inactive');
     case 'MAINTENANCE': return t('assetManagement.status.maintenance');
-    default: return 'Desconocido';
+    case 'READY': return 'Ready'; // o una traducción si tienes
+    default: return status || 'Desconocido';
   }
 };
 
 const selectProductionLine = async (id) => {
   loading.value = true;
   try {
-    const line = await productionLineService.getProductionLineById(id);
+    const line = await ProductionLineApiService.getProductionLineById(id);
     selectedLine.value = line;
     selectedLineId.value = line.id;
     updateInfoPanel(line);
@@ -216,7 +257,7 @@ const updateInfoPanel = (line) => {
     { subtitle: t('assetManagement.productionLines.columns.name'), info: line.name },
     { subtitle: t('assetManagement.productionLines.columns.plant'), info: getPlantName(line.plantId) },
     { subtitle: t('assetManagement.productionLines.details.currentStatus'), info: getStatusText(line.status) },
-    { subtitle: t('assetManagement.productionLines.details.capacity'), info: `${line.maxUnitsPerHour} ${line.unit}/hora` }
+    { subtitle: t('assetManagement.productionLines.details.capacity'), info: `${line.capacityUnitsPerHour} ${line.unit}/hora` }
   ];
 
   techData.value = [
@@ -237,6 +278,10 @@ const closeDetailPanel = () => {
 };
 
 const newLineAction = () => {
+  if (!selectedPlantId.value) {
+    error.value = 'Por favor, seleccione una planta primero';
+    return;
+  }
   isEditMode.value = false;
   showLineModal.value = true;
 };
@@ -257,9 +302,10 @@ const saveLine = async (lineData) => {
     if (isEditMode.value && selectedLine.value) {
       const updatedLine = {
         ...selectedLine.value,
-        ...lineData
+        ...lineData,
+        plantId: selectedPlantId.value
       };
-      const result = await productionLineService.updateProductionLine(updatedLine);
+      const result = await ProductionLineApiService.updateProductionLine(updatedLine);
       const index = productionLines.value.findIndex(l => l.id === result.id);
       if (index >= 0) {
         productionLines.value[index] = result;
@@ -271,25 +317,24 @@ const saveLine = async (lineData) => {
     } else {
       const newLine = {
         ...lineData,
-        plantId: selectedPlantId.value,
-        status: 'ACTIVE'
+        plantId: selectedPlantId.value
       };
-      const created = await productionLineService.createProductionLine(newLine);
+      const created = await ProductionLineApiService.createProductionLine(newLine);
       productionLines.value.push(created);
+      await loadProductionLines();
     }
-    
+
     prepareTableData();
     showLineModal.value = false;
   } catch (err) {
     console.error('Error al guardar la línea:', err);
-    error.value = isEditMode.value ? 
-      'Error al actualizar la línea' : 
-      'Error al crear la línea';
+    error.value = isEditMode.value
+        ? 'Error al actualizar la línea'
+        : 'Error al crear la línea';
   } finally {
     loading.value = false;
   }
 };
-
 const toggleLineStatus = async () => {
   if (!selectedLine.value) return;
 
@@ -297,11 +342,11 @@ const toggleLineStatus = async () => {
   loading.value = true;
 
   try {
-    const updatedLine = await productionLineService.changeProductionLineStatus(
+    const updatedLine = await ProductionLineApiService.changeProductionLineStatus(
       selectedLine.value.id,
       newStatus
     );
-    
+
     const index = productionLines.value.findIndex(l => l.id === updatedLine.id);
     if (index >= 0) {
       productionLines.value[index] = updatedLine;
@@ -317,118 +362,133 @@ const toggleLineStatus = async () => {
   }
 };
 
-const loadPlants = async () => {
-  try {
-    const response = await plantService.getAll();
-    plants.value = response;
-    if (response.length > 0) {
-      selectedPlantId.value = response[0].id;
-      loadProductionLines();
-    }
-  } catch (err) {
-    console.error('Error al cargar las plantas:', err);
-    error.value = 'Error al cargar las plantas';
-  }
-};
-
 const onPlantChange = () => {
   loadProductionLines();
 };
 
 // Ciclo de vida
-onMounted(() => {
-  loadPlants();
+onMounted(async () => {
+  try {
+
+    if (AuthService.isAuthenticated()) {
+      const token = AuthService.getToken();
+      AuthService.setAuthToken(token);
+      await loadData();
+    } else {
+      console.warn("🔐 Usuario no autenticado. Redirigiendo a login...");
+      window.location.href = '/authentication/sign-in';
+    }
+  } catch (error) {
+    console.error("❌ Error al cargar datos con usuario autenticado:", error.message);
+  }
 });
 </script>
 
-<style scoped lang="scss">
+<style scoped>
+* {
+  font-family: var(--font-family-base);
+}
+
 .container {
-  height: 100%;
-  min-height: 100vh;
-  box-sizing: border-box;
-  background: var(--clr-bg);
-  transition: background 0.3s;
-  padding: 2rem;
-}
-
-.breadcrumb-header {
-  margin-bottom: 2em;
-
-  h1 {
-    color: var(--clr-text);
-    font-size: 1.75rem;
-    font-weight: 600;
-    margin: 0;
-    margin-bottom: 0.5rem;
-  }
-}
-
-.main-container {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 2.5em;
-  min-height: 80vh;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  height: 100%;
+}
+
+.header-main {
   width: 100%;
-  transition: gap 0.3s;
 }
 
-.search-container {
+.header-main h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: var(--surface-border);
+  margin: 10px 0;
+}
+
+.plant-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: var(--surface-card);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+}
+
+.plant-selector label {
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.plant-select {
+  padding: 8px 12px;
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  font-size: 14px;
+  min-width: 200px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.plant-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-color-alpha-20);
+}
+
+.plant-select:hover {
+  border-color: var(--primary-color);
+}
+
+.main-content {
+  display: flex;
+  gap: 20px;
+  height: calc(100% - 80px);
+}
+
+.left-container {
+  flex: 3;
   display: flex;
   flex-direction: column;
-  gap: 2em;
-  width: 72%;
-  height: 100%;
-  transition: width 0.3s ease;
-
-  &.full-width {
-    width: 100% !important;
-  }
+  gap: 20px;
 }
 
-.table-container {
-  padding: 1em;
-  border: 1px solid var(--clr-shadow);
-  border-radius: var(--radius-md);
-  height: 100%;
-  min-width: 0;
-  overflow: hidden;
-  transition: box-shadow 0.3s, border 0.3s;
-}
-
-.information-panel-container {
-  width: 28%;
-  border-radius: var(--radius-md);
-  height: 100%;
-  transition: box-shadow 0.3s, border 0.3s, width 0.3s;
+.right-container {
+  flex: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  gap: 20px;
   overflow: hidden;
-  position: relative;
-  background: var(--clr-surface);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  width: 0;
+}
 
-  .panel-header {
-    position: absolute;
-    top: 0.5em;
-    right: 0.5em;
-    z-index: 2;
+.right-container.show-panel {
+  flex: 1;
+  width: auto;
+}
 
-    .close-button {
-      background: transparent;
-      border: none;
-      color: var(--clr-text);
-      font-size: 1.5em;
-      cursor: pointer;
-      opacity: 0.6;
-      transition: opacity 0.2s;
-
-      &:hover {
-        opacity: 1;
-      }
-    }
-  }
+.info-panel {
+  height: 100%;
+  transition: all 0.3s ease;
+  min-width: 350px;
+  background: var(--surface-card);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
 }
 
 .loading-indicator {
@@ -436,187 +496,109 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   padding: 2em;
-  color: var(--clr-primary-400);
+  color: var(--primary-color);
   font-weight: 500;
 }
 
 .error-message {
-  color: var(--clr-danger);
-  padding: 1em;
-  border: 1px solid var(--clr-danger);
-  border-radius: var(--radius-md);
-  background-color: var(--clr-danger-050);
+  color: var(--red-500);
+  padding: 1.5rem;
+  border: 1px solid var(--red-200);
+  border-radius: 8px;
+  background-color: var(--red-50);
   display: flex;
   flex-direction: column;
-  gap: 1em;
-
-  button {
-    align-self: flex-end;
-    background-color: var(--clr-primary-300);
-    color: white;
-    border: none;
-    padding: 0.5em 1em;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background-color: var(--clr-primary-400);
-    }
-  }
+  gap: 1rem;
 }
 
-.plant-selector-container {
-  margin: 1.5rem 0;
-  width: 100%;
-  background: var(--clr-surface);
+.error-message button {
+  align-self: flex-end;
+  background-color: var(--primary-color);
+  color: var(--primary-color-text);
+  border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
 }
 
-.plant-selector-group {
+.error-message button:hover {
+  background-color: var(--primary-600);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.actions-row {
   display: flex;
   gap: 0.5rem;
-}
-
-.plant-label {
-  font-size: 0.875rem;
-  color: var(--clr-text);
-  font-weight: 500;
-}
-
-.plant-select-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  width: 100%;
-}
-
-.plant-select {
-  flex: 1;
-  padding: 0.75rem;
-  border-radius: 6px;
-  border: 1px solid var(--clr-primary-200);
-  background-color: var(--clr-surface);
-  color: var(--clr-text);
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: var(--clr-primary-300);
-    box-shadow: 0 0 0 2px rgba(var(--clr-primary-300), 0.1);
-  }
-
-  &:hover {
-    border-color: var(--clr-primary-300);
-  }
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 20px;
-  overflow-y: auto;
 }
 
-.modal-container {
-  position: relative;
-  max-width: 90%;
-  width: 650px;
-  max-height: 90vh;
-  overflow-y: auto;
-  background-color: var(--clr-bg);
-  border-radius: var(--radius-md);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  transform-origin: center center;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: var(--clr-primary-200);
-    border-radius: 4px;
-  }
+.actions-row:first-child {
+  justify-content: center;
 }
 
-// Transiciones
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+.actions-row:last-child {
+  justify-content: space-between;
 }
 
-.slide-enter-from,
-.slide-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
+:deep(.button-component) {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
+/* Estados de líneas */
+.active { color: var(--green-500); }
+.inactive { color: var(--red-500); }
+.maintenance { color: var(--orange-500); }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-// Media queries
 @media (max-width: 1024px) {
-  .main-container {
+  .main-content {
     flex-direction: column;
-    align-items: stretch;
-    gap: 1.5em;
-    min-height: unset;
   }
-  
-  .search-container,
-  .information-panel-container {
+
+  .right-container.show-panel {
     width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
   }
-  
-  .information-panel-container {
-    margin-top: 0.5em;
-    height: auto;
+
+  .info-panel {
+    min-width: unset;
   }
 }
 
 @media (max-width: 600px) {
   .container {
-    padding: 1em 0.2em;
+    padding: 10px;
   }
-  
-  .main-container {
-    gap: 1em;
+
+  .plant-selector {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  
-  .table-container,
-  .information-panel-container {
-    border-radius: 12px;
-    box-shadow: 0 1px 4px 0 var(--clr-shadow);
-  }
-  
-  .modal-container {
-    width: 95%;
+
+  .plant-select {
+    width: 100%;
   }
 }
 </style>

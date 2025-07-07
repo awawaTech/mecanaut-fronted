@@ -4,63 +4,93 @@ import axios from 'axios';
 import { InventoryPartAssembler } from '../../shared/services/inventory-part.assembler.js';
 import { PurchaseOrderAssembler } from '../../shared/services/purchase-order.assembler.js';
 
-const baseEndpoint = 'http://localhost:3000';
-const inventoryPartsEndpoint = `https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/inventory-parts`;
-const purchaseOrdersEndpoint = `https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/purchase-orders`;
+const baseEndpoint = 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api';
+const inventoryPartsEndpoint = `${baseEndpoint}/inventory-parts`;
 
+// Función para obtener el token de autenticación
+const getAuthToken = () => {
+    return localStorage.getItem('token');
+};
+
+// Función para crear headers con autenticación
+const getAuthHeaders = () => {
+    const token = getAuthToken();
+    return {
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+};
+
+// Instancia de axios configurada
 const http = axios.create({
-    baseURL: baseEndpoint
-})
- 
+    baseURL: baseEndpoint,
+    headers: getAuthHeaders()
+});
 
-// URL base para json-server
-
+// Interceptor para agregar el token en cada petición
+http.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
 
 export class InventoryPartsApiService {
-    static async getParts() {
+    /**
+     * Obtiene todas las partes del inventario por plantId
+     * @param {number} plantId - ID de la planta
+     * @returns {Promise<Array>} - Lista de partes del inventario
+     */
+    static async getParts(plantId) {
         try {
-            const response = await http.get('https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/inventory-parts');
-            return InventoryPartAssembler.toEntitiesFromResponse(response);
+            const response = await http.get(`${inventoryPartsEndpoint}?plantId=${plantId}`);
+            return response.data;
         } catch (err) {
             console.error('Error cargando partes:', err);
             return [];
         }
     }
 
-    
+    /**
+     * Obtiene una parte específica por ID
+     * @param {number} id - ID de la parte
+     * @returns {Promise<Object>} - Parte del inventario
+     */
     static async getPartById(id) {
         try {
-            // Obtenemos la parte del inventario
-            const inventoryPartResponse = await http.get(`https://6854b3de6a6ef0ed662fcca2.mockapi.io/api/v1/inventory-parts/${id}`);
-            
-            // Obtenemos las órdenes de compra relacionadas
-            const purchaseOrdersResponse = await http.get(`${purchaseOrdersEndpoint}?inventory_part_id=${id}`);
-            
-            // Combinamos la información
-            const completeData = {
-                ...inventoryPartResponse.data,
-                purchaseOrders: PurchaseOrderAssembler.toEntitiesFromResponse({
-                    data: purchaseOrdersResponse.data
-                })
-            };
-            
-            return InventoryPartAssembler.toEntityFromResource(completeData);
+            const response = await http.get(`${inventoryPartsEndpoint}/${id}`);
+            return InventoryPartAssembler.toEntityFromResource(response.data);
         } catch (err) {
             console.error(`Error cargando parte ${id}:`, err);
             throw err;
         }
     }
 
+    /**
+     * Crea una nueva parte en el inventario
+     * @param {Object} partData - Datos de la parte a crear
+     * @returns {Promise<Object>} - Parte creada
+     */
     static async createPart(partData) {
         try {
-            if (!partData.code || !partData.name) {
-                throw new Error("El código y nombre son obligatorios");
+            if (!partData.code || !partData.name || !partData.plantId) {
+                throw new Error("El código, nombre y plantId son obligatorios");
             }
             
-            const resourceData = InventoryPartAssembler.toResourceFromEntity(partData);
+            // Preparar datos para el endpoint
+            const requestData = {
+                code: partData.code,
+                name: partData.name,
+                description: partData.description || '',
+                currentStock: partData.currentStock || 0,
+                minStock: partData.minStock || 0,
+                unitPrice: partData.unitPrice || 0,
+                plantId: partData.plantId
+            };
             
-            const response = await http.post(inventoryPartsEndpoint, resourceData);
-            
+            const response = await http.post(inventoryPartsEndpoint, requestData);
             return InventoryPartAssembler.toEntityFromResource(response.data);
         } catch (err) {
             console.error('Error creando parte:', err);
@@ -68,15 +98,23 @@ export class InventoryPartsApiService {
         }
     }
 
+    /**
+     * Actualiza una parte existente
+     * @param {number} id - ID de la parte a actualizar
+     * @param {Object} partData - Datos a actualizar
+     * @returns {Promise<Object>} - Parte actualizada
+     */
     static async updatePart(id, partData) {
         try {
-            const resourceData = InventoryPartAssembler.toResourceFromEntity({
-                ...partData,
-                id
-            });
+            // Solo se pueden actualizar estos campos según la API
+            const updateData = {
+                description: partData.description,
+                currentStock: partData.currentStock,
+                minStock: partData.minStock,
+                unitPrice: partData.unitPrice
+            };
             
-            const response = await http.put(`${inventoryPartsEndpoint}/${id}`, resourceData);
-            
+            const response = await http.put(`${inventoryPartsEndpoint}/${id}`, updateData);
             return InventoryPartAssembler.toEntityFromResource(response.data);
         } catch (err) {
             console.error(`Error actualizando parte ${id}:`, err);
@@ -84,6 +122,11 @@ export class InventoryPartsApiService {
         }
     }
 
+    /**
+     * Elimina una parte del inventario
+     * @param {number} id - ID de la parte a eliminar
+     * @returns {Promise<boolean>} - true si se eliminó correctamente
+     */
     static async deletePart(id) {
         try {
             await http.delete(`${inventoryPartsEndpoint}/${id}`);
@@ -91,6 +134,20 @@ export class InventoryPartsApiService {
         } catch (err) {
             console.error(`Error eliminando parte ${id}:`, err);
             throw err;
+        }
+    }
+
+    /**
+     * Obtiene todas las plantas disponibles
+     * @returns {Promise<Array>} - Lista de plantas
+     */
+    static async getPlants() {
+        try {
+            const response = await http.get(`${baseEndpoint}/v1/plants`);
+            return response.data;
+        } catch (err) {
+            console.error('Error cargando plantas:', err);
+            return [];
         }
     }
 }

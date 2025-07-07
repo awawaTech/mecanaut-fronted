@@ -2,15 +2,40 @@ import axios from 'axios';
 import { MaintenanceDynamicPlanAssembler } from './maintenance-dynamic-plan.assembler.js';
 
 const http = axios.create({
-  baseURL: 'http://localhost:3000/maintenance-dynamic-plans',
+  baseURL: 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api',
   timeout: 8000,
+});
+
+// Nueva instancia para la API externa
+const externalHttp = axios.create({
+  baseURL: 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api',
+  timeout: 8000,
+});
+
+// Función para obtener el token de autenticación
+const getAuthToken = () => {
+    return localStorage.getItem('token');
+};
+
+// Interceptor para agregar el token en cada petición a la API externa
+externalHttp.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
 });
 
 export class MaintenanceDynamicPlanService {
   /* -------- READ ALL -------- */
-  async getAllPlans() {
+  async getAllPlans(plantLineId = null) {
     try {
-      const res = await http.get('/');
+      let url = '/v1/dynamic-maintenance-plans';
+      if (plantLineId) {
+        url += `?plantLineId=${plantLineId}`;
+      }
+      
+      const res = await externalHttp.get(url);
       console.log('Respuesta bruta de la API:', res.data); // Depuración
       
       if (!res.data) return [];
@@ -32,7 +57,7 @@ export class MaintenanceDynamicPlanService {
   /* -------- READ ONE -------- */
   async getPlanById(planId) {
     try {
-      const res = await http.get(`/${planId}`);
+      const res = await externalHttp.get(`/v1/dynamic-maintenance-plans/${planId}`);
       if (!res.data) return null;
       
       return MaintenanceDynamicPlanAssembler.toModel(res.data);
@@ -45,52 +70,29 @@ export class MaintenanceDynamicPlanService {
   /* -------- CREATE -------- */
   async createPlan(planData) {
     try {
-      // Obtener todos los planes para calcular el nuevo ID
-      const existingPlans = await this.getAllPlans();
-      
-      // Encontrar el ID más alto entre los planes existentes
-      const maxPlanId = existingPlans.length > 0 
-        ? Math.max(...existingPlans.map(p => parseInt(p.dynamicPlanId) || 0)) 
-        : 0;
-      
-      // Asignar el siguiente ID al nuevo plan (secuencial)
-      const newPlan = { 
-        ...planData, 
-        id: maxPlanId + 1,  // Asignar también el id para evitar inconsistencias
-        dynamicPlanId: maxPlanId + 1
+      // Preparar datos según la estructura esperada por la API
+      const planForServer = {
+        name: planData.planName,
+        metricId: parseInt(planData.parameter),
+        amount: parseInt(planData.amount),
+        productionLineId: 1,
+        plantLineId: 1,
+        machineIds: planData.machineIds.map(id => parseInt(id)),
+        taskDescriptions: planData.tasks.map(task => task.taskDescription)
       };
       
-      // Encontrar el ID de tarea más alto en todos los planes existentes
-      let maxTaskId = 0;
-      existingPlans.forEach(plan => {
-        if (plan.tasks && Array.isArray(plan.tasks)) {
-          plan.tasks.forEach(task => {
-            if (task.taskId && parseInt(task.taskId) > maxTaskId) {
-              maxTaskId = parseInt(task.taskId);
-            }
-          });
-        }
-      });
-      
-      // Asignar IDs a las tareas (secuenciales a partir del último ID existente)
-      let taskIdCounter = maxTaskId + 1;
-      newPlan.tasks = newPlan.tasks.map(task => ({
-        ...task,
-        taskId: taskIdCounter++,
-        // Asegurarse de que machineIds sea un array
-        machineIds: Array.isArray(task.machineIds) ? [...task.machineIds] : []
-      }));
-      
-      console.log('Plan dinámico preparado para enviar:', newPlan);
-      
-      // Convertir a formato de API
-      const planForServer = MaintenanceDynamicPlanAssembler.toApiFormat(newPlan);
+      console.log('Plan dinámico preparado para enviar:', planForServer);
+      console.log('Estructura detallada de tareas:', JSON.stringify(planForServer.taskDescriptions, null, 2));
+      console.log('Datos originales recibidos:', JSON.stringify(planData, null, 2));
       
       // Enviar POST
-      const res = await http.post('/', planForServer);
+      const res = await externalHttp.post('/v1/dynamic-maintenance-plans', planForServer);
       return MaintenanceDynamicPlanAssembler.toModel(res.data);
     } catch (error) {
       console.error('Error al crear plan dinámico', error);
+      if (error.response) {
+        console.error('Detalles del error:', error.response.data);
+      }
       throw new Error('Error al crear plan dinámico');
     }
   }
@@ -98,8 +100,17 @@ export class MaintenanceDynamicPlanService {
   /* -------- UPDATE -------- */
   async updatePlan(planData) {
     try {
-      const planForServer = MaintenanceDynamicPlanAssembler.toApiFormat(planData);
-      const res = await http.put(`/${planData.dynamicPlanId}`, planForServer);
+      const planForServer = {
+        name: planData.planName,
+        metricId: planData.parameter,
+        amount: planData.amount.toString(),
+        productionLineId: "1", // Valor por defecto
+        plantLineId: "1", // Valor por defecto
+        machines: planData.machineIds || [],
+        tasks: planData.tasks ? planData.tasks.map(task => task.taskDescription) : []
+      };
+      
+      const res = await externalHttp.put(`/v1/dynamic-maintenance-plans/${planData.id}`, planForServer);
       
       if (!res.data) return null;
       return MaintenanceDynamicPlanAssembler.toModel(res.data);
@@ -112,11 +123,42 @@ export class MaintenanceDynamicPlanService {
   /* -------- DELETE -------- */
   async deletePlan(planId) {
     try {
-      await http.delete(`/${planId}`);
+      await externalHttp.delete(`/v1/dynamic-maintenance-plans/${planId}`);
       return true;
     } catch (error) {
       console.error('Error al eliminar plan dinámico', error);
       return false;
+    }
+  }
+
+  /* -------- EXTERNAL API ENDPOINTS -------- */
+  
+  /**
+   * Obtiene todas las plantas disponibles
+   * @returns {Promise<Array>} - Lista de plantas
+   */
+  async getPlants() {
+    try {
+      const response = await externalHttp.get('/v1/plants');
+      return response.data;
+    } catch (err) {
+      console.error('Error cargando plantas:', err);
+      return [];
+    }
+  }
+
+  /**
+   * Obtiene las líneas de producción por plantId
+   * @param {number} plantId - ID de la planta
+   * @returns {Promise<Array>} - Lista de líneas de producción
+   */
+  async getProductionLines(plantId) {
+    try {
+      const response = await externalHttp.get(`/v1/production-lines?plantId=${plantId}`);
+      return response.data;
+    } catch (err) {
+      console.error('Error cargando líneas de producción:', err);
+      return [];
     }
   }
 }

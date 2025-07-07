@@ -1,43 +1,30 @@
-/**
- * Representa la estructura de datos tal como llega de la API
- */
 export class PlantResource {
-    constructor(data = {}) {
-        this.id = data.id;
-        this.name = data.name;
-        this.address = data.address;
-        this.city = data.city;
-        this.country = data.country;
-        this.contactPhone = data.contactPhone;
-        this.contactEmail = data.contactEmail;
-        this.active = data.active;
+    constructor({
+                    id = 0,
+                    name = '',
+                    address = '',
+                    city = '',
+                    country = '',
+                    phone = '',
+                    email = '',
+                    active = true
+                } = {}) {
+        this.id = id;
+        this.name = name;
+        this.address = address;
+        this.city = city;
+        this.country = country;
+        this.phone = phone;
+        this.email = email;
+        this.active = active;
     }
 }
 
-/**
- * Estructura para crear una nueva planta
- */
-export class CreatePlantResource {
-    constructor(data = {}) {
-        this.name = data.name;
-        this.address = data.address;
-        this.city = data.city;
-        this.country = data.country;
-        this.contactPhone = data.contactPhone;
-        this.contactEmail = data.contactEmail;
-    }
-}
-
-/**
- * Estructura para actualizar una planta existente
- */
-export class UpdatePlantResource {
-    constructor(data = {}) {
-        this.name = data.name;
-        this.address = data.address;
-        this.city = data.city;
-        this.country = data.country;
-        this.contactPhone = data.contactPhone;
-        this.contactEmail = data.contactEmail;
+export class PlantResponse {
+    constructor(data = []) {
+        this.data = data;
+        this.info = {
+            count: data.length
+        };
     }
 }

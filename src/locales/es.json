@@ -33,7 +33,8 @@
     "edit": "Editar",
     "view": "Ver",
     "confirm": "Confirmar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "next": "Siguiente"
   },
   "maintenance": {
     "newPlan": "Nuevo Plan de Mantenimiento Estático",
@@ -71,11 +72,16 @@
       "maintenancePlan": "Plan de Mantenimiento",
       "execution": "Ejecución",
       "dashboard": "Dashboard",
+      "machineParameters": "Métricas de Máquina",
       "staffManagement": "Gestión de Personal",
       "settings": "Configuración"
     },
     "user": {
-      "role": "Rol"
+      "role": "Rol",
+      "roles": {
+        "admin": "Administrador",
+        "technical": "Técnico"
+      }
     },
     "settings": {
       "title": "Configuración"
@@ -85,16 +91,23 @@
     "create": "Crear Cuenta",
     "happy": "¡Estamos felices de que te nos unas!",
     "company": "Nombre de la empresa",
-    "email": "Correo electrónico",
+    "username": "Nombre de usuario",
+    "username_placeholder": "Ingresa tu nombre de usuario",
     "password": "Contraseña",
-    "repeat": "Repetir",
+    "password_placeholder": "Ingresa tu contraseña",
+    "repeat": "Repetir contraseña",
     "read": "He leído y acepto los",
     "terms": "términos y condiciones",
     "have": "¿Ya tienes una cuenta?",
     "login": "Iniciar Sesión",
     "back": "¡Nos alegra tenerte de vuelta!",
     "forgot": "Olvidé mi contraseña",
-    "dont": "¿No tienes una cuenta?"
+    "dont": "¿No tienes una cuenta?",
+    "logging_in": "Iniciando sesión...",
+    "errors": {
+      "all_fields": "Por favor completa todos los campos",
+      "invalid_credentials": "Nombre de usuario o contraseña incorrectos"
+    }
   },
   "dashboard": {
     "welcome": "¡Bienvenido",
@@ -126,6 +139,38 @@
     "inProgress": "En Progreso",
     "tip": "Sugerencia",
     "tipText": "Revisa las órdenes pendientes de alta prioridad para mejorar el tiempo de respuesta.",
+    "loading": "Cargando datos del dashboard...",
+    "retry": "Reintentar",
+    "refresh": "Actualizar",
+    "noMetrics": "No hay métricas disponibles",
+    "noEquipment": "No hay equipos críticos",
+    "noInventoryIssues": "No hay problemas de inventario",
+    "noRecentActivity": "No hay actividad reciente",
+    "additionalMetrics": "Métricas Adicionales",
+    "plantPerformance": "Rendimiento de Plantas",
+    "activePlants": "Plantas Activas",
+    "teamProductivity": "Productividad del Equipo",
+    "thisWeek": "Esta Semana",
+    "vsLastWeek": "vs Semana Anterior",
+    "maintenanceSchedule": "Programa de Mantenimiento",
+    "thisMonth": "Este Mes",
+    "onTrack": "En Camino",
+    "behindSchedule": "Retrasado",
+    "costSavings": "Ahorro de Costos",
+    "thisQuarter": "Este Trimestre",
+    "vsLastQuarter": "vs Trimestre Anterior",
+    "safetyScore": "Puntuación de Seguridad",
+    "incidentFree": "Sin Incidentes",
+    "days": "días",
+    "energyEfficiency": "Eficiencia Energética",
+    "powerOptimization": "Optimización de Energía",
+    "vsLastMonth": "vs Mes Anterior",
+    "quickStats": "Estadísticas Rápidas",
+    "equipmentMonitored": "Equipos Monitoreados",
+    "lowStockItems": "Items con Stock Bajo",
+    "pendingOrders": "Órdenes Pendientes",
+    "activeTechnicians": "Técnicos Activos",
+    "systemHealth": "Estado del Sistema",
     "metrics": {
       "availability": "Disponibilidad",
       "performance": "Rendimiento",
@@ -144,24 +189,35 @@
   "execution": {
     "title": "Ejecución de Órdenes de Trabajo",
     "workOrder": "Orden de Trabajo",
+    "selectOrder": "Seleccionar Orden",
+    "loadingOrders": "Cargando órdenes de trabajo...",
+    "noMachineries": "No hay maquinarias asignadas a esta orden",
+    "noOrders": "No hay órdenes de trabajo asignadas",
+    "noOrdersDescription": "No tienes órdenes de trabajo asignadas para esta línea de producción.",
+    "machineries": "Maquinarias",
+    "filters": {
+      "workOrder": "Orden de trabajo",
+      "allOrders": "Todas las órdenes"
+    },
     "tasks": {
       "title": "Tareas",
-      "drainOil": "Drenar aceite viejo al depósito aprobado",
-      "replaceFilter": "Reemplazar filtro hidráulico",
-      "refillOil": "Rellenar con aceite nuevo",
-      "testRun": "Arranque de prueba y verificación de presión",
-      "inspection": "Inspección de fugas en un recorrido de 5 min"
+      "drainOil": "Drenar aceite",
+      "replaceFilter": "Reemplazar filtro",
+      "refillOil": "Rellenar aceite",
+      "testRun": "Prueba de funcionamiento",
+      "inspection": "Inspección final"
     },
     "observations": {
       "title": "Observaciones",
-      "placeholder": "Texto"
+      "placeholder": "Ingresa aquí tus observaciones sobre la ejecución de la orden de trabajo..."
     },
     "products": {
       "title": "Productos utilizados",
       "product": "Producto",
       "quantity": "Cantidad",
       "addProduct": "Agregar producto",
-      "productPlaceholder": "Nombre del producto"
+      "productPlaceholder": "Nombre del producto",
+      "selectProduct": "Seleccionar producto"
     },
     "actions": {
       "finish": "Marcar como Finalizada",
@@ -172,21 +228,19 @@
     "title": "Órdenes de Trabajo",
     "search": {
       "placeholder": "Buscar orden por código...",
-      "newOrder": "Nueva Orden",
-      "filters": {
-        "type": {
-          "label": "Tipo",
-          "options": {
-            "preventive": "Preventivo",
-            "corrective": "Correctivo"
-          }
-        }
-      }
+      "newOrder": "Nueva Orden"
+    },
+    "filters": {
+      "plant": "Planta",
+      "selectPlant": "Seleccionar Planta",
+      "productionLine": "Línea de Producción",
+      "allLines": "Todas las líneas"
     },
     "table": {
       "code": "Código",
       "date": "Fecha",
       "type": "Tipo",
+      "status": "Estado",
       "assign": "Asignar",
       "details": "Detalles"
     },
@@ -200,6 +254,7 @@
           "code": "Código",
           "date": "Fecha",
           "type": "Tipo",
+          "status": "Estado",
           "productionLine": "Línea de Producción"
         },
         "technicians": {
@@ -223,7 +278,8 @@
         },
         "productionLine": {
           "label": "Línea de Producción",
-          "placeholder": "Seleccione una línea"
+          "placeholder": "Seleccione una línea",
+          "hint": "La línea de producción se selecciona automáticamente según el filtro"
         },
         "type": {
           "label": "Tipo",
@@ -232,17 +288,35 @@
             "corrective": "Correctivo"
           }
         },
+        "machines": {
+          "label": "Máquinas",
+          "hint": "Seleccione las máquinas para esta orden",
+          "loading": "Cargando maquinarias...",
+          "noMachines": "No hay máquinas disponibles para esta línea de producción"
+        },
         "technicians": {
           "label": "Técnicos",
-          "add": "Agregar Técnico",
-          "remove": "Eliminar Técnico",
-          "emptyState": "No hay técnicos asignados",
-          "technician": "Técnico",
-          "select": "Seleccionar Técnico",
-          "selectPlaceholder": "Elegir un técnico",
-          "machines": "Máquinas Asignadas",
-          "machinesHint": "Seleccione las máquinas para este técnico"
+          "hint": "Seleccione los técnicos para esta orden"
+        },
+        "tasks": {
+          "label": "Tareas",
+          "placeholder": "Ingrese una nueva tarea",
+          "add": "Agregar",
+          "emptyState": "No hay tareas definidas"
+        },
+        "type": {
+          "hint": "Todas las órdenes se crean como correctivas"
         }
+      },
+      "assignTechnicians": {
+        "title": "Asignar Técnicos",
+        "orderInfo": "Información de la Orden",
+        "selectTechnicians": "Seleccionar Técnicos",
+        "hint": "Seleccione los técnicos que trabajarán en esta orden",
+        "selectedCount": "{count} técnico(s) seleccionado(s)",
+        "assign": "Asignar Técnicos",
+        "loading": "Cargando técnicos...",
+        "noTechnicians": "No hay técnicos disponibles"
       },
       "actions": {
         "save": "Guardar",
@@ -276,8 +350,8 @@
         "address": "Dirección",
         "city": "Ciudad",
         "country": "País",
-        "contactPhone": "Teléfono",
-        "contactEmail": "Email",
+        "phone": "Teléfono",
+        "email": "Email",
         "status": "Estado"
       },
       "details": {
@@ -368,7 +442,8 @@
       },
       "buttons": {
         "save": "Guardar",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "create": "Crear"
       }
     }
   },
@@ -408,5 +483,51 @@
       "ok": "OK",
       "outOfStock": "Sin Stock"
     }
+  },
+  "auth": {
+    "createAccount": "Crear cuenta",
+    "welcomeMessage": "¡Estamos felices de que te unas!",
+    "companyInfo": "Información de la Empresa",
+    "companyInfoDesc": "Completa los datos de tu empresa para comenzar",
+    "personalInfo": "Información Personal",
+    "personalInfoDesc": "Completa tus datos personales para finalizar",
+    "ruc": "RUC",
+    "rucPlaceholder": "Ingresa el RUC de tu empresa",
+    "legalName": "Nombre Legal",
+    "legalNamePlaceholder": "Ingresa el nombre legal de tu empresa",
+    "commercialName": "Nombre Comercial",
+    "commercialNamePlaceholder": "Ingresa el nombre comercial de tu empresa",
+    "address": "Dirección",
+    "addressPlaceholder": "Ingresa la dirección de tu empresa",
+    "city": "Ciudad",
+    "cityPlaceholder": "Ingresa la ciudad",
+    "country": "País",
+    "countryPlaceholder": "Ingresa el país",
+    "phone": "Teléfono de la Empresa",
+    "phonePlaceholder": "Ej: +51 999999999",
+    "email": "Correo Electrónico",
+    "emailPlaceholder": "Ingresa tu correo electrónico",
+    "website": "Sitio Web (opcional)",
+    "websitePlaceholder": "https://www.tuempresa.com",
+    "username": "Nombre de Usuario",
+    "usernamePlaceholder": "Elige un nombre de usuario",
+    "firstName": "Nombre",
+    "firstNamePlaceholder": "Ingresa tu nombre",
+    "lastName": "Apellido",
+    "lastNamePlaceholder": "Ingresa tu apellido",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Ingresa una contraseña segura",
+    "confirmPassword": "Confirmar Contraseña",
+    "confirmPasswordPlaceholder": "Repite tu contraseña",
+    "acceptTerms": "He leído y acepto los",
+    "termsLink": "Términos y Condiciones",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "login": "Inicia sesión",
+    "planSelection": "Plan de Suscripción",
+    "choosePlan": "Elige tu Plan",
+    "choosePlanDesc": "Selecciona el plan que mejor se adapte a tus necesidades",
+    "monthly": "Mensual",
+    "yearly": "Anual",
+    "access": "Acceder"
   }
 }

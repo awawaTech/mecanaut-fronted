@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ButtonComponent from '@/shared/components/button.component.vue';
+import { WorkOrderService } from '../services/work-order.service';
 
 export default {
   name: 'WorkOrderFormModal',
@@ -16,6 +17,10 @@ export default {
     orderData: {
       type: Object,
       default: null
+    },
+    selectedProductionLine: {
+      type: Number,
+      default: null
     }
   },
   emits: ['submit', 'delete', 'cancel'],
@@ -25,88 +30,86 @@ export default {
     const formData = ref({
       code: '',
       date: '',
-      productionLine: '',
-      type: '',
-      technicians: []
+      productionLineId: '',
+      machineIds: [],
+      tasks: []
     });
 
-    const availableTechnicians = ref([
-      { id: 1, name: 'Juan Pérez', email: 'juan@example.com' },
-      { id: 2, name: 'María López', email: 'maria@example.com' },
-      { id: 3, name: 'Luis Ramírez', email: 'luis@example.com' },
-      { id: 4, name: 'Ana García', email: 'ana@example.com' },
-      { id: 5, name: 'Carlos Rodríguez', email: 'carlos@example.com' }
-    ]);
-    
-    const availableMachines = ref([
-      { id: 1, code: 'MT-430', name: 'Máquina Torno 430' },
-      { id: 2, code: 'MT-450', name: 'Máquina Torno 450' },
-      { id: 3, code: 'MT-500', name: 'Máquina Torno 500' },
-      { id: 4, code: 'MT-600', name: 'Máquina Torno 600' },
-      { id: 5, code: 'MT-700', name: 'Máquina Torno 700' },
-      { id: 6, code: 'MT-800', name: 'Máquina Torno 800' }
-    ]);
+    const availableMachines = ref([]);
+    const loading = ref(false);
+    const newTask = ref('');
 
-    const productionLines = ref([
-      { id: 1, code: 'L-01', name: 'Línea de Producción 01' },
-      { id: 2, code: 'L-02', name: 'Línea de Producción 02' }
-    ]);
+    const loadMachines = async (productionLineId) => {
+      try {
+        if (!productionLineId) {
+          availableMachines.value = [];
+          return;
+        }
+        
+        loading.value = true;
+        const machines = await WorkOrderService.getMachines(productionLineId);
+        availableMachines.value = machines;
+      } catch (error) {
+        console.error('Error cargando maquinarias:', error);
+        availableMachines.value = [];
+      } finally {
+        loading.value = false;
+      }
+    };
 
-    const technicianRows = ref([]);
+    const addTask = () => {
+      if (newTask.value.trim()) {
+        formData.value.tasks.push(newTask.value.trim());
+        newTask.value = '';
+      }
+    };
 
-    onMounted(() => {
+    const removeTask = (index) => {
+      formData.value.tasks.splice(index, 1);
+    };
+
+    onMounted(async () => {
+      // Usar la línea de producción seleccionada del componente padre
+      if (props.selectedProductionLine) {
+        formData.value.productionLineId = props.selectedProductionLine;
+        await loadMachines(props.selectedProductionLine);
+      }
+      
       if (props.orderData) {
         formData.value = {
           ...formData.value,
-          ...props.orderData
+          id: props.orderData.id,
+          code: props.orderData.code || '',
+          date: props.orderData.date || '',
+          productionLineId: props.orderData.productionLineId || props.selectedProductionLine,
+          machineIds: [...(props.orderData.machineIds || [])],
+          tasks: [...(props.orderData.tasks || [])]
         };
-
-        technicianRows.value = (props.orderData.technicians || []).map(tech => ({
-          technician: tech.name,
-          machines: [...tech.machines]
-        }));
-      }
-
-      if (technicianRows.value.length === 0) {
-        addTechnicianRow();
+        
+        // Cargar máquinas para la línea de producción de la orden
+        if (formData.value.productionLineId) {
+          await loadMachines(formData.value.productionLineId);
+        }
       }
     });
 
-    const addTechnicianRow = () => {
-      technicianRows.value.push({
-        technician: '',
-        machines: []
-      });
-    };
-
-    const removeTechnicianRow = (index) => {
-      technicianRows.value.splice(index, 1);
-    };
-
-    const toggleMachine = (technicianIndex, machine, event) => {
+    const toggleMachine = (machineId, event) => {
       const isChecked = event.target.checked;
       if (isChecked) {
-        if (!technicianRows.value[technicianIndex].machines.includes(machine)) {
-          technicianRows.value[technicianIndex].machines.push(machine);
+        if (!formData.value.machineIds.includes(machineId)) {
+          formData.value.machineIds.push(machineId);
         }
       } else {
-        technicianRows.value[technicianIndex].machines = 
-          technicianRows.value[technicianIndex].machines.filter(m => m !== machine);
+        formData.value.machineIds = formData.value.machineIds.filter(id => id !== machineId);
       }
     };
 
     const handleSubmit = () => {
-      const technicians = technicianRows.value
-        .filter(row => row.technician && row.machines.length > 0)
-        .map(row => ({
-          name: row.technician,
-          machines: [...row.machines]
-        }));
-
       const formDataForBackend = {
         ...formData.value,
-        technicians,
-        id: props.orderData?.id
+        // Asegurar que los arrays estén presentes
+        machineIds: formData.value.machineIds || [],
+        tasks: formData.value.tasks || []
       };
 
       emit('submit', formDataForBackend);
@@ -126,12 +129,11 @@ export default {
 
     return {
       formData,
-      availableTechnicians,
       availableMachines,
-      productionLines,
-      technicianRows,
-      addTechnicianRow,
-      removeTechnicianRow,
+      loading,
+      newTask,
+      addTask,
+      removeTask,
       toggleMachine,
       handleSubmit,
       handleCancel,
@@ -174,91 +176,74 @@ export default {
           </div>
 
           <div class="form-group">
-            <label for="productionLine">{{ $t('workOrder.form.fields.productionLine.label') }}</label>
-            <select
-              id="productionLine"
-              v-model="formData.productionLine"
-              required
-            >
-              <option value="">{{ $t('workOrder.form.fields.productionLine.placeholder') }}</option>
-              <option v-for="line in productionLines" :key="line.id" :value="line.code">
-                {{ line.name }}
-              </option>
-            </select>
+            <label for="productionLineId">{{ $t('workOrder.form.fields.productionLine.label') }}</label>
+            <input
+              id="productionLineId"
+              v-model="formData.productionLineId"
+              type="text"
+              disabled
+              class="disabled-input"
+            />
+            <small class="hint">{{ $t('workOrder.form.fields.productionLine.hint') }}</small>
           </div>
 
           <div class="form-group">
-            <label for="type">{{ $t('workOrder.form.fields.type.label') }}</label>
-            <select
-              id="type"
-              v-model="formData.type"
-              required
-            >
-              <option value="Preventivo">{{ $t('workOrder.form.fields.type.options.preventive') }}</option>
-              <option value="Correctivo">{{ $t('workOrder.form.fields.type.options.corrective') }}</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <div class="section-header">
-              <label>{{ $t('workOrder.form.fields.technicians.label') }}</label>
-              <button type="button" class="add-button" @click="addTechnicianRow">
-                <span class="add-icon">+</span>
-                {{ $t('workOrder.form.fields.technicians.add') }}
-              </button>
+            <label>{{ $t('workOrder.form.fields.machines.label') }}</label>
+            <div v-if="loading" class="loading-machines">
+              <span class="loading-text">{{ $t('workOrder.form.fields.machines.loading') }}</span>
             </div>
-
-            <div class="technicians-container">
-              <div v-if="technicianRows.length === 0" class="empty-state">
-                <span class="empty-icon">👥</span>
-                <p>{{ $t('workOrder.form.fields.technicians.emptyState') }}</p>
+            <div v-else-if="availableMachines.length === 0" class="no-machines">
+              <span class="no-machines-text">{{ $t('workOrder.form.fields.machines.noMachines') }}</span>
+            </div>
+            <div v-else class="machines-checkboxes">
+              <div v-for="machine in availableMachines" :key="machine.id" class="checkbox-item">
+                <input
+                  type="checkbox"
+                  :id="`machine_${machine.id}`"
+                  :checked="formData.machineIds.includes(machine.id)"
+                  @change="toggleMachine(machine.id, $event)"
+                />
+                <label :for="`machine_${machine.id}`">
+                  <div class="machine-info">
+                    <span class="machine-name">{{ machine.name }}</span>
+                    <span class="machine-details">{{ machine.model }} - {{ machine.manufacturer }}</span>
+                    <span class="machine-status" :class="`status-${machine.status.toLowerCase()}`">
+                      {{ machine.status }}
+                    </span>
+                  </div>
+                </label>
               </div>
+            </div>
+            <small class="hint">{{ $t('workOrder.form.fields.machines.hint') }}</small>
+          </div>
 
-              <div v-for="(row, i) in technicianRows" :key="i" class="technician-card">
-                <div class="technician-header">
-                  <h4 class="technician-title">
-                    {{ $t('workOrder.form.fields.technicians.technician') }} {{ i + 1 }}
-                  </h4>
-                  <button
-                    type="button"
-                    class="delete-button"
-                    @click="removeTechnicianRow(i)"
-                    :disabled="technicianRows.length <= 1"
-                    :aria-label="$t('workOrder.form.fields.technicians.remove')"
-                  >
+          <div class="form-group">
+            <label>{{ $t('workOrder.form.fields.tasks.label') }}</label>
+            <div class="tasks-container">
+              <div class="task-input">
+                <input
+                  v-model="newTask"
+                  type="text"
+                  :placeholder="$t('workOrder.form.fields.tasks.placeholder')"
+                  @keyup.enter="addTask"
+                />
+                <button type="button" class="add-task-button" @click="addTask">
+                  {{ $t('workOrder.form.fields.tasks.add') }}
+                </button>
+              </div>
+              
+              <div v-if="formData.tasks.length > 0" class="tasks-list">
+                <div v-for="(task, index) in formData.tasks" :key="index" class="task-item">
+                  <span class="task-text">{{ task }}</span>
+                  <button type="button" class="remove-task-button" @click="removeTask(index)">
                     ×
                   </button>
                 </div>
-
-                <div class="technician-content">
-                  <div class="form-group">
-                    <label>{{ $t('workOrder.form.fields.technicians.select') }}</label>
-                    <select
-                      v-model="row.technician"
-                    >
-                      <option value="">{{ $t('workOrder.form.fields.technicians.selectPlaceholder') }}</option>
-                      <option v-for="tech in availableTechnicians" :key="tech.id" :value="tech.name">
-                        {{ tech.name }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label>{{ $t('workOrder.form.fields.technicians.machines') }}</label>
-                    <div class="machines-checkboxes">
-                      <div v-for="machine in availableMachines" :key="machine.id" class="checkbox-item">
-                        <input
-                          type="checkbox"
-                          :id="`machine_${i}_${machine.code}`"
-                          :checked="row.machines.includes(machine.code)"
-                          @change="toggleMachine(i, machine.code, $event)"
-                        />
-                        <label :for="`machine_${i}_${machine.code}`">{{ machine.name }}</label>
-                      </div>
-                    </div>
-                    <small class="hint">{{ $t('workOrder.form.fields.technicians.machinesHint') }}</small>
-                  </div>
-                </div>
+              </div>
+              
+              <div v-else class="empty-tasks">
+                <span class="empty-icon">📝</span>
+                <p>{{ $t('workOrder.form.fields.tasks.emptyState') }}</p>
               </div>
             </div>
           </div>
@@ -414,58 +399,189 @@ export default {
                 color: var(--clr-grey-200);
             }
         }
+
+        .disabled-input {
+            background: var(--clr-primary-100);
+            border-color: var(--clr-primary-300);
+            color: var(--clr-primary-500);
+            font-weight: 500;
+        }
     }
 
-    .section-header {
+    .loading-machines,
+    .no-machines {
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
-        margin-bottom: 16px;
+        padding: 32px;
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-grey-200);
+        border-radius: var(--radius-md);
 
-        label {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--clr-primary-500);
-        }
-
-        .add-button {
-            background: var(--clr-primary-500);
-            color: var(--clr-bg);
-            border: none;
-            border-radius: 4px;
-            padding: 8px 16px;
-            cursor: pointer;
-            font-weight: 500;
+        .loading-text,
+        .no-machines-text {
+            color: var(--clr-grey-200);
             font-size: 14px;
-            transition: all 0.2s ease;
+        }
+    }
+
+    .machines-checkboxes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 12px;
+        margin-top: 8px;
+
+        .checkbox-item {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            border: 1px solid var(--clr-grey-200);
+            border-radius: 4px;
+            background: var(--clr-bg);
+            transition: all 0.2s ease;
+            cursor: pointer;
 
             &:hover {
-                background: var(--clr-primary-400);
-                transform: translateY(-1px);
+                border-color: var(--clr-primary-300);
+                background: var(--clr-primary-100);
             }
 
-            &:active {
-                transform: translateY(0);
+            input[type="checkbox"] {
+                width: auto;
+                margin: 0;
+                margin-top: 2px;
+                cursor: pointer;
+
+                &:checked {
+                    accent-color: var(--clr-primary-500);
+                }
             }
 
-            .add-icon {
-                font-size: 16px;
-                font-weight: bold;
+            label {
+                margin: 0;
+                cursor: pointer;
+                flex: 1;
+            }
+
+            .machine-info {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+
+                .machine-name {
+                    font-size: 14px;
+                    color: var(--clr-text);
+                    font-weight: 500;
+                }
+
+                .machine-details {
+                    font-size: 12px;
+                    color: var(--clr-grey-200);
+                }
+
+                .machine-status {
+                    font-size: 11px;
+                    font-weight: 500;
+                    padding: 2px 6px;
+                    border-radius: 10px;
+                    text-transform: uppercase;
+                    width: fit-content;
+
+                    &.status-operational {
+                        background: var(--clr-success-100);
+                        color: var(--clr-success-500);
+                    }
+
+                    &.status-maintenance {
+                        background: var(--clr-warning-100);
+                        color: var(--clr-warning-500);
+                    }
+
+                    &.status-offline {
+                        background: var(--clr-danger-100);
+                        color: var(--clr-danger-500);
+                    }
+                }
             }
         }
     }
 
-    .technicians-container {
+    .tasks-container {
         display: flex;
         flex-direction: column;
         gap: 16px;
     }
 
-    .empty-state {
+    .task-input {
+        display: flex;
+        gap: 12px;
+
+        input {
+            flex: 1;
+        }
+
+        .add-task-button {
+            background: var(--clr-primary-500);
+            color: var(--clr-bg);
+            border: none;
+            border-radius: 4px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+
+            &:hover {
+                background: var(--clr-primary-400);
+            }
+        }
+    }
+
+    .tasks-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .task-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: var(--clr-surface);
+        border: 1px solid var(--clr-grey-200);
+        border-radius: 4px;
+        transition: all 0.2s ease;
+
+        &:hover {
+            border-color: var(--clr-primary-300);
+        }
+
+        .task-text {
+            flex: 1;
+            color: var(--clr-text);
+            font-size: 14px;
+        }
+
+        .remove-task-button {
+            background: none;
+            border: none;
+            color: var(--clr-danger-500);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background-color: var(--clr-danger-050);
+            }
+        }
+    }
+
+    .empty-tasks {
         background: var(--clr-surface);
         border: 2px dashed var(--clr-grey-200);
         border-radius: var(--radius-md);
@@ -485,104 +601,6 @@ export default {
         }
     }
 
-    .technician-card {
-        background: var(--clr-bg);
-        border: 1px solid var(--clr-grey-200);
-        border-radius: var(--radius-md);
-        padding: 20px;
-        box-shadow: 0 2px 4px var(--clr-shadow);
-        transition: all 0.2s ease;
-        border-left: 4px solid var(--clr-primary-500);
-
-        &:hover {
-            box-shadow: 0 4px 8px var(--clr-shadow);
-        }
-
-        .technician-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-
-            .technician-title {
-                margin: 0;
-                font-size: 16px;
-                font-weight: 500;
-                color: var(--clr-primary-500);
-            }
-
-            .delete-button {
-                background: none;
-                border: none;
-                color: var(--clr-danger-500);
-                font-size: 20px;
-                cursor: pointer;
-                opacity: 0.7;
-                padding: 8px;
-                border-radius: 4px;
-                transition: all 0.2s ease;
-
-                &:hover:not(:disabled) {
-                    opacity: 1;
-                    background-color: var(--clr-danger-050);
-                }
-
-                &:disabled {
-                    opacity: 0.3;
-                    cursor: not-allowed;
-                }
-            }
-        }
-
-        .technician-content {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-    }
-
-    .machines-checkboxes {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 12px;
-        margin-top: 8px;
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            border: 1px solid var(--clr-grey-200);
-            border-radius: 4px;
-            background: var(--clr-bg);
-            transition: all 0.2s ease;
-            cursor: pointer;
-
-            &:hover {
-                border-color: var(--clr-primary-300);
-                background: var(--clr-primary-100);
-            }
-
-            input[type="checkbox"] {
-                width: auto;
-                margin: 0;
-                cursor: pointer;
-
-                &:checked {
-                    accent-color: var(--clr-primary-500);
-                }
-            }
-
-            label {
-                margin: 0;
-                cursor: pointer;
-                font-size: 14px;
-                color: var(--clr-text);
-                flex: 1;
-            }
-        }
-    }
-
     .hint {
         color: var(--clr-grey-200);
         font-size: 12px;
@@ -599,3 +617,4 @@ export default {
     border-top: 1px solid var(--clr-grey-100);
 }
 </style>
+

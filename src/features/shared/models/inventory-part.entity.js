@@ -6,22 +6,20 @@ export class InventoryPartEntity {
         code = '',
         name = '',
         description = '',
-        current_stock = 0,
-        min_stock = 0,
-        unit_price = 0,
-        stock_status = '',
-        last_restock = '',
+        currentStock = 0,
+        minStock = 0,
+        unitPrice = 0,
+        stockStatus = '',
         purchaseOrders = []
     }) {
         this.id = id;
         this.code = code;
         this.name = name;
         this.description = description;
-        this.currentStock = current_stock;
-        this.minStock = min_stock;
-        this.unitPrice = unit_price;
-        this.stockStatus = stock_status;
-        this.lastRestock = last_restock;
+        this.currentStock = currentStock;
+        this.minStock = minStock;
+        this.unitPrice = unitPrice;
+        this.stockStatus = stockStatus;
         this.purchaseOrders = purchaseOrders;
     }
 }

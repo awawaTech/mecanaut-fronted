@@ -12,14 +12,22 @@ export class MaintenanceDynamicPlanAssembler {
     
     console.log('Convirtiendo recurso a modelo:', resource); // Depuración
     
+    // Mapear desde la estructura de la API a nuestro modelo interno
     const safe = {
       id: resource.id || 0,
-      dynamicPlanId: resource.dynamicPlanId || 0,
-      planName: resource.planName || '',
+      dynamicPlanId: resource.id || 0, // Usar id como dynamicPlanId
+      planName: resource.name || '',
       machineIds: Array.isArray(resource.machineIds) ? resource.machineIds : [],
-      parameter: resource.parameter || '',
-      userCreator: resource.userCreator || 0,
-      tasks: Array.isArray(resource.tasks) ? resource.tasks : [],
+      parameter: resource.metricId || '',
+      amount: resource.amount || '',
+      userCreator: 1, // Por defecto
+      tasks: Array.isArray(resource.tasks) ? 
+        resource.tasks.map((task, index) => ({
+          taskId: index + 1,
+          taskName: task.name || `Tarea ${index + 1}`,
+          taskDescription: task.description || '',
+          machineIds: Array.isArray(resource.machineIds) ? [...resource.machineIds] : []
+        })) : [],
     };
 
     return new MaintenanceDynamicPlanModel(safe);
@@ -34,18 +42,13 @@ export class MaintenanceDynamicPlanAssembler {
   /* ---------- modelo → recurso (para POST/PUT) ---------- */
   static toApiFormat(model) {
     return {
-      id: model.dynamicPlanId,
-      dynamicPlanId: model.dynamicPlanId,
-      planName: model.planName,
-      machineIds: Array.isArray(model.machineIds) ? model.machineIds : [],
-      parameter: model.parameter,
-      userCreator: model.userCreator,
-      tasks: model.tasks.map((t) => ({
-        taskId: t.taskId,
-        taskName: t.taskName,
-        taskDescription: t.taskDescription,
-        machineIds: Array.isArray(t.machineIds) ? t.machineIds : [],
-      })),
+      name: model.planName,
+      metricId: model.parameter,
+      amount: model.amount.toString(),
+      productionLineId: "1", // Valor por defecto
+      plantLineId: "1", // Valor por defecto
+      machines: Array.isArray(model.machineIds) ? model.machineIds : [],
+      tasks: model.tasks.map((t) => t.taskDescription),
     };
   }
 } 

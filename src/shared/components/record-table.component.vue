@@ -39,6 +39,10 @@ export default {
     newLabel: {
       type: String,
       default: ''
+    },
+    showSearch: {
+      type: Boolean,
+      default: true
     }
   },
 
@@ -135,6 +139,7 @@ export default {
 <template>
   <div class="record-table-container">
     <SearchComponent
+        v-if="showSearch"
       :placeholder="searchPlaceholder"
       :filters="getSearchFilters()"
       :show-new-button="showNewButton"

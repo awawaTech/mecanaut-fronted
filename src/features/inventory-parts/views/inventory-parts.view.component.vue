@@ -27,32 +27,62 @@ export default {
         const showEditModal = ref(false);
         const infoData = ref([]);
         const stockData = ref([]);
+        const plants = ref([]);
+        const selectedPlantId = ref(null);
         
         // Simplificamos las columnas de la tabla
         const columns = [
             { key: 'code', label: 'Código', type: 'texto' },
             { key: 'name', label: 'Nombre', type: 'texto'},
-            { key: 'current_stock', label: 'Stock Actual', type: 'numero' },
-            { key: 'stock_status', label: 'Estado del Stock', type: 'texto', filterable: true},
+            { key: 'currentStock', label: 'Stock Actual', type: 'numero' },
+            { key: 'stockStatus', label: 'Estado del Stock', type: 'texto', filterable: true},
             { key: 'info', label: 'Información', type: 'informacion' }
         ];
 
+        const loadPlants = async () => {
+            try {
+                const data = await InventoryPartsApiService.getPlants();
+                plants.value = data;
+                // Si hay plantas, seleccionar la primera por defecto
+                if (data.length > 0 && !selectedPlantId.value) {
+                    selectedPlantId.value = data[0].id;
+                }
+            } catch (error) {
+                console.error('Error loading plants:', error);
+            }
+        };
+
         const loadInventoryParts = async () => {
             try {
-                const data = await InventoryPartsApiService.getParts();
+                if (!selectedPlantId.value) return;
+                
+                const data = await InventoryPartsApiService.getParts(selectedPlantId.value);
                 inventoryParts.value = data.map(part => ({
                     id: part.id,
                     code: part.code,
                     name: part.name,
-                    current_stock: part.currentStock,
-                    min_stock: part.minStock,
-                    unit_price: part.unitPrice,
-                    stock_status: part.stockStatus,
-                    last_restock: part.lastRestock,
+                    description: part.description,
+                    currentStock: part.currentStock,
+                    minStock: part.minStock,
+                    unitPrice: part.unitPrice,
+                    stockStatus: calculateStockStatus(part.currentStock, part.minStock),
+                    lastRestock: part.lastRestock,
                 }));
             } catch (error) {
                 console.error('Error loading inventory parts:', error);
             }
+        };
+
+        const handlePlantChange = async () => {
+            await loadInventoryParts();
+        };
+
+        // Función para calcular el status del stock
+        const calculateStockStatus = (current, minimum) => {
+            if (!current || current === 0) return "OUT_OF_STOCK";
+            if (current < minimum) return "LOW";
+            if (current === minimum) return "MEDIUM";
+            return "OK";
         };
 
         const handleInfoClick = async (item) => {
@@ -61,8 +91,13 @@ export default {
                 // Activamos el panel primero
                 showInfoPanel.value = true;
                 
-                const completeData = await InventoryPartsApiService.getPartById(item.id);
-                console.log('Fetched data:', completeData);
+                // Buscar la parte completa en el array de inventoryParts
+                const completeData = inventoryParts.value.find(part => part.id === item.id);
+                console.log('Found data:', completeData);
+                
+                if (!completeData) {
+                    throw new Error('Part not found');
+                }
                 
                 selectedPart.value = completeData;
                 
@@ -70,31 +105,31 @@ export default {
                 infoData.value = [
                     { subtitle: 'Code', info: completeData.code },
                     { subtitle: 'Name', info: completeData.name },
-                    { subtitle: 'Description', info: completeData.description }
+                    { subtitle: 'Description', info: completeData.description || 'Sin descripción' }
                 ];
 
                 stockData.value = [
                     { 
                         subtitle: 'Current Stock',
-                        info: completeData.currentStock,
-                        class: completeData.stockStatus.toLowerCase()
+                        info: completeData.currentStock || 0,
+                        class: completeData.stockStatus ? completeData.stockStatus.toLowerCase() : 'unknown'
                     },
                     { 
                         subtitle: 'Minimum Stock',
-                        info: completeData.minStock
+                        info: completeData.minStock || 0
                     },
                     {
                         subtitle: 'Unit Price',
-                        info: `$${completeData.unitPrice.toFixed(2)}`
+                        info: `$${(completeData.unitPrice || 0).toFixed(2)}`
                     },
                     {
                         subtitle: 'Status',
-                        info: completeData.stockStatus,
-                        class: completeData.stockStatus.toLowerCase()
+                        info: completeData.stockStatus || 'No disponible',
+                        class: completeData.stockStatus ? completeData.stockStatus.toLowerCase() : 'unknown'
                     },
                     {
                         subtitle: 'Last Restock',
-                        info: new Date(completeData.lastRestock).toLocaleDateString()
+                        info: completeData.lastRestock ? new Date(completeData.lastRestock).toLocaleDateString() : 'No disponible'
                     }
                 ];
 
@@ -110,8 +145,13 @@ export default {
 
         const handleCreate = async (formData) => {
             try {
+                // Agregar el plantId seleccionado
+                const partDataWithPlant = {
+                    ...formData,
+                    plantId: selectedPlantId.value
+                };
 
-                await InventoryPartsApiService.createPart(formData);
+                await InventoryPartsApiService.createPart(partDataWithPlant);
 
                 showCreateModal.value = false;
                 // Recargar datos
@@ -156,7 +196,10 @@ export default {
             }, 300);
         };
 
-        onMounted(loadInventoryParts);
+        onMounted(async () => {
+            await loadPlants();
+            await loadInventoryParts();
+        });
 
         return {
             inventoryParts,
@@ -171,7 +214,10 @@ export default {
             columns,
             closePanel,
             infoData,
-            stockData
+            stockData,
+            plants,
+            selectedPlantId,
+            handlePlantChange
         };
     },
     methods: {
@@ -185,6 +231,26 @@ export default {
         <div class="header-main">
             <h1>Inventario de Repuestos</h1>
             <div class="divider"></div>
+        </div>
+
+        <!-- Selector de Planta -->
+        <div class="plant-selector">
+            <label for="plant-select">Seleccionar Planta:</label>
+            <select 
+                id="plant-select"
+                v-model="selectedPlantId"
+                @change="handlePlantChange"
+                class="plant-select"
+            >
+                <option value="" disabled>Selecciona una planta</option>
+                <option 
+                    v-for="plant in plants" 
+                    :key="plant.id" 
+                    :value="plant.id"
+                >
+                    {{ plant.name }}
+                </option>
+            </select>
         </div>
 
         <div class="main-content">
@@ -216,7 +282,7 @@ export default {
                                 Edit
                             </ButtonComponent>
                             <ButtonComponent
-                                variant="warning"
+                                variant="secondary"
                                 size="sm"
                                 icon-left="pi pi-times"
                                 @click="closePanel"
@@ -299,6 +365,45 @@ export default {
     margin: 10px 0;
 }
 
+.plant-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: var(--surface-card);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+}
+
+.plant-selector label {
+    font-weight: 600;
+    color: var(--text-color);
+    white-space: nowrap;
+}
+
+.plant-select {
+    padding: 8px 12px;
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    background: var(--surface-ground);
+    color: var(--text-color);
+    font-size: 14px;
+    min-width: 200px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.plant-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color-alpha-20);
+}
+
+.plant-select:hover {
+    border-color: var(--primary-color);
+}
+
 .main-content {
     display: flex;
     gap: 20px;
@@ -379,6 +484,7 @@ export default {
 .medium { color: var(--clr-warning); }
 .ok { color: var(--clr-success); }
 .out_of_stock { color: var(--clr-danger); font-weight: bold; }
+.unknown { color: var(--clr-text-secondary); }
 
 /* Estados de órdenes */
 .pending { color: var(--clr-warning); }

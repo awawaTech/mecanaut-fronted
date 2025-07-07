@@ -1,9 +1,10 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import ThemeToggle from './theme-toggle.component.vue';
 import LanguageSwitcher from './language-switcher.component.vue';
+import AuthService from '../../features/authentication/services/auth.service.js';
 
 const { t } = useI18n();
 
@@ -19,6 +20,26 @@ const props = defineProps({
   }
 });
 
+// Computed para obtener datos del usuario desde localStorage
+const userData = computed(() => {
+  const userStr = localStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+});
+
+const displayUserName = computed(() => {
+  return userData.value?.username || '';
+});
+
+const displayUserRole = computed(() => {
+  const roles = userData.value?.roles || [];
+  if (roles.includes('RoleAdmin')) {
+    return t('sidebar.user.roles.admin');
+  } else if (roles.includes('RoleTechnical')) {
+    return t('sidebar.user.roles.technical');
+  }
+  return roles.join(', ') || '';
+});
+
 // Emits
 const emit = defineEmits(['sidebar-toggle']);
 
@@ -30,83 +51,120 @@ watch(isExpanded, (newValue) => {
   emit('sidebar-toggle', newValue);
 });
 
+// Computed para verificar si el usuario es técnico
+const isTechnicalUser = computed(() => {
+  const roles = userData.value?.roles || [];
+  return roles.includes('RoleTechnical');
+});
+
+// Computed para verificar si el usuario es administrador
+const isAdminUser = computed(() => {
+  const roles = userData.value?.roles || [];
+  return roles.includes('RoleAdmin');
+});
+
 // Opciones del menú usando computed para reactividad
-const menuOptions = computed(() => [
+const menuOptions = computed(() => {
+  const allOptions = [
+    { 
+      path: '/', 
+      title: t('sidebar.menu.home'), 
+      icon: 'pi pi-home'
+    },/*
+    { 
+      path: '/maintenance-calendar',
+      title: t('sidebar.menu.calendar'), 
+      icon: 'pi pi-calendar' 
+    },*/
+    {
+      path: '/inventario-parts',
+      title: t('sidebar.menu.inventory.title'),
+      icon: 'pi pi-box',
+      submenu: [
+        { 
+          path: '/inventory-parts', 
+          title: t('sidebar.menu.inventory.parts')
+        },
+        { 
+          path: '/purchase-orders', 
+          title: t('sidebar.menu.inventory.purchaseOrders')
+        }
+      ]
+    },
+    {
+      path: '/machinery',
+      title: t('sidebar.menu.assetManagement.title'),
+      icon: 'pi pi-cog',
+      submenu: [
+        { 
+          path: '/machinery', 
+          title: t('sidebar.menu.assetManagement.machinery')
+        },
+        { 
+          path: '/gestion-activos/lineas-produccion', 
+          title: t('sidebar.menu.assetManagement.productionLines')
+        },
+        { 
+          path: '/gestion-activos/plantas', 
+          title: t('sidebar.menu.assetManagement.plants')
+        }
+      ]
+    },
+    { 
+      path: '/orden-trabajo', 
+      title: t('sidebar.menu.workOrder'), 
+      icon: 'pi pi-file'
+    },
+    { 
+      path: '/maintenance-plan', 
+      title: t('sidebar.menu.maintenancePlan'), 
+      icon: 'pi pi-wrench'
+    },
+    { 
+      path: '/execution', 
+      title: t('sidebar.menu.execution'), 
+      icon: 'pi pi-play',
+      adminOnly: false // Los admin NO pueden ver esto
+    },/*
+    { 
+      path: '/dashboard', 
+      title: t('sidebar.menu.dashboard'), 
+      icon: 'pi pi-chart-bar' 
+    },*/
   { 
-    path: '/', 
-    title: t('sidebar.menu.home'), 
-    icon: 'pi pi-home' 
+    path: '/machine-parameters', 
+    title: t('sidebar.menu.machineParameters'), 
+    icon: 'pi pi-sliders-h'
   },
-  { 
-    path: '/maintenance-calendar',
-    title: t('sidebar.menu.calendar'), 
-    icon: 'pi pi-calendar' 
-  },
-  {
-    path: '/inventario',
-    title: t('sidebar.menu.inventory.title'),
-    icon: 'pi pi-box',
-    submenu: [
-      { 
-        path: '/inventory-parts', 
-        title: t('sidebar.menu.inventory.parts')
-      },
-      { 
-        path: '/purchase-orders', 
-        title: t('sidebar.menu.inventory.purchaseOrders')
-      }
-    ]
-  },
-  {
-    path: '/gestion-activos',
-    title: t('sidebar.menu.assetManagement.title'),
-    icon: 'pi pi-cog',
-    submenu: [
-      { 
-        path: '/machinery', 
-        title: t('sidebar.menu.assetManagement.machinery')
-      },
-      { 
-        path: '/gestion-activos/lineas-produccion', 
-        title: t('sidebar.menu.assetManagement.productionLines')
-      },
-      { 
-        path: '/gestion-activos/plantas', 
-        title: t('sidebar.menu.assetManagement.plants')
-      }
-    ]
-  },
-  { 
-    path: '/orden-trabajo', 
-    title: t('sidebar.menu.workOrder'), 
-    icon: 'pi pi-file' 
-  },
-  { 
-    path: '/maintenance-plan', 
-    title: t('sidebar.menu.maintenancePlan'), 
-    icon: 'pi pi-wrench' 
-  },
-  { 
-    path: '/execution', 
-    title: t('sidebar.menu.execution'), 
-    icon: 'pi pi-play' 
-  },
-  { 
-    path: '/dashboard', 
-    title: t('sidebar.menu.dashboard'), 
-    icon: 'pi pi-chart-bar' 
-  },
-  { 
-    path: '/administracion-personal', 
-    title: t('sidebar.menu.staffManagement'), 
-    icon: 'pi pi-users' 
-  },
-  { 
-    path: '/configuracion', 
-    title: t('sidebar.menu.settings'), 
-    icon: 'pi pi-cog' 
-  }
-]);
+    { 
+      path: '/administracion-personal', 
+      title: t('sidebar.menu.staffManagement'), 
+      icon: 'pi pi-users',
+      technicalOnly: false // Los técnicos NO pueden ver esto
+    },
+    { 
+      path: '/configuracion', 
+      title: t('sidebar.menu.settings'), 
+      icon: 'pi pi-cog'
+    }
+  ];
+
+  // Filtrar opciones según el rol del usuario
+  return allOptions.filter(option => {
+    // Los administradores NO pueden ver execution
+    if (option.adminOnly === false && isAdminUser.value) {
+      return false;
+    }
+    // Los técnicos NO pueden ver administracion-personal
+    if (option.technicalOnly === false && isTechnicalUser.value) {
+      return false;
+    }
+    return true;
+  });
+});
+
+// Router
+const router = useRouter();
 
 // Métodos
 const toggleSidebar = () => {
@@ -119,6 +177,11 @@ const expandSidebar = () => {
 
 const collapseSidebar = () => {
   isExpanded.value = false;
+};
+
+const handleLogout = () => {
+  AuthService.logout();
+  router.push('/login');
 };
 </script>
 
@@ -182,11 +245,11 @@ const collapseSidebar = () => {
       <a href="#">
         <i class="pi pi-user"></i>
         <span v-if="isExpanded">
-          {{ userName }}<br>
-          <small>{{ t('sidebar.user.role') }}: {{ userRole }}</small>
+          {{ displayUserName }}<br>
+          <small>{{ t('sidebar.user.role') }}: {{ displayUserRole }}</small>
         </span>
       </a>
-      <a v-if="isExpanded" href="#">
+      <a v-if="isExpanded" href="#" @click.prevent="handleLogout">
         <i class="pi pi-sign-out"></i>
       </a>
     </div>

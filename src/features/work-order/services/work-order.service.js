@@ -1,97 +1,163 @@
+import ApiService from '@/core/services/api.service';
 import { WorkOrderEntity } from '../models/work-order.entity';
 
-const MOCK_WORK_ORDERS = [
-  {
-    id: 1,
-    code: 'WO-2024-001',
-    date: '2024-03-15',
-    productionLine: 'L-01',
-    type: 'Preventivo',
-    status: 'pending',
-    description: 'Mantenimiento preventivo línea 1',
-    priority: 'high',
-    technicians: [
-      {
-        id: 1,
-        name: 'Juan Pérez',
-        email: 'juan@example.com',
-        machines: ['MT-430', 'MT-450'],
-        assignedAt: new Date()
-      }
-    ],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: 1,
-    updatedBy: 1
-  },
-  {
-    id: 2,
-    code: 'WO-2024-002',
-    date: '2024-03-16',
-    productionLine: 'L-02',
-    type: 'Correctivo',
-    status: 'in_progress',
-    description: 'Reparación urgente línea 2',
-    priority: 'medium',
-    technicians: [
-      {
-        id: 2,
-        name: 'María López',
-        email: 'maria@example.com',
-        machines: ['MT-500', 'MT-600'],
-        assignedAt: new Date()
-      }
-    ],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: 1,
-    updatedBy: 1
-  }
-];
+const apiService = new ApiService();
 
 export class WorkOrderService {
-  static async getOrders() {
-    return MOCK_WORK_ORDERS.map(order => new WorkOrderEntity(order));
+  /**
+   * Obtiene todas las órdenes de trabajo por línea de producción
+   * @param {number} productionLineId - ID de la línea de producción
+   * @returns {Promise<Array>} - Lista de órdenes de trabajo
+   */
+  static async getOrders(productionLineId = null) {
+    try {
+      let endpoint = '/work-orders';
+      
+      if (productionLineId) {
+        endpoint = `/work-orders/by-production-line/${productionLineId}`;
+      }
+      
+      const response = await apiService.get(endpoint);
+      return response.data.map(order => new WorkOrderEntity(order));
+    } catch (error) {
+      console.error('Error obteniendo órdenes de trabajo:', error);
+      throw error;
+    }
   }
 
+  /**
+   * Obtiene una orden de trabajo por ID
+   * @param {number} id - ID de la orden de trabajo
+   * @returns {Promise<WorkOrderEntity>} - Orden de trabajo
+   */
   static async getOrder(id) {
-    const order = MOCK_WORK_ORDERS.find(o => o.id === id);
-    return order ? new WorkOrderEntity(order) : null;
+    try {
+      const response = await apiService.get(`/work-orders/${id}`);
+      return new WorkOrderEntity(response.data);
+    } catch (error) {
+      console.error('Error obteniendo orden de trabajo:', error);
+      throw error;
+    }
   }
 
+  /**
+   * Obtiene todas las maquinarias disponibles por línea de producción
+   * @param {number} productionLineId - ID de la línea de producción
+   * @returns {Promise<Array>} - Lista de maquinarias
+   */
+  static async getMachines(productionLineId) {
+    try {
+      const response = await apiService.get(`/machines/production-line/${productionLineId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error obteniendo maquinarias:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Obtiene todos los usuarios técnicos disponibles
+   * @returns {Promise<Array>} - Lista de usuarios técnicos
+   */
+  static async getTechnicians() {
+    try {
+      const response = await apiService.get('/users');
+      // Filtrar solo usuarios con rol RoleTechnical
+      const technicians = response.data.filter(user => 
+        user.roles && user.roles.includes('RoleTechnical')
+      );
+      return technicians;
+    } catch (error) {
+      console.error('Error obteniendo técnicos:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Crea una nueva orden de trabajo
+   * @param {Object} orderData - Datos de la orden de trabajo
+   * @returns {Promise<WorkOrderEntity>} - Orden de trabajo creada
+   */
   static async createOrder(orderData) {
-    const newOrder = {
-      ...orderData,
-      id: MOCK_WORK_ORDERS.length + 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: 1,
-      updatedBy: 1
-    };
-    MOCK_WORK_ORDERS.push(newOrder);
-    return new WorkOrderEntity(newOrder);
-  }
-
-  static async updateOrder(id, orderData) {
-    const index = MOCK_WORK_ORDERS.findIndex(o => o.id === id);
-    if (index !== -1) {
-      MOCK_WORK_ORDERS[index] = {
-        ...MOCK_WORK_ORDERS[index],
-        ...orderData,
-        updatedAt: new Date(),
-        updatedBy: 1
+    try {
+      const payload = {
+        code: orderData.code,
+        date: orderData.date,
+        productionLineId: orderData.productionLineId,
+        type: 'Corrective', // Tipo fijo
+        machineIds: orderData.machineIds || [],
+        tasks: orderData.tasks || [],
+        technicianIds: orderData.technicianIds || []
       };
-      return new WorkOrderEntity(MOCK_WORK_ORDERS[index]);
+
+      const response = await apiService.post('/work-orders', payload);
+      return new WorkOrderEntity(response.data);
+    } catch (error) {
+      console.error('Error creando orden de trabajo:', error);
+      throw error;
     }
-    throw new Error('Order not found');
   }
 
-  static async deleteOrder(id) {
-    const index = MOCK_WORK_ORDERS.findIndex(o => o.id === id);
-    if (index !== -1) {
-      MOCK_WORK_ORDERS.splice(index, 1);
-      return true;
+  /**
+   * Asigna técnicos a una orden de trabajo
+   * @param {number} orderId - ID de la orden de trabajo
+   * @param {Array<number>} technicianIds - IDs de los técnicos
+   * @returns {Promise<Object>} - Respuesta de la asignación
+   */
+  static async assignTechnicians(orderId, technicianIds) {
+    try {
+      console.log('Service - Asignando técnicos a orden:', orderId);
+      console.log('Service - IDs de técnicos:', technicianIds);
+      console.log('Service - Tipo de technicianIds:', typeof technicianIds);
+      console.log('Service - Es array:', Array.isArray(technicianIds));
+      
+      // El endpoint espera directamente el array de IDs
+      const response = await apiService.put(`/work-orders/${orderId}/technicians`, technicianIds);
+      console.log('Service - Respuesta exitosa:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error asignando técnicos:', error);
+      console.error('Service - Error response:', error.response?.data);
+      throw error;
     }
-    throw new Error('Order not found');
+  }
+
+  /**
+   * Actualiza una orden de trabajo
+   * @param {number} id - ID de la orden de trabajo
+   * @param {Object} orderData - Datos actualizados
+   * @returns {Promise<WorkOrderEntity>} - Orden de trabajo actualizada
+   */
+  static async updateOrder(id, orderData) {
+    try {
+      // Para actualizar, primero obtenemos la orden actual
+      const currentOrder = await this.getOrder(id);
+      
+      // Luego actualizamos los técnicos si es necesario
+      if (orderData.technicianIds && orderData.technicianIds.length > 0) {
+        await this.assignTechnicians(id, orderData.technicianIds);
+      }
+      
+      // Retornamos la orden actualizada
+      return await this.getOrder(id);
+    } catch (error) {
+      console.error('Error actualizando orden de trabajo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Elimina una orden de trabajo
+   * @param {number} id - ID de la orden de trabajo
+   * @returns {Promise<boolean>} - True si se eliminó correctamente
+   */
+  static async deleteOrder(id) {
+    try {
+      await apiService.delete(`/work-orders/${id}`);
+      return true;
+    } catch (error) {
+      console.error('Error eliminando orden de trabajo:', error);
+      throw error;
+    }
   }
 }

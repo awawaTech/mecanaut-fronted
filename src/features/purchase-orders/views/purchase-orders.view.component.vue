@@ -23,32 +23,53 @@ export default {
         const showInfoPanel = ref(false);
         const showCreateModal = ref(false);
         const showEditModal = ref(false);
+        const plants = ref([]);
+        const selectedPlantId = ref(null);
         
         const columns = [
-            { key: 'id', label: 'ID Orden', type: 'texto' },
-            { key: 'inventory_part_id', label: 'ID Repuesto', type: 'texto' },
+            { key: 'orderNumber', label: 'Número de Orden', type: 'texto' },
+            { key: 'inventoryPartId', label: 'ID Repuesto', type: 'texto' },
             { key: 'quantity', label: 'Cantidad', type: 'numero' },
             { key: 'status', label: 'Estado', type: 'texto', filterable: true },
             { key: 'info', label: 'Información', type: 'informacion' }
         ];
 
+        const loadPlants = async () => {
+            try {
+                const data = await PurchaseOrdersApiService.getPlants();
+                plants.value = data;
+                // Si hay plantas, seleccionar la primera por defecto
+                if (data.length > 0 && !selectedPlantId.value) {
+                    selectedPlantId.value = data[0].id;
+                }
+            } catch (error) {
+                console.error('Error loading plants:', error);
+            }
+        };
+
         const loadPurchaseOrders = async () => {
             try {
-                const data = await PurchaseOrdersApiService.getPurchaseOrders();
+                if (!selectedPlantId.value) return;
+                
+                const data = await PurchaseOrdersApiService.getPurchaseOrders(selectedPlantId.value);
                 purchaseOrders.value = data.map(order => ({
                     id: order.id,
-                    inventory_part_id: order.inventory_part_id,
-                    inventory_part_name: order.inventoryPart?.name || 'N/A',
+                    orderNumber: order.orderNumber,
+                    inventoryPartId: order.inventoryPartId,
                     quantity: order.quantity,
-                    price: order.price,
+                    totalPrice: order.totalPrice,
                     status: order.status,
-                    order_date: order.order_date,
-                    received_date: order.received_date,
-                    user_id: order.user_id
+                    orderDate: order.orderDate,
+                    deliveryDate: order.deliveryDate,
+                    plantId: order.plantId
                 }));
             } catch (error) {
                 console.error('Error cargando órdenes de compra:', error);
             }
+        };
+
+        const handlePlantChange = async () => {
+            await loadPurchaseOrders();
         };
 
         const handleInfoClick = async (item) => {
@@ -58,34 +79,31 @@ export default {
                     ...completeData,
                     generalInfo: [
                         { subtitle: 'ID Orden', info: completeData.id },
-                        { subtitle: 'Usuario ID', info: completeData.user_id },
+                        { subtitle: 'Número de Orden', info: completeData.orderNumber },
                         { subtitle: 'Estado', info: completeData.status, class: completeData.status.toLowerCase() }
                     ],
                     orderInfo: [
+                        { 
+                            subtitle: 'ID Repuesto',
+                            info: completeData.inventoryPartId
+                        },
                         { 
                             subtitle: 'Cantidad',
                             info: `${completeData.quantity} unidades`
                         },
                         { 
-                            subtitle: 'Precio',
-                            info: `$${completeData.price}`
+                            subtitle: 'Precio Total',
+                            info: `$${completeData.totalPrice || 0}`
                         }
                     ],
                     dateInfo: [
                         {
                             subtitle: 'Fecha de Orden',
-                            info: new Date(completeData.order_date).toLocaleDateString()
+                            info: completeData.orderDate ? new Date(completeData.orderDate).toLocaleDateString() : 'No disponible'
                         },
                         {
-                            subtitle: 'Fecha de Recepción',
-                            info: completeData.received_date ? new Date(completeData.received_date).toLocaleDateString() : 'Pendiente'
-                        }
-                    ],
-                    partInfo: [
-                        {
-                            subtitle: 'Repuesto',
-                            info: completeData.inventoryPart.name,
-                            subInfo: `Código: ${completeData.inventoryPart.code}`
+                            subtitle: 'Fecha de Entrega',
+                            info: completeData.deliveryDate ? new Date(completeData.deliveryDate).toLocaleDateString() : 'No disponible'
                         }
                     ]
                 };
@@ -97,7 +115,13 @@ export default {
 
         const handleCreate = async (formData) => {
             try {
-                await PurchaseOrdersApiService.createPurchaseOrder(formData);
+                // Agregar el plantId seleccionado
+                const orderDataWithPlant = {
+                    ...formData,
+                    plantId: selectedPlantId.value
+                };
+
+                await PurchaseOrdersApiService.createPurchaseOrder(orderDataWithPlant);
                 showCreateModal.value = false;
                 await loadPurchaseOrders();
             } catch (error) {
@@ -107,7 +131,7 @@ export default {
 
         const handleEdit = async (formData) => {
             try {
-                await PurchaseOrdersApiService.updatePurchaseOrder(formData.id, formData);
+                // Como no hay endpoint de actualización, solo cerramos el modal
                 showEditModal.value = false;
                 selectedOrder.value = null;
                 await loadPurchaseOrders();
@@ -118,12 +142,26 @@ export default {
 
         const handleDelete = async (id) => {
             try {
-                await PurchaseOrdersApiService.deletePurchaseOrder(id);
-                showEditModal.value = false;
-                selectedOrder.value = null;
-                await loadPurchaseOrders();
+                if (confirm('¿Está seguro de eliminar esta orden de compra?')) {
+                    await PurchaseOrdersApiService.deletePurchaseOrder(id);
+                    showEditModal.value = false;
+                    selectedOrder.value = null;
+                    showInfoPanel.value = false;
+                    await loadPurchaseOrders();
+                }
             } catch (error) {
                 console.error('Error al eliminar:', error);
+            }
+        };
+
+        const handleComplete = async (id) => {
+            try {
+                await PurchaseOrdersApiService.completePurchaseOrder(id);
+                selectedOrder.value = null;
+                showInfoPanel.value = false;
+                await loadPurchaseOrders();
+            } catch (error) {
+                console.error('Error al completar:', error);
             }
         };
 
@@ -134,7 +172,10 @@ export default {
             }, 300);
         };
 
-        onMounted(loadPurchaseOrders);
+        onMounted(async () => {
+            await loadPlants();
+            await loadPurchaseOrders();
+        });
 
         return {
             purchaseOrders,
@@ -146,8 +187,12 @@ export default {
             handleCreate,
             handleEdit,
             handleDelete,
+            handleComplete,
             columns,
-            closePanel
+            closePanel,
+            plants,
+            selectedPlantId,
+            handlePlantChange
         };
     }
 }
@@ -160,13 +205,33 @@ export default {
             <div class="divider"></div>
         </div>
 
+        <!-- Selector de Planta -->
+        <div class="plant-selector">
+            <label for="plant-select">Seleccionar Planta:</label>
+            <select 
+                id="plant-select"
+                v-model="selectedPlantId"
+                @change="handlePlantChange"
+                class="plant-select"
+            >
+                <option value="" disabled>Selecciona una planta</option>
+                <option 
+                    v-for="plant in plants" 
+                    :key="plant.id" 
+                    :value="plant.id"
+                >
+                    {{ plant.name }}
+                </option>
+            </select>
+        </div>
+
         <div class="main-content">
             <div class="left-container">
                 <RecordTable 
                     :columns="columns"
                     :data="purchaseOrders"
-                    :searchable-columns="['id', 'inventory_part_name']"
-                    search-placeholder="Buscar por ID o repuesto ..."
+                    :searchable-columns="['orderNumber', 'inventoryPartId']"
+                    search-placeholder="Buscar por número de orden o ID repuesto ..."
                     :show-new-button="true"
                     :new-label="'Orden de Compra'"
                     @info-click="handleInfoClick"
@@ -217,22 +282,37 @@ export default {
                     />
                 </InformationPanel>
                 <div class="panel-actions">
-                    <button-component
-                        variant="primary"
-                        size="sm"
-                        icon-left="pi pi-pencil"
-                        @clicked="showEditModal = true"
-                    >
-                        Editar
-                    </button-component>
-                    <button-component
-                        variant="warning"
-                        size="sm"
-                        icon-left="pi pi-times"
-                        @clicked="closePanel"
-                    >
-                        Cerrar
-                    </button-component>
+                    <div class="actions-row">
+                        <button-component
+                            v-if="selectedOrder && selectedOrder.status !== 'Completed'"
+                            variant="success"
+                            style="background-color: var(--clr-primary-400);"
+                            size="sm"
+                            icon-left="pi pi-check"
+                            @clicked="handleComplete(selectedOrder.id)"
+                        >
+                            Completar
+                        </button-component>
+                    </div>
+                    <div class="actions-row">
+                        <button-component
+                            variant="danger"
+                            style="background-color: var(--clr-danger);"
+                            size="sm"
+                            icon-left="pi pi-trash"
+                            @clicked="handleDelete(selectedOrder.id)"
+                        >
+                            Eliminar
+                        </button-component>
+                        <button-component
+                            variant="secondary"
+                            size="sm"
+                            icon-left="pi pi-times"
+                            @clicked="closePanel"
+                        >
+                            Cerrar
+                        </button-component>
+                    </div>
                 </div>
             </div>
         </div>
@@ -242,6 +322,7 @@ export default {
             v-if="showCreateModal"
             :is-edit="false"
             :order-data="selectedOrder"
+            :plant-id="selectedPlantId"
             @submit="handleCreate"
             @cancel="() => {
                 showCreateModal = false;
@@ -254,6 +335,7 @@ export default {
             v-if="showEditModal"
             :is-edit="true"
             :order-data="selectedOrder"
+            :plant-id="selectedPlantId"
             @submit="handleEdit"
             @delete="handleDelete"
             @cancel="showEditModal = false"
@@ -290,6 +372,45 @@ export default {
     height: 1px;
     background-color: var(--clr-primary-100);
     margin: 10px 0;
+}
+
+.plant-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: var(--surface-card);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+}
+
+.plant-selector label {
+    font-weight: 600;
+    color: var(--text-color);
+    white-space: nowrap;
+}
+
+.plant-select {
+    padding: 8px 12px;
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    background: var(--surface-ground);
+    color: var(--text-color);
+    font-size: 14px;
+    min-width: 200px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.plant-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color-alpha-20);
+}
+
+.plant-select:hover {
+    border-color: var(--primary-color);
 }
 
 .main-content {
@@ -330,8 +451,8 @@ export default {
 }
 
 /* Estados de órdenes */
-.pending { color: var(--clr-warning); }
-.in_progress { color: var(--clr-primary); }
+.created { color: var(--clr-primary); }
+.in_progress { color: var(--clr-warning); }
 .completed { color: var(--clr-success); }
 .cancelled { color: var(--clr-danger); }
 
@@ -352,7 +473,23 @@ export default {
 
 .panel-actions {
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
+    padding: 1rem;
+}
+
+.actions-row {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.actions-row:first-child {
+    justify-content: center;
+}
+
+.actions-row:last-child {
+    justify-content: space-between;
 }
 
 :deep(.button-component) {
