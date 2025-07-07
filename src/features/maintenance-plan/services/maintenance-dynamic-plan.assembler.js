@@ -21,11 +21,11 @@ export class MaintenanceDynamicPlanAssembler {
       parameter: resource.metricId || '',
       amount: resource.amount || '',
       userCreator: 1, // Por defecto
-      tasks: Array.isArray(resource.taskDescriptions) ? 
-        resource.taskDescriptions.map((description, index) => ({
+      tasks: Array.isArray(resource.tasks) ? 
+        resource.tasks.map((task, index) => ({
           taskId: index + 1,
-          taskName: `Tarea ${index + 1}`,
-          taskDescription: description,
+          taskName: task.name || `Tarea ${index + 1}`,
+          taskDescription: task.description || '',
           machineIds: Array.isArray(resource.machineIds) ? [...resource.machineIds] : []
         })) : [],
     };

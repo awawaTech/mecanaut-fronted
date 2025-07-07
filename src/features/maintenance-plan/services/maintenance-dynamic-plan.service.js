@@ -2,13 +2,13 @@ import axios from 'axios';
 import { MaintenanceDynamicPlanAssembler } from './maintenance-dynamic-plan.assembler.js';
 
 const http = axios.create({
-  baseURL: 'http://localhost:5128/api',
+  baseURL: 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api',
   timeout: 8000,
 });
 
 // Nueva instancia para la API externa
 const externalHttp = axios.create({
-  baseURL: 'http://localhost:5128/api',
+  baseURL: 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api',
   timeout: 8000,
 });
 
@@ -73,21 +73,26 @@ export class MaintenanceDynamicPlanService {
       // Preparar datos según la estructura esperada por la API
       const planForServer = {
         name: planData.planName,
-        metricId: planData.parameter,
-        amount: planData.amount.toString(),
-        productionLineId: "1", // Valor por defecto
-        plantLineId: "1", // Valor por defecto
-        machines: planData.machineIds || [],
-        tasks: planData.tasks ? planData.tasks.map(task => task.taskDescription) : []
+        metricId: parseInt(planData.parameter),
+        amount: parseInt(planData.amount),
+        productionLineId: 1,
+        plantLineId: 1,
+        machineIds: planData.machineIds.map(id => parseInt(id)),
+        taskDescriptions: planData.tasks.map(task => task.taskDescription)
       };
       
       console.log('Plan dinámico preparado para enviar:', planForServer);
+      console.log('Estructura detallada de tareas:', JSON.stringify(planForServer.taskDescriptions, null, 2));
+      console.log('Datos originales recibidos:', JSON.stringify(planData, null, 2));
       
       // Enviar POST
       const res = await externalHttp.post('/v1/dynamic-maintenance-plans', planForServer);
       return MaintenanceDynamicPlanAssembler.toModel(res.data);
     } catch (error) {
       console.error('Error al crear plan dinámico', error);
+      if (error.response) {
+        console.error('Detalles del error:', error.response.data);
+      }
       throw new Error('Error al crear plan dinámico');
     }
   }
