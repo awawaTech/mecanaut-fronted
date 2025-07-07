@@ -53,7 +53,7 @@ export default {
       {
         id: 1,
         name: 'Free Plan',
-        price: '30.00',
+        price: '00.00',
         yearlyPrice: '30.00',
         icon: '/gratiuto.svg',
         features: [

@@ -3,121 +3,130 @@
     <h2 class="form-title">{{ title }}</h2>
 
     <form @submit.prevent="onSubmit" class="machinery-form">
+      <!-- === Datos básicos === -->
       <div class="form-row">
         <label for="name">Nombre <span class="required">*</span></label>
-        <input 
-          type="text" 
-          id="name" 
-          v-model="formData.name" 
-          class="form-input" 
-          :class="{ invalid: errors.name && touched.name }"
-        >
-      </div>
-      <div class="form-row">
-        <label for="manufacturer">Fabricante <span class="required">*</span></label>
-        <input 
-          type="text" 
-          id="manufacturer" 
-          v-model="formData.manufacturer" 
-          class="form-input" 
-          :class="{ invalid: errors.manufacturer && touched.manufacturer }"
-        >
-      </div>
-      <div class="form-row">
-        <label for="serialNumber">N° de Serie <span class="required">*</span></label>
-        <input 
-          type="text" 
-          id="serialNumber" 
-          v-model="formData.serialNumber" 
-          class="form-input" 
-          :class="{ invalid: errors.serialNumber && touched.serialNumber }"
-        >
-      </div>
-      <div class="form-row">
-        <label for="model">Modelo <span class="required">*</span></label>
-        <input 
-          type="text" 
-          id="model" 
-          v-model="formData.model" 
-          class="form-input" 
-          :class="{ invalid: errors.model && touched.model }"
-        >
+        <input
+          id="name"
+          type="text"
+          v-model="formData.name"
+          :class="['form-input', { invalid: errors.name }]"
+        />
       </div>
 
+      <div class="form-row">
+        <label for="manufacturer">Fabricante <span class="required">*</span></label>
+        <input
+          id="manufacturer"
+          type="text"
+          v-model="formData.manufacturer"
+          :class="['form-input', { invalid: errors.manufacturer }]"
+        />
+      </div>
+
+      <div class="form-row">
+        <label for="serialNumber">N° de Serie <span class="required">*</span></label>
+        <input
+          id="serialNumber"
+          type="text"
+          v-model="formData.serialNumber"
+          :class="['form-input', { invalid: errors.serialNumber }]"
+        />
+      </div>
+
+      <div class="form-row">
+        <label for="model">Modelo <span class="required">*</span></label>
+        <input
+          id="model"
+          type="text"
+          v-model="formData.model"
+          :class="['form-input', { invalid: errors.model }]"
+        />
+      </div>
 
       <div class="form-row">
         <label for="type">Tipo de máquina <span class="required">*</span></label>
-        <input 
-          type="text" 
-          id="type" 
-          v-model="formData.type" 
-          class="form-input" 
-          :class="{ invalid: errors.type && touched.type }"
-        >
-      </div>
-      <div class="form-row">
-        <label for="powerConsumption">
-          Consumo de energía (kW) <span class="required">*</span>
-        </label>
-        <input 
-          type="number" 
-          id="powerConsumption" 
-          v-model="formData.powerConsumption" 
-          class="form-input"
-          :class="{ invalid: errors.powerConsumption && touched.powerConsumption }"
-          min="0"
-          step="0.1"
-        >
+        <input
+          id="type"
+          type="text"
+          v-model="formData.type"
+          :class="['form-input', { invalid: errors.type }]"
+        />
       </div>
 
-      <div 
-        class="measurements-section" 
-        :class="{ invalid: errors.metrics && touched.metrics }"
-      >
+      <div class="form-row">
+        <label for="powerConsumption">Consumo de energía (kW) <span class="required">*</span></label>
+        <input
+          id="powerConsumption"
+          type="number"
+          v-model.number="formData.powerConsumption"
+          min="0"
+          step="0.1"
+          :class="['form-input', { invalid: errors.powerConsumption }]"
+        />
+      </div>
+
+      <!-- === Métricas === -->
+      <div class="measurements-section" :class="{ invalid: errors.metrics }">
+        <!-- encabezados -->
         <div class="measurements-header">
           <div class="header-cell name-header">Métrica</div>
           <div class="header-cell value-header">Valor</div>
           <div v-if="!isEditMode" class="header-cell action-header"></div>
         </div>
 
+        <!-- lista -->
         <div class="measurements-list">
-          <div 
-            v-for="(metric, index) in formData.metrics" 
-            :key="index" 
+          <div
+            v-for="(metric, index) in formData.metrics"
+            :key="index"
             class="measurement-row"
           >
             <div class="measurement-cell name-cell">
-              <select 
-                v-model.number="metric.metricId" 
-                class="form-input" 
+              <select
+                v-model.number="metric.metricId"
                 :disabled="isEditMode"
-                :class="{ invalid: errors.metrics?.[index]?.metricId && touched.metrics?.[index]?.metricId }"
+                :class="['form-input', { invalid: errors.metrics?.[index]?.metricId }]"
               >
-                <option value="">Seleccionar métrica</option>
-                <option v-for="availableMetric in availableMetrics" :key="availableMetric.id" :value="availableMetric.id">
-                  {{ availableMetric.name }}
+                <option :value="null">Seleccionar métrica</option>
+                <option
+                  v-for="m in availableMetrics"
+                  :key="m.id"
+                  :value="m.id"
+                >
+                  {{ m.name }}
                 </option>
               </select>
             </div>
+
             <div class="measurement-cell value-cell">
-              <input 
-                type="number" 
-                v-model="metric.value" 
-                class="form-input"
-                placeholder="Valor"
+              <input
+                type="number"
+                v-model.number="metric.value"
                 min="0"
                 step="0.01"
-                :class="{ invalid: errors.metrics?.[index]?.value && touched.metrics?.[index]?.value }"
-              >
+                placeholder="Valor"
+                :class="['form-input', { invalid: errors.metrics?.[index]?.value }]"
+              />
             </div>
+
             <div v-if="!isEditMode" class="measurement-cell action-cell">
-              <button 
-                type="button" 
-                class="remove-btn" 
-                @click="removeMetric(index)" 
+              <button
+                type="button"
+                class="remove-btn"
+                @click="removeMetric(index)"
                 v-if="formData.metrics.length > 1"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <!-- ícono X -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
@@ -125,19 +134,28 @@
             </div>
           </div>
         </div>
-        <div 
-          class="measurements-error"
-          v-if="errors.metrics?.atLeastOne && touched.metrics"
-        >
-          Debe agregar al menos una métrica válida.
+
+        <!-- error global -->
+        <div class="measurements-error" v-if="typeof errors.metrics === 'string'">
+          {{ errors.metrics }}
         </div>
-        <button 
-          type="button" 
-          class="add-measurement-btn" 
-          @click="addMetric"
+
+        <!-- botón agregar -->
+        <button
           v-if="!isEditMode"
+          type="button"
+          class="add-measurement-btn"
+          @click="addMetric"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
@@ -145,6 +163,7 @@
         </button>
       </div>
 
+      <!-- === Acciones === -->
       <div class="form-actions">
         <button type="button" class="btn-cancel" @click="onCancel">Cancelar</button>
         <button type="submit" class="btn-save">Guardar</button>
@@ -154,15 +173,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useForm } from 'vee-validate'
 import * as yup from 'yup'
 import { MachineryApiService } from '../services/machinery-api.service'
 
+/* ────────────────── Props & Emits ────────────────── */
 interface Props {
   machinery?: any
   title?: string
-  productionLineId?: number
+  productionLineId?: number | string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -172,169 +192,173 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits(['save', 'cancel'])
-
 const isEditMode = computed(() => !!props.machinery)
 
-// Métricas predefinidas disponibles
-const availableMetrics = ref(MachineryApiService.getAvailableMetrics())
+/* ────────────────── Helpers ────────────────── */
+const blankMetric = () => ({
+  metricId: null as number | null,
+  value: null as number | null,
+  measuredAt: new Date().toISOString()
+})
 
-// Creamos un objeto reactivo para los datos del formulario
-const formData = ref({
+/* ────────────────── Form state ────────────────── */
+const formData = reactive({
   name: '',
   manufacturer: '',
   serialNumber: '',
   model: '',
   type: '',
-  powerConsumption: null,
-  plantId: null,
-  metrics: [{ metricId: '', value: '', measuredAt: new Date().toISOString() }]
+  powerConsumption: null as number | null,
+  plantId: null as number | null,
+  metrics: [blankMetric()]
 })
 
+/* ────────────────── Validation ────────────────── */
 const schema = yup.object({
   name: yup.string().required('El nombre es requerido'),
   manufacturer: yup.string().required('El fabricante es requerido'),
   serialNumber: yup.string().required('El número de serie es requerido'),
   model: yup.string().required('El modelo es requerido'),
   type: yup.string().required('El tipo es requerido'),
-  powerConsumption: yup.number()
+  powerConsumption: yup
+    .number()
+    .typeError('El consumo de energía debe ser un número')
     .required('El consumo de energía es requerido')
     .min(0, 'El consumo debe ser mayor o igual a 0'),
   plantId: yup.number().nullable(),
-  metrics: yup.array().of(
-    yup.object({
-      metricId: yup.number().required('Debe seleccionar una métrica'),
-      value: yup.number().required('El valor es requerido').min(0, 'El valor debe ser mayor o igual a 0'),
-      measuredAt: yup.string().required('La fecha de medición es requerida')
-    })
-  ).min(1, 'Debe agregar al menos una métrica válida')
+  metrics: yup
+    .array()
+    .of(
+      yup.object({
+        metricId: yup
+          .number()
+          .nullable()
+          .required('Debe seleccionar una métrica'),
+        value: yup
+          .number()
+          .nullable()
+          .required('El valor es requerido')
+          .min(0, 'El valor debe ser mayor o igual a 0'),
+        measuredAt: yup.string().required()
+      })
+    )
+    .min(1, 'Debe agregar al menos una métrica válida')
 })
 
-const { handleSubmit, errors, touched } = useForm({
+const { handleSubmit, errors } = useForm({
   validationSchema: schema,
-  initialValues: formData.value
+  initialValues: formData
 })
 
-onMounted(() => {
-  if (isEditMode.value && props.machinery) {
-    formData.value = {
-      name: props.machinery.name || '',
-      manufacturer: props.machinery.manufacturer || '',
-      serialNumber: props.machinery.serialNumber || '',
-      model: props.machinery.model || '',
-      type: props.machinery.type || '',
-      powerConsumption: props.machinery.powerConsumption || null,
-      plantId: props.machinery.plantId || null,
-      metrics: props.machinery.metrics?.length > 0 
-        ? props.machinery.metrics 
-        : [{ metricId: '', value: '', measuredAt: new Date().toISOString() }]
-    }
+watch(errors, (val) => {
+  console.log('Errores de validación:', val);
+})
+
+/* ────────────────── Métricas disponibles ────────────────── */
+const availableMetrics = ref<{ id: number; name: string; unit?: string }[]>([])
+
+onMounted(async () => {
+  // cargar métricas
+  try {
+    const metrics = await MachineryApiService.getAvailableMetrics()
+    availableMetrics.value = (metrics || []).filter(
+      (m: any) => m && m.name !== undefined
+    )
+  } catch (e) {
+    console.error('Error cargando métricas:', e)
   }
-})
 
-const addMetric = () => {
-  if (!isEditMode.value) {
-    formData.value.metrics.push({ 
-      metricId: '', 
-      value: '', 
-      measuredAt: new Date().toISOString() 
+  // modo edición → rellenar formulario
+  if (isEditMode.value && props.machinery) {
+    Object.assign(formData, {
+      name: props.machinery.name ?? '',
+      manufacturer: props.machinery.manufacturer ?? '',
+      serialNumber: props.machinery.serialNumber ?? '',
+      model: props.machinery.model ?? '',
+      type: props.machinery.type ?? '',
+      powerConsumption: props.machinery.powerConsumption ?? null,
+      plantId: props.machinery.plantId ?? null,
+      metrics:
+        props.machinery.metrics?.length > 0
+          ? props.machinery.metrics.map((m: any) => ({
+              metricId: Number(m.metricId),
+              value: Number(m.value),
+              measuredAt: m.measuredAt ?? new Date().toISOString()
+            }))
+          : [blankMetric()]
     })
   }
+})
+
+/* ────────────────── Acciones métrica ────────────────── */
+const addMetric = () => {
+  if (!isEditMode.value) formData.metrics.push(blankMetric())
 }
 
 const removeMetric = (index: number) => {
-  if (!isEditMode.value && formData.value.metrics.length > 1) {
-    formData.value.metrics.splice(index, 1)
+  if (!isEditMode.value && formData.metrics.length > 1) {
+    formData.metrics.splice(index, 1)
   }
 }
 
-const getMetricUnit = (metricId) => {
-  if (!metricId || metricId === '') return ''
-  const metric = availableMetrics.value.find(m => m.id === metricId)
-  return metric ? metric.unit : ''
-}
+/* ────────────────── Submit ────────────────── */
+const productionLineIdNum = computed(() => {
+  if (
+    props.productionLineId === null ||
+    props.productionLineId === undefined ||
+    props.productionLineId === ''
+  )
+    return null
+  return Number(props.productionLineId)
+})
 
-// Watcher para actualizar automáticamente las fechas de medición
-watch(() => formData.value.metrics, (newMetrics) => {
-  newMetrics.forEach((metric, index) => {
-    if (metric.metricId && !metric.measuredAt) {
-      formData.value.metrics[index].measuredAt = new Date().toISOString()
-    }
-  })
-}, { deep: true })
-
-const onSubmit = handleSubmit(async (values) => {
-  console.log('1. Iniciando onSubmit con valores:', values)
-  
+const onSubmit = handleSubmit(async () => {
   try {
-    console.log('2. Entrando al try-catch')
-    
-    // Filtrar métricas válidas
-    const validMetrics = formData.value.metrics
-      .filter(m => m.metricId && m.value !== null && m.value !== '')
-      .map(m => ({
-        metricId: parseInt(m.metricId),
-        value: parseFloat(m.value),
-        measuredAt: m.measuredAt || new Date().toISOString()
+    const validMetrics = formData.metrics
+      .filter((m) => m.metricId !== null && m.value !== null)
+      .map((m) => ({
+        metricId: Number(m.metricId),
+        value: Number(m.value),
+        measuredAt: m.measuredAt
       }))
-    
-    console.log('3. Métricas válidas procesadas:', validMetrics)
 
     const machineData = {
-      serialNumber: formData.value.serialNumber,
-      name: formData.value.name,
-      manufacturer: formData.value.manufacturer,
-      plantId: 1,
-      model: formData.value.model,
-      type: formData.value.type,
-      powerConsumption: parseFloat(formData.value.powerConsumption),
+      serialNumber: formData.serialNumber,
+      name: formData.name,
+      manufacturer: formData.manufacturer,
+      plantId: 1, // ajusta según lógica de tu app
+      model: formData.model,
+      type: formData.type,
+      powerConsumption:
+        formData.powerConsumption !== null
+          ? Number(formData.powerConsumption)
+          : null,
       metrics: validMetrics
     }
-    
-    console.log('4. Datos de máquina preparados:', machineData)
-    console.log('5. Intentando crear máquina con MachineryApiService')
-    
+
     const createdMachine = await MachineryApiService.createMachine(machineData)
-    console.log('6. Respuesta de creación de máquina:', createdMachine)
-    
-    if (!createdMachine || !createdMachine.id) {
-      console.log('7A. Error: No hay ID en la respuesta', createdMachine)
-      throw new Error('No se recibió ID de la máquina creada')
-    }
-    
-    console.log('7B. ID de máquina recibido:', createdMachine.id)
-    
-    if (props.productionLineId) {
-      console.log('8. Intentando asignar a línea de producción:', {
-        machineId: createdMachine.id,
-        lineId: props.productionLineId
-      })
-      
+
+    if (productionLineIdNum.value !== null) {
       await MachineryApiService.assignMachineToProductionLine(
-        createdMachine.id, 
-        props.productionLineId
+        createdMachine.id,
+        productionLineIdNum.value
       )
-      console.log('9. Asignación completada')
-    } else {
-      console.log('8A. No hay productionLineId, saltando asignación')
     }
 
-    console.log('10. Emitiendo evento save')
     emit('save', createdMachine)
-    console.log('11. Evento save emitido')
-    
-  } catch (error) {
-    console.log('ERROR. Entrando al catch con error:', error)
-    console.error('ERROR detallado:', {
-      mensaje: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    })
-    throw error
+  } catch (err) {
+    console.error('Error guardando máquina:', err)
   }
 })
 
-const onCancel = () => {
-  emit('cancel')
+/* ────────────────── Cancelar ────────────────── */
+const onCancel = () => emit('cancel')
+
+/* ────────────────── Helper UI ────────────────── */
+const getMetricUnit = (metricId: number | null) => {
+  if (metricId == null) return ''
+  const metric = availableMetrics.value.find((m) => m.id === metricId)
+  return metric?.unit ?? ''
 }
 </script>
 
