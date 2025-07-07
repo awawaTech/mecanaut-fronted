@@ -32,13 +32,13 @@ const router = createRouter({
             component: InventoryPartsView, 
             name: 'inventory-parts',
             beforeEnter: requireAuth
-        },
+        },/*
         { 
             path: '/maintenance-calendar', 
             component: CalendarViewComponent, 
             name: 'maintenance-calendar',
             beforeEnter: requireAuth
-        },
+        },*/
         { 
             path: '/purchase-orders', 
             component: PurchaseOrdersView, 

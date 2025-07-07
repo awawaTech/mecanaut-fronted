@@ -57,21 +57,27 @@ const isTechnicalUser = computed(() => {
   return roles.includes('RoleTechnical');
 });
 
+// Computed para verificar si el usuario es administrador
+const isAdminUser = computed(() => {
+  const roles = userData.value?.roles || [];
+  return roles.includes('RoleAdmin');
+});
+
 // Opciones del menú usando computed para reactividad
 const menuOptions = computed(() => {
   const allOptions = [
     { 
       path: '/', 
       title: t('sidebar.menu.home'), 
-      icon: 'pi pi-home' 
-    },
+      icon: 'pi pi-home'
+    },/*
     { 
       path: '/maintenance-calendar',
       title: t('sidebar.menu.calendar'), 
       icon: 'pi pi-calendar' 
-    },
+    },*/
     {
-      path: '/inventario',
+      path: '/inventario-parts',
       title: t('sidebar.menu.inventory.title'),
       icon: 'pi pi-box',
       submenu: [
@@ -86,7 +92,7 @@ const menuOptions = computed(() => {
       ]
     },
     {
-      path: '/gestion-activos',
+      path: '/machinery',
       title: t('sidebar.menu.assetManagement.title'),
       icon: 'pi pi-cog',
       submenu: [
@@ -107,17 +113,18 @@ const menuOptions = computed(() => {
     { 
       path: '/orden-trabajo', 
       title: t('sidebar.menu.workOrder'), 
-      icon: 'pi pi-file' 
+      icon: 'pi pi-file'
     },
     { 
       path: '/maintenance-plan', 
       title: t('sidebar.menu.maintenancePlan'), 
-      icon: 'pi pi-wrench' 
+      icon: 'pi pi-wrench'
     },
     { 
       path: '/execution', 
       title: t('sidebar.menu.execution'), 
-      icon: 'pi pi-play' 
+      icon: 'pi pi-play',
+      adminOnly: false // Los admin NO pueden ver esto
     },/*
     { 
       path: '/dashboard', 
@@ -127,25 +134,29 @@ const menuOptions = computed(() => {
   { 
     path: '/machine-parameters', 
     title: t('sidebar.menu.machineParameters'), 
-    icon: 'pi pi-sliders-h' 
+    icon: 'pi pi-sliders-h'
   },
     { 
       path: '/administracion-personal', 
       title: t('sidebar.menu.staffManagement'), 
       icon: 'pi pi-users',
-      requiresAdmin: true
+      technicalOnly: false // Los técnicos NO pueden ver esto
     },
     { 
       path: '/configuracion', 
       title: t('sidebar.menu.settings'), 
-      icon: 'pi pi-cog' 
+      icon: 'pi pi-cog'
     }
   ];
 
   // Filtrar opciones según el rol del usuario
   return allOptions.filter(option => {
-    // Si la opción requiere admin y el usuario es técnico, no mostrarla
-    if (option.requiresAdmin && isTechnicalUser.value) {
+    // Los administradores NO pueden ver execution
+    if (option.adminOnly === false && isAdminUser.value) {
+      return false;
+    }
+    // Los técnicos NO pueden ver administracion-personal
+    if (option.technicalOnly === false && isTechnicalUser.value) {
       return false;
     }
     return true;

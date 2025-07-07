@@ -73,15 +73,9 @@ export class MachineParametersService {
                 measuredAt: new Date().toISOString()
             };
             
-            console.log('Enviando payload:', payload);
-            console.log('URL:', `/v1/machines/${machineryId}/metrics`);
-            
-            // Verificar que el token esté disponible
             const token = localStorage.getItem('token');
-            console.log('Token disponible:', !!token);
             
             const response = await http.post(`/v1/machines/${machineryId}/metrics`, payload);
-            console.log('Respuesta exitosa:', response.data);
             return response.data;
         } catch (err) {
             console.error('Error saving parameter value:', err);
