@@ -35,15 +35,6 @@ export default class ExecutionService {
     }
   }
 
-  /**
-   * Obtiene el ID del usuario actual
-   * @returns {number} - ID del usuario actual
-   */
-  static getCurrentUserId() {
-    // Por ahora, retornamos un ID fijo para el usuario técnico
-    // En una implementación real, esto vendría del contexto de autenticación
-    return 2; // Usuario técnico Sofia Ramírez
-  }
 
   /**
    * Obtiene órdenes de trabajo por línea de producción
@@ -55,23 +46,14 @@ export default class ExecutionService {
       let endpoint;
       
       if (productionLineId) {
-        endpoint = `/work-orders/by-production-line/${productionLineId}`;
+        endpoint = `work-orders/by-production-line/${productionLineId}`;
       } else {
         // Si no hay línea seleccionada, obtener todas las órdenes
-        endpoint = '/work-orders';
+        endpoint = 'work-orders';
       }
       
       const response = await apiService.get(endpoint);
-      
-      // Filtrar solo las órdenes donde el usuario actual es técnico asignado
-      const currentUserId = this.getCurrentUserId();
-      
-      const filteredOrders = response.data.filter(order => {
-        const hasTechnician = order.technicianIds && order.technicianIds.includes(currentUserId);
-        return hasTechnician;
-      });
-      
-      return filteredOrders;
+      return response.data;
     } catch (error) {
       console.error('Error obteniendo órdenes de trabajo:', error);
       return [];
@@ -216,9 +198,20 @@ export default class ExecutionService {
    */
   static async completeWorkOrder(orderId, completionData) {
     try {
-      const minimalData = {};
+      const executedOrderData = {
+        code: completionData.code,
+        annotations: completionData.observations || '',
+        executionDate: new Date().toISOString(),
+        productionLineId: completionData.productionLineId,
+        intervenedMachineIds: completionData.machineIds || [],
+        assignedTechnicianIds: completionData.technicianIds || [],
+        executedTasks: completionData.tasks.map(t => t.task),
+        usedProducts: completionData.products,
+        files: completionData.images || [],
+        workOrderId: orderId
+      };
 
-      const response = await apiService.put(`/v1/work-orders/${orderId}/complete`, minimalData);
+      const response = await apiService.post('/executed-work-orders', executedOrderData);
       return response.data;
     } catch (error) {
       console.error('Error completando orden de trabajo:', error);
@@ -244,9 +237,9 @@ export default class ExecutionService {
   static async uploadImage(file) {
     try {
       const formData = new FormData();
-      formData.append('File', file);
+      formData.append('file', file);
 
-      const response = await axios.post('http://localhost:5128/api/image-storage/upload', formData, {
+      const response = await axios.post('http://localhost:5128/api/v1/image-storage/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
