@@ -116,12 +116,15 @@ class ApiService {
         return response;
       }
     } catch (error) {
-      console.error('Error en petición POST:', error);
-      console.error('Detalles del error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
+      // No mostrar error si es un 400 con location header (caso especial para creación)
+      if (!(error.response?.status === 400 && error.response?.headers?.location)) {
+        console.error('Error en petición POST:', error);
+        console.error('Detalles del error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
       throw error;
     }
   }

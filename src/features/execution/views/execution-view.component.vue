@@ -173,7 +173,7 @@
               <div class="image-upload-container">
                 <div class="image-upload-area" @click="triggerFileInput(order.id)" @drop="handleDrop" @dragover.prevent @dragenter.prevent>
                   <input 
-                    :ref="`fileInput-${order.id}`"
+                    :ref="setFileInputRef(order.id)"
                     type="file" 
                     accept="image/*" 
                     multiple
@@ -315,6 +315,7 @@ export default {
     const loadingProductionLines = ref(false);
     const loadingOrders = ref(false);
     const inventoryParts = ref([]);
+    const fileInputs = ref({});
     
     // Datos de cada orden (observaciones, productos, tareas completadas)
     const orderData = ref({});
@@ -431,12 +432,19 @@ export default {
       selectedWorkOrder.value = null;
       await loadProductionLines(selectedPlant.value);
       await loadInventoryParts(selectedPlant.value);
-      await loadWorkOrders();
+      // No cargar órdenes hasta que se seleccione una línea de producción
+      workOrders.value = [];
+      availableWorkOrders.value = [];
     };
 
     const handleProductionLineChange = async () => {
       selectedWorkOrder.value = null;
-      await loadWorkOrders();
+      if (selectedProductionLine.value) {
+        await loadWorkOrders();
+      } else {
+        workOrders.value = [];
+        availableWorkOrders.value = [];
+      }
     };
 
     const handleWorkOrderChange = async () => {
@@ -506,12 +514,15 @@ export default {
       return part ? part.currentStock : 0;
     };
 
+    // Función para guardar refs dinámicos
+    const setFileInputRef = (orderId) => (el) => {
+      if (el) fileInputs.value[orderId] = el
+    }
+
     // Métodos para manejo de imágenes
     const triggerFileInput = (orderId) => {
-      const fileInput = document.querySelector(`input[ref="fileInput-${orderId}"]`);
-      if (fileInput) {
-        fileInput.click();
-      }
+      const input = fileInputs.value[orderId]
+      if (input) input.click()
     };
 
     const handleFileSelect = async (event, orderId) => {
@@ -667,6 +678,11 @@ export default {
         
         // Preparar datos para completar la orden
         const completionData = {
+          code: order.code,
+          observations: data.observations || '',
+          productionLineId: selectedProductionLine.value,
+          machineIds: order.machineries?.map(m => m.id) || [],
+          technicianIds: order.technicianIds || [],
           tasks: getTasksForOrder(order).map((task, index) => ({
             task: task.label,
             completed: data.tasksCompleted.includes(index)
@@ -717,7 +733,7 @@ export default {
       await loadWorkOrders();
     });
 
-    return {
+          return {
       workOrders,
       selectedPlant,
       selectedProductionLine,
@@ -731,6 +747,7 @@ export default {
       inventoryParts,
       orderData,
       defaultTasks,
+      setFileInputRef,
       handlePlantChange,
       handleProductionLineChange,
       handleWorkOrderChange,
