@@ -198,6 +198,12 @@ export default class ExecutionService {
    */
   static async completeWorkOrder(orderId, completionData) {
     try {
+      // Primero verificamos el estado de la orden
+      const currentOrder = await this.getWorkOrder(orderId);
+      if (currentOrder.status === 'completed') {
+        throw new Error('La orden ya está completada');
+      }
+
       const executedOrderData = {
         code: completionData.code,
         annotations: completionData.observations || '',
@@ -236,18 +242,87 @@ export default class ExecutionService {
    */
   static async uploadImage(file) {
     try {
+      console.log('Iniciando subida de imagen:', {
+        nombreArchivo: file.name,
+        tipo: file.type,
+        tamaño: file.size
+      });
+
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post('https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/image-storage/upload', formData, {
+      const token = localStorage.getItem('token');
+      console.log('Token disponible:', !!token);
+
+      const url = 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/image-storage/upload';
+      const config = {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
         },
+        timeout: 30000,
+        timeoutErrorMessage: 'La subida de la imagen está tomando demasiado tiempo',
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log('Progreso de subida:', percentCompleted + '%');
+        }
+      };
+
+      console.log('Iniciando petición a:', url);
+
+      const response = await axios.post(url, formData, config);
+
+      console.log('Respuesta recibida:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers
       });
-      return response.data;
+      
+      if (response.data && typeof response.data === 'string') {
+        console.log('Respuesta es un string, retornando como URL');
+        return { url: response.data };
+      } else if (response.data && response.data.url) {
+        console.log('Respuesta es un objeto con URL, retornando');
+        return { url: response.data.url };
+      } else {
+        console.error('Formato de respuesta inesperado:', response.data);
+        throw new Error('Formato de respuesta no válido del servidor');
+      }
     } catch (error) {
-      console.error('Error subiendo imagen:', error);
-      throw error;
+      console.error('Error detallado al subir imagen:', {
+        mensaje: error.message,
+        nombre: error.name,
+        codigo: error.code,
+        respuesta: error.response?.data,
+        estado: error.response?.status,
+        headers_respuesta: error.response?.headers,
+        config: error.config
+      });
+      
+      let mensajeError = 'Error al subir la imagen: ';
+      if (!localStorage.getItem('token')) {
+        mensajeError += 'No hay token de autorización disponible. Por favor, inicie sesión nuevamente.';
+      } else if (error.response?.status === 401) {
+        mensajeError += 'Token no válido o expirado. Por favor, inicie sesión nuevamente.';
+      } else if (error.response?.status === 404) {
+        mensajeError += 'La ruta de subida de imágenes no está disponible. Por favor, contacte al administrador.';
+      } else if (error.response?.status === 413) {
+        mensajeError += 'La imagen es demasiado grande.';
+      } else if (error.response?.status === 415) {
+        mensajeError += 'Tipo de archivo no soportado.';
+      } else if (error.message.includes('timeout')) {
+        mensajeError += 'La subida está tomando demasiado tiempo. Por favor, intente con una imagen más pequeña o verifique su conexión.';
+      } else if (error.message.includes('Network Error')) {
+        mensajeError += 'Error de conexión. Por favor, verifique su conexión a internet.';
+      } else if (error.response?.data?.message) {
+        mensajeError += error.response.data.message;
+      } else {
+        mensajeError += error.message;
+      }
+      
+      throw new Error(mensajeError);
     }
   }
 
