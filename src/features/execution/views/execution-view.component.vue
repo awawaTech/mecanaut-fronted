@@ -542,6 +542,13 @@ export default {
     const processFiles = async (files, orderId) => {
       for (const file of files) {
         if (!file.type.startsWith('image/')) {
+          alert('Solo se permiten archivos de imagen');
+          continue;
+        }
+
+        // Validar tamaño del archivo (máximo 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('El archivo es demasiado grande. El tamaño máximo es 5MB');
           continue;
         }
 
@@ -558,10 +565,11 @@ export default {
           if (!orderData.value[orderId].images) {
             orderData.value[orderId].images = [];
           }
+          const imageIndex = orderData.value[orderId].images.length;
           orderData.value[orderId].images.push(imageData);
 
           // Subir imagen
-          uploadImage(file, orderId, orderData.value[orderId].images.length - 1);
+          uploadImage(file, orderId, imageIndex);
         };
         reader.readAsDataURL(file);
       }
@@ -569,13 +577,32 @@ export default {
 
     const uploadImage = async (file, orderId, imageIndex) => {
       try {
+        console.log('Iniciando subida de imagen:', {
+          nombre: file.name,
+          tipo: file.type,
+          tamaño: file.size
+        });
+
         const response = await ExecutionService.uploadImage(file);
-        orderData.value[orderId].images[imageIndex].url = response.url || response.imageUrl;
-        orderData.value[orderId].images[imageIndex].uploading = false;
+        if (response && response.url) {
+          console.log('Imagen subida exitosamente:', response.url);
+          orderData.value[orderId].images[imageIndex].url = response.url;
+          orderData.value[orderId].images[imageIndex].uploading = false;
+        } else {
+          throw new Error('No se recibió la URL de la imagen');
+        }
       } catch (error) {
-        console.error('Error uploading image:', error);
-        orderData.value[orderId].images[imageIndex].uploading = false;
-        // Opcional: mostrar mensaje de error al usuario
+        console.error('Error en componente al subir imagen:', error);
+        
+        // Mostrar mensaje de error más amigable
+        const mensaje = error.message.includes('No autorizado') 
+          ? 'Su sesión ha expirado. Por favor, vuelva a iniciar sesión.'
+          : error.message || 'Error al subir la imagen. Por favor, intente nuevamente.';
+        
+        alert(mensaje);
+        
+        // Remover la imagen que falló
+        orderData.value[orderId].images.splice(imageIndex, 1);
       }
     };
 
@@ -694,8 +721,6 @@ export default {
           }))
         };
 
-        console.log('Datos a enviar para completar orden:', completionData);
-
         // Completar la orden
         await ExecutionService.completeWorkOrder(orderId, completionData);
 
@@ -710,8 +735,15 @@ export default {
         await loadWorkOrders();
       } catch (error) {
         console.error('Error finalizando orden:', error);
-        console.error('Detalles del error:', error.response?.data);
-        alert('Error al finalizar la orden');
+        let errorMessage = 'Error al finalizar la orden';
+        
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        alert(errorMessage);
       }
     };
 

@@ -141,12 +141,12 @@ const menuOptions = computed(() => {
       title: t('sidebar.menu.staffManagement'), 
       icon: 'pi pi-users',
       technicalOnly: false // Los técnicos NO pueden ver esto
-    },
+    }/*
     { 
       path: '/configuracion', 
       title: t('sidebar.menu.settings'), 
       icon: 'pi pi-cog'
-    }
+    }*/
   ];
 
   // Filtrar opciones según el rol del usuario
