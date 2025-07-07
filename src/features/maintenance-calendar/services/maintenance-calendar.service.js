@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { MaintenanceCalendarAssembler } from './maintenance-calendar.assembler';
 
+
 const http = axios.create({
-  baseURL: 'http://localhost:3000/maintenance-plan-data',
+  baseURL: 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/dynamic-maintenance-plans',
   timeout: 8000,
 });
 

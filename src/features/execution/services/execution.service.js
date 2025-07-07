@@ -82,7 +82,7 @@ export default class ExecutionService {
    */
   static async getMachineries(productionLineId) {
     try {
-      const response = await axios.get(`https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/machines/production-line/${productionLineId}`);
+      const response = await axios.get(`https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/machines/production-line/${productionLineId}`);
       return response.data;
     } catch (error) {
       console.error('Error obteniendo maquinarias:', error);
