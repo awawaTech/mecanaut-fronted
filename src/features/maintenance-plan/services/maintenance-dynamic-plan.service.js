@@ -28,30 +28,27 @@ externalHttp.interceptors.request.use((config) => {
 
 export class MaintenanceDynamicPlanService {
   /* -------- READ ALL -------- */
-  async getAllPlans(plantLineId = null) {
-    try {
-      let url = '/v1/dynamic-maintenance-plans';
-      if (plantLineId) {
-        url += `?plantLineId=${plantLineId}`;
+  async getAllPlans() {
+    const token = localStorage.getItem('token');
+    const response = await fetch(
+      'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/dynamic-maintenance-plans?plantLineId=1',
+      {
+        method: 'GET',
+        headers: {
+          'accept': 'text/plain',
+          'Authorization': `Bearer ${token}`
+        }
       }
-      
-      const res = await externalHttp.get(url);
-      console.log('Respuesta bruta de la API:', res.data); // Depuración
-      
-      if (!res.data) return [];
-      
-      // Procesamos directamente cada elemento con el método toModel
-      if (Array.isArray(res.data)) {
-        const plans = res.data.map(plan => MaintenanceDynamicPlanAssembler.toModel(plan));
-        console.log('Planes procesados:', plans); // Depuración
-        return plans;
-      }
-      
-      return [];
-    } catch (error) {
-      console.error('Error al obtener planes dinámicos', error);
-      return [];
+    );
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Respuesta del backend:', errorText);
+      throw new Error('Error al obtener planes dinámicos');
     }
+    // El backend responde con texto plano, pero es JSON en string
+    const text = await response.text();
+    const data = JSON.parse(text);
+    return MaintenanceDynamicPlanAssembler.toModelList(data);
   }
 
   /* -------- READ ONE -------- */
@@ -73,26 +70,42 @@ export class MaintenanceDynamicPlanService {
       // Preparar datos según la estructura esperada por la API
       const planForServer = {
         name: planData.planName,
-        metricId: parseInt(planData.parameter),
-        amount: parseInt(planData.amount),
-        productionLineId: 1,
-        plantLineId: 1,
-        machineIds: planData.machineIds.map(id => parseInt(id)),
-        taskDescriptions: planData.tasks.map(task => task.taskDescription)
+        metricId: String(planData.parameter),
+        amount: String(planData.amount),
+        productionLineId: String(planData.productionLineId || 1),
+        plantLineId: String(planData.plantLineId || 1),
+        machines: planData.machineIds.map(id => Number(id)),
+        tasks: planData.tasks.map(task => task.taskDescription)
       };
-      
+
       console.log('Plan dinámico preparado para enviar:', planForServer);
-      console.log('Estructura detallada de tareas:', JSON.stringify(planForServer.taskDescriptions, null, 2));
-      console.log('Datos originales recibidos:', JSON.stringify(planData, null, 2));
-      
+
       // Enviar POST
-      const res = await externalHttp.post('/v1/dynamic-maintenance-plans', planForServer);
-      return MaintenanceDynamicPlanAssembler.toModel(res.data);
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/dynamic-maintenance-plans',
+        {
+          method: 'POST',
+          headers: {
+            'accept': 'text/plain',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(planForServer)
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Respuesta del backend:', errorText);
+        throw new Error('Error al crear plan dinámico');
+      }
+
+      const text = await response.text();
+      const data = JSON.parse(text);
+      return MaintenanceDynamicPlanAssembler.toModel(data);
     } catch (error) {
       console.error('Error al crear plan dinámico', error);
-      if (error.response) {
-        console.error('Detalles del error:', error.response.data);
-      }
       throw new Error('Error al crear plan dinámico');
     }
   }
