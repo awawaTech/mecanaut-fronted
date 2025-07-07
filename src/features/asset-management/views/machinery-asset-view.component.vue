@@ -5,42 +5,46 @@
     </header>
 
     <!-- Selectores de filtrado -->
+    <!-- Filtros -->
     <div class="filters-container">
+      <!-- Planta -->
       <div class="filter-group">
         <label for="plant-selector">Planta:</label>
         <select 
-          id="plant-selector" 
-          v-model="selectedPlantId" 
+          id="plant-selector"
+          v-model="selectedPlantId"
           @change="onPlantChange"
           class="filter-select">
-          <option value="">Todas las plantas</option>
+          <option value="">Selecciona una planta</option>
           <option 
             v-for="plant in plants" 
-            :key="plant.id" 
+            :key="plant.id"
             :value="plant.id">
             {{ plant.name }}
           </option>
         </select>
       </div>
-      
+
+      <!-- Línea de Producción -->
       <div class="filter-group">
         <label for="production-line-selector">Línea de Producción:</label>
         <select 
-          id="production-line-selector" 
-          v-model="selectedProductionLineId" 
+          id="production-line-selector"
+          v-model="selectedProductionLineId"
           @change="onProductionLineChange"
           class="filter-select"
-          :disabled="!selectedPlantId">
-          <option value="">Todas las líneas</option>
+          :disabled="!selectedPlantId || productionLines.length === 0">
+          <option disabled value="">Selecciona una línea</option>
           <option 
-            v-for="line in productionLines" 
-            :key="line.id" 
+            v-for="line in productionLines"
+            :key="line.id"
             :value="line.id">
             {{ line.name }}
           </option>
         </select>
       </div>
     </div>
+
 
     <main class="main-container">
       <div class="search-container" :class="{'full-width': !showDetailPanel}">
@@ -116,12 +120,10 @@
       </div>
     </main>
 
-    <!-- Modal para crear/editar máquina -->
+    <!-- Modal para crear máquina -->
     <div v-if="showMachineModal" class="modal-overlay" @click="closeMachineModal">
       <div class="modal-container" @click.stop>
         <interact-machinery
-          :machinery="isEditMode ? selectedMachine : null"
-          :title="isEditMode ? 'Editar Máquina' : 'Nueva Máquina'"
           :production-line-id="selectedProductionLineId"
           @save="saveMachine"
           @cancel="closeMachineModal"
@@ -162,7 +164,6 @@ const selectedProductionLineId = ref('');
 
 // Estados para el modal
 const showMachineModal = ref(false);
-const isEditMode = ref(false);
 
 // Estado para la búsqueda y filtrado
 const searchQuery = ref('');
@@ -206,7 +207,8 @@ const filterMachinery = () => {
     filteredMachineryData.value = [];
     return;
   }
-  
+
+  // Mapea para agregar campos legibles (si quieres)
   let filtered = allMachineryData.value.map(machine => ({
     id: machine.id,
     name: machine.name || 'Sin nombre',
@@ -223,8 +225,8 @@ const filterMachinery = () => {
     nextMaintenanceDate: machine.nextMaintenanceDate,
     original: machine
   }));
-  
-  // Filtrar por texto de búsqueda
+
+  // Solo búsqueda por texto si quieres
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(machine => 
@@ -234,18 +236,7 @@ const filterMachinery = () => {
       machine.serialNumber?.toLowerCase().includes(query)
     );
   }
-  
-  // Filtrar por planta
-  if (selectedPlantId.value) {
-    filtered = filtered.filter(machine => machine.plantId === selectedPlantId.value);
-  }
-  
-  // Filtrar por línea de producción
-  if (selectedProductionLineId.value) {
-    filtered = filtered.filter(machine => machine.productionLineId === selectedProductionLineId.value);
-  }
-  
-  console.log('Datos filtrados para la tabla:', filtered);
+
   filteredMachineryData.value = filtered;
 };
 
@@ -254,11 +245,29 @@ const loadMachineries = async () => {
   loading.value = true;
   error.value = '';
   try {
-    console.log('Cargando máquinas para línea de producción:', selectedProductionLineId.value);
-    const machines = await MachineryApiService.getMachines(selectedProductionLineId.value);
-    console.log('Máquinas cargadas:', machines);
+    let machines = [];
+
+    // ✔️ Si hay línea de producción, filtra por línea
+    if (selectedProductionLineId.value) {
+      const lineId = Number(selectedProductionLineId.value);
+      console.log('Obteniendo máquinas por línea:', lineId);
+      machines = await MachineryApiService.getMachinesByProductionLine(lineId);
+
+    // ✔️ Si NO hay línea pero sí planta, filtra por planta
+    } else if (selectedPlantId.value) {
+      const plantId = Number(selectedPlantId.value);
+      console.log('Obteniendo máquinas por planta:', plantId);
+      machines = await MachineryApiService.getMachinesByPlant(plantId);
+
+    // ✔️ Si no hay filtros, trae todas
+    } else {
+      console.log('Obteniendo todas las máquinas');
+      machines = await MachineryApiService.getMachines();
+    }
+
     allMachineryData.value = machines;
     filterMachinery();
+
   } catch (err) {
     console.error('Error al cargar máquinas:', err);
     error.value = err?.message ?? 'Error inesperado';
@@ -268,6 +277,8 @@ const loadMachineries = async () => {
     loading.value = false;
   }
 };
+
+
 
 const loadPlants = async () => {
   try {
@@ -334,18 +345,16 @@ const onRowClick = ({ row }) => {
 };
 
 const openNewMachineModal = () => {
-  isEditMode.value = false;
-  showMachineModal.value = true;
-};
-
-const editMachine = () => {
-  isEditMode.value = true;
   showMachineModal.value = true;
 };
 
 const closeMachineModal = () => {
   showMachineModal.value = false;
-  isEditMode.value = false;
+};
+
+const editMachine = () => {
+  // Por ahora no hacemos nada aquí ya que la edición se manejará de otra manera
+  console.log('La edición de máquinas se manejará de otra manera');
 };
 
 const saveMachine = async (machineData) => {

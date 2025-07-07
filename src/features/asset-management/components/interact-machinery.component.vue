@@ -76,7 +76,6 @@
       >
         <div class="measurements-header">
           <div class="header-cell name-header">Métrica</div>
-          <div class="header-cell unit-header">Unidad</div>
           <div class="header-cell value-header">Valor</div>
           <div v-if="!isEditMode" class="header-cell action-header"></div>
         </div>
@@ -99,11 +98,6 @@
                   {{ availableMetric.name }}
                 </option>
               </select>
-            </div>
-            <div class="measurement-cell unit-cell">
-              <div class="unit-display">
-                {{ getMetricUnit(metric.metricId) || 'Seleccione métrica' }}
-              </div>
             </div>
             <div class="measurement-cell value-cell">
               <input 
