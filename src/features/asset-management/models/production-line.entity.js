@@ -6,7 +6,7 @@ export class ProductionLineEntity {
     this.id = data.id;
     this.name = data.name;
     this.code = data.code;
-    this.maxUnitsPerHour = data.maxUnitsPerHour;
+    this.capacityUnitsPerHour = data.capacityUnitsPerHour;
     this.unit = data.unit;
     this.status = data.status;
     this.plantId = data.plantId;

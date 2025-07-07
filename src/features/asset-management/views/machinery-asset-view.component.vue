@@ -1,88 +1,71 @@
 <template>
   <div class="container">
     <header class="breadcrumb-header">
-      <div class="breadcrumb-card">
-        <span class="breadcrumb-text">Gestión de Activos &gt; Maquinarias</span>
-      </div>
+      <h1>Gestión de Maquinaria</h1>
     </header>
 
+    <!-- Selectores de filtrado -->
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="plant-selector">Planta:</label>
+        <select 
+          id="plant-selector" 
+          v-model="selectedPlantId" 
+          @change="onPlantChange"
+          class="filter-select">
+          <option value="">Todas las plantas</option>
+          <option 
+            v-for="plant in plants" 
+            :key="plant.id" 
+            :value="plant.id">
+            {{ plant.name }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="production-line-selector">Línea de Producción:</label>
+        <select 
+          id="production-line-selector" 
+          v-model="selectedProductionLineId" 
+          @change="onProductionLineChange"
+          class="filter-select"
+          :disabled="!selectedPlantId">
+          <option value="">Todas las líneas</option>
+          <option 
+            v-for="line in productionLines" 
+            :key="line.id" 
+            :value="line.id">
+            {{ line.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+
     <main class="main-container">
-      <div class="search-container" :class="{ 'full-width': !showDetailPanel || showMachineryModal }">
-        <div class="search-actions">
-          <!-- Filtros -->
-          <div class="filters-container">
-            <div class="filter-group">
-              <label for="plant-select" class="filter-label">Planta:</label>
-              <select 
-                id="plant-select"
-                v-model="selectedPlant" 
-                @change="onPlantChange"
-                class="filter-select"
-                :disabled="loadingPlants"
-              >
-                <option value="">{{ loadingPlants ? 'Cargando...' : 'Todas las plantas' }}</option>
-                <option v-for="plant in plants" :key="plant.id" :value="plant.id">
-                  {{ plant.name }}
-                </option>
-              </select>
-            </div>
-            
-            <div class="filter-group">
-              <label for="production-line-select" class="filter-label">Línea de Producción:</label>
-              <select 
-                id="production-line-select"
-                v-model="selectedProductionLine" 
-                @change="onProductionLineChange"
-                class="filter-select"
-                :disabled="loadingProductionLines || !selectedPlant"
-              >
-                <option value="">{{ 
-                  !selectedPlant ? 'Selecciona una planta' : 
-                  loadingProductionLines ? 'Cargando...' : 'Todas las líneas' 
-                }}</option>
-                <option v-for="line in productionLines" :key="line.id" :value="line.id">
-                  {{ line.name }}
-                </option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="search-bar">
-            <input type="text" placeholder="Buscar" class="search-input">
-            <button class="new-button" @click="newMachineAction">+ Nueva Máquina</button>
-          </div>
-        </div>
-        
+      <div class="search-container" :class="{'full-width': !showDetailPanel}">
         <div v-if="loading && !showDetailPanel" class="loading-indicator">
           Cargando datos...
         </div>
         
         <div v-if="error && !showDetailPanel" class="error-message">
           {{ error }}
-          <button @click="loadMachineries">Reintentar</button>
+          <button @click="loadMachineries()">Reintentar</button>
         </div>
         
         <div v-if="!loading && !error" class="table-container">
-          <table class="record-table">
-            <thead>
-              <tr>
-                <th v-for="column in columns" :key="column.key">{{ column.label }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="machine in machines" :key="machine.id" @click="selectMachinery(machine.id)">
-                <td>{{ machine.id }}</td>
-                <td>{{ machine.name }}</td>
-                <td>{{ machine.model }}</td>
-                <td>{{ machine.manufacturer }}</td>
-                <td>{{ machine.status }}</td>
-                <td>{{ machine.nextMaintenance }}</td>
-                <td>
-                  <button class="btn-primary" @click.stop="selectMachinery(machine.id)">Ver</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <app-record-table
+            :columns="tableColumns"
+            :data="filteredMachineryData"
+            :search-placeholder="'Buscar maquinaria...'"
+            :new-label="'Máquina'"
+            :searchable-columns="['id', 'name', 'model', 'manufacturer', 'serialNumber']"
+            :show-new-button="true"
+            @search="onSearch"
+            @filter-change="onFilterChange"
+            @new-click="openNewMachineModal"
+            @ctaClick="onRowClick">
+          </app-record-table>
         </div>
       </div>
       
@@ -95,328 +78,301 @@
         </div>
         
         <div v-if="loading" class="loading-indicator">
-          Cargando información de la maquinaria...
+          Cargando información de la máquina...
         </div>
         
-        <div v-if="!loading && selectedMachine" class="info-panel">
-          <div class="panel-title">
-            ID: {{ selectedMachineId }} | {{ selectedMachine.name }}
-          </div>
-          
-          <div class="panel-actions">
-            <button class="btn-primary" @click="editMachine">Editar</button>
-            <button class="btn-secondary" @click="toggleMachineryStatus">
-              {{ selectedMachine.status === 1 ? 'Desactivar' : 'Activar' }}
-            </button>
-          </div>
-          
-          <!-- Información básica -->
-          <div class="info-section">
-            <div v-for="(item, index) in infoData" :key="index" class="info-item">
-              <span class="subtitle">{{ item.subtitle }}:</span>
-              <span class="info">{{ item.info }}</span>
-            </div>
-          </div>
-          
-          <!-- Especificaciones técnicas -->
-          <div class="info-container">
-            <h3>Especificaciones técnicas:</h3>
-            <div class="info-section">
-              <div v-for="(item, index) in techData" :key="index" class="info-item">
-                <span class="subtitle">{{ item.subtitle }}:</span>
-                <span class="info">{{ item.info }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Historial de mantenimiento -->
-          <div class="info-container">
-            <h3>Historial de mantenimiento</h3>
-            <div class="maintenance-list">
-              <div v-for="(item, index) in maintenanceItems" :key="index" class="maintenance-item">
-                <div class="maintenance-date">{{ item.date }}</div>
-                <div class="maintenance-type">{{ item.type }}</div>
-                <div class="maintenance-responsible">{{ item.responsible }}</div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Mediciones actuales -->
-          <div class="info-container">
-            <h3>Mediciones actuales:</h3>
-            <div class="info-section">
-              <div v-for="(item, index) in measurementData" :key="index" class="info-item">
-                <span class="subtitle">{{ item.subtitle }}:</span>
-                <span class="info">{{ item.info }}</span>
-              </div>
-            </div>
-          </div>
+        <div v-if="!loading && selectedMachine">
+          <app-information-panel
+            :headerText="'Máquina: ' + selectedMachine.name + ' (ID: ' + selectedMachine.id + ')'"
+            :showHeader="true"
+            :showPrimaryButton="true"
+            :primaryButtonText="'Editar'"
+            @primaryClick="editMachine">
+            
+            <app-info-section 
+              :infoType="2" 
+              :data="machineInfoData">
+            </app-info-section>
+            
+            <app-info-container 
+              :title="'Métricas'" 
+              :titleType="1">
+              <app-info-list-items 
+                :type="'simpleList'" 
+                :items="metricsItems">
+              </app-info-list-items>
+            </app-info-container>
+
+            <app-info-container 
+              :title="'Estado y Mantenimiento'" 
+              :titleType="1">
+              <app-info-list-items 
+                :type="'simpleList'" 
+                :items="maintenanceItems">
+              </app-info-list-items>
+            </app-info-container>
+          </app-information-panel>
         </div>
       </div>
     </main>
 
-    <!-- Modal para crear/editar maquinaria -->
-    <div v-if="showMachineryModal" class="modal-overlay" @click="closeModal">
+    <!-- Modal para crear/editar máquina -->
+    <div v-if="showMachineModal" class="modal-overlay" @click="closeMachineModal">
       <div class="modal-container" @click.stop>
         <interact-machinery
           :machinery="isEditMode ? selectedMachine : null"
-          :title="isEditMode ? 'Editar Maquinaria' : 'Nueva Maquinaria'"
-          :production-line-id="selectedProductionLine"
-          @save="saveMachinery"
-          @cancel="closeModal"
+          :title="isEditMode ? 'Editar Máquina' : 'Nueva Máquina'"
+          :production-line-id="selectedProductionLineId"
+          @save="saveMachine"
+          @cancel="closeMachineModal"
         />
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import InteractMachinery from '../components/interact-machinery.component.vue'
-import { PlantApiService } from '../services/plant-api.service.js'
-import { ProductionLineApiService } from '../services/production-line-api.service.js'
-import { MachineryApiService } from '../services/machinery-api.service.js'
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { MachineryApiService } from '../services/machinery-api.service.js';
+import InteractMachinery from '../components/interact-machinery.component.vue';
+import AppRecordTable from '../../../shared/components/record-table.component.vue';
+import AppInformationPanel from '../../../shared/components/information-panel/information-panel.component.vue';
+import AppInfoSection from '../../../shared/components/information-panel/info-section.component.vue';
+import AppInfoContainer from '../../../shared/components/information-panel/info-container.component.vue';
+import AppInfoListItems from '../../../shared/components/information-panel/info-list-items.component.vue';
+import { PlantApiService } from '../services/plant-api.service.js';
+import { ProductionLineApiService } from '../services/production-line-api.service.js';
 
-// Estado
-const selectedMachineId = ref<number | null>(null)
-const selectedMachine = ref<any>(null)
-const showDetailPanel = ref(false)
-const showMachineryModal = ref(false)
-const isEditMode = ref(false)
-const loading = ref(false)
-const error = ref<string | null>(null)
+// Variables reactivas
+const allMachineryData = ref([]);
+const filteredMachineryData = ref([]);
+const showDetailPanel = ref(false);
+const selectedMachine = ref(null);
+const metricsItems = ref([]);
+const machineInfoData = ref([]);
+const maintenanceItems = ref([]);
+const loading = ref(false);
+const error = ref('');
 
-// Filtros
-const selectedPlant = ref<number | null>(null)
-const selectedProductionLine = ref<number | null>(null)
-const plants = ref<any[]>([])
-const productionLines = ref<any[]>([])
-const loadingPlants = ref(false)
-const loadingProductionLines = ref(false)
+// Variables para los selectores
+const plants = ref([]);
+const productionLines = ref([]);
+const selectedPlantId = ref('');
+const selectedProductionLineId = ref('');
 
-// Datos de máquinas desde API
-const machineries = ref([])
+// Estados para el modal
+const showMachineModal = ref(false);
+const isEditMode = ref(false);
 
-// Columnas para la tabla
-const columns = [
+// Estado para la búsqueda y filtrado
+const searchQuery = ref('');
+const activeFilters = ref({});
+
+// Configuración de la tabla
+const tableColumns = ref([
   { key: 'id', label: 'ID', type: 'texto' },
   { key: 'name', label: 'Nombre', type: 'texto' },
   { key: 'model', label: 'Modelo', type: 'texto' },
   { key: 'manufacturer', label: 'Fabricante', type: 'texto' },
+  { key: 'serialNumber', label: 'N° Serie', type: 'texto' },
   { key: 'status', label: 'Estado', type: 'texto' },
-  { key: 'nextMaintenance', label: 'Próximo mantenimiento', type: 'texto' },
-  { key: 'details', label: 'Detalles', type: 'cta', ctaLabel: 'Ver' }
-]
+  { key: 'actions', label: 'Acciones', type: 'cta', ctaLabel: 'Ver', ctaVariant: 'primary' }
+]);
 
-// Datos adaptados para la tabla
-const machines = computed(() => {
-  return machineries.value.map(machinery => ({
-    id: machinery.id,
-    name: machinery.name,
-    model: machinery.model,
-    manufacturer: machinery.manufacturer,
-    status: getStatusText(machinery.status),
-    nextMaintenance: formatDate(machinery.nextMaintenanceDate),
-    details: machinery.id,
-    original: machinery
-  }))
-})
+const getStatusText = (status) => {
+  const statusMap = {
+    1: 'Activo',
+    0: 'Inactivo',
+    'ACTIVE': 'Activo',
+    'INACTIVE': 'Inactivo',
+    'MAINTENANCE': 'En Mantenimiento'
+  };
+  return statusMap[status] || 'Desconocido';
+};
 
-// Datos para el panel de información
-const infoData = ref<{subtitle: string, info: string}[]>([])
-const techData = ref<{subtitle: string, info: string}[]>([])
-const maintenanceItems = ref<{date: string, type: string, responsible: string}[]>([])
-const measurementData = ref<{subtitle: string, info: string}[]>([])
+// Funciones para la búsqueda y filtrado
+const onSearch = (query) => {
+  searchQuery.value = query;
+  filterMachinery();
+};
 
-// Funciones auxiliares
-const getStatusText = (status: string): string => {
-  switch(status) {
-    case 'Operational': return 'Operacional'
-    case 'Maintenance': return 'En mantenimiento'
-    case 'Repair': return 'En reparación'
-    case 'Inactive': return 'Inactiva'
-    default: return status || 'Desconocido'
+const onFilterChange = (filters) => {
+  activeFilters.value = filters;
+  filterMachinery();
+};
+
+const filterMachinery = () => {
+  if (!allMachineryData.value.length) {
+    filteredMachineryData.value = [];
+    return;
   }
-}
+  
+  let filtered = allMachineryData.value.map(machine => ({
+    id: machine.id,
+    name: machine.name || 'Sin nombre',
+    model: machine.model || 'Sin modelo',
+    manufacturer: machine.manufacturer || 'Sin fabricante',
+    serialNumber: machine.serialNumber || 'Sin número de serie',
+    status: getStatusText(machine.status),
+    type: machine.type || 'Sin tipo',
+    powerConsumption: machine.powerConsumption,
+    metrics: machine.metrics || [],
+    plantId: machine.plantId,
+    productionLineId: machine.productionLineId,
+    lastMaintenanceDate: machine.lastMaintenanceDate,
+    nextMaintenanceDate: machine.nextMaintenanceDate,
+    original: machine
+  }));
+  
+  // Filtrar por texto de búsqueda
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(machine => 
+      machine.name?.toLowerCase().includes(query) || 
+      machine.model?.toLowerCase().includes(query) ||
+      machine.manufacturer?.toLowerCase().includes(query) ||
+      machine.serialNumber?.toLowerCase().includes(query)
+    );
+  }
+  
+  // Filtrar por planta
+  if (selectedPlantId.value) {
+    filtered = filtered.filter(machine => machine.plantId === selectedPlantId.value);
+  }
+  
+  // Filtrar por línea de producción
+  if (selectedProductionLineId.value) {
+    filtered = filtered.filter(machine => machine.productionLineId === selectedProductionLineId.value);
+  }
+  
+  console.log('Datos filtrados para la tabla:', filtered);
+  filteredMachineryData.value = filtered;
+};
 
-const formatDate = (date: Date): string => {
-  return date ? new Date(date).toLocaleDateString('es-ES') : ''
-}
+// Cargar datos
+const loadMachineries = async () => {
+  loading.value = true;
+  error.value = '';
+  try {
+    console.log('Cargando máquinas para línea de producción:', selectedProductionLineId.value);
+    const machines = await MachineryApiService.getMachines(selectedProductionLineId.value);
+    console.log('Máquinas cargadas:', machines);
+    allMachineryData.value = machines;
+    filterMachinery();
+  } catch (err) {
+    console.error('Error al cargar máquinas:', err);
+    error.value = err?.message ?? 'Error inesperado';
+    allMachineryData.value = [];
+    filteredMachineryData.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
 
-// Métodos
 const loadPlants = async () => {
-  loadingPlants.value = true
   try {
-    const response = await PlantApiService.getPlants()
-    plants.value = response || []
-  } catch (err) {
-    console.error('Error cargando plantas:', err)
-    plants.value = []
-  } finally {
-    loadingPlants.value = false
+    const response = await PlantApiService.getPlants();
+    plants.value = response || [];
+    console.log('Plantas cargadas:', plants.value);
+  } catch (error) {
+    console.error('Error al cargar plantas:', error);
+    plants.value = [];
   }
-}
+};
 
-const loadProductionLines = async (plantId: number) => {
-  if (!plantId) {
-    productionLines.value = []
-    return
-  }
-  
-  loadingProductionLines.value = true
+const loadProductionLines = async (plantId) => {
   try {
-    const response = await ProductionLineApiService.getProductionLines(plantId)
-    productionLines.value = response || []
-  } catch (err) {
-    console.error('Error cargando líneas de producción:', err)
-    productionLines.value = []
-  } finally {
-    loadingProductionLines.value = false
+    if (!plantId) {
+      productionLines.value = [];
+      return;
+    }
+    
+    const response = await ProductionLineApiService.getProductionLines(plantId);
+    productionLines.value = response || [];
+    console.log('Líneas de producción cargadas:', productionLines.value);
+  } catch (error) {
+    console.error('Error al cargar líneas de producción:', error);
+    productionLines.value = [];
   }
-}
+};
 
-const onPlantChange = () => {
-  selectedProductionLine.value = null
-  productionLines.value = []
-  
-  if (selectedPlant.value) {
-    loadProductionLines(selectedPlant.value)
-  }
-  
-  // Aquí podrías filtrar las maquinarias por planta
-  loadMachineries()
-}
+// Manejadores de eventos
+const onPlantChange = async () => {
+  selectedProductionLineId.value = '';
+  await loadProductionLines(selectedPlantId.value);
+  await loadMachineries();
+};
 
 const onProductionLineChange = () => {
-  loadMachineries()
-}
+  loadMachineries();
+};
 
-const loadMachineries = async () => {
-  loading.value = true
-  error.value = null
+const onRowClick = ({ row }) => {
+  selectedMachine.value = row;
   
-  try {
-    const productionLineId = selectedProductionLine.value
-    const machinesData = await MachineryApiService.getMachines(productionLineId)
-    machineries.value = machinesData || []
-  } catch (err) {
-    console.error('Error cargando máquinas:', err)
-    error.value = err?.message || 'Error al cargar las máquinas'
-    machineries.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-const selectMachinery = async (id: number) => {
-  loading.value = true
-  try {
-    const machinery = await MachineryApiService.getMachineById(id)
-    if (machinery) {
-      selectedMachine.value = machinery
-      selectedMachineId.value = machinery.id
-      updateInfoPanel(machinery)
-      showDetailPanel.value = true
-    }
-  } catch (err) {
-    console.error('Error cargando máquina:', err)
-    error.value = err?.message || 'Error al cargar la máquina'
-  } finally {
-    loading.value = false
-  }
-}
-
-const updateInfoPanel = (machinery: any) => {
-  infoData.value = [
-    { subtitle: 'Nombre', info: machinery.name || 'No especificado' },
-    { subtitle: 'Modelo', info: machinery.model || 'No especificado' },
-    { subtitle: 'Estado actual', info: getStatusText(machinery.status) },
-    { subtitle: 'Fabricante', info: machinery.manufacturer || 'No especificado' },
-    { subtitle: 'Número de serie', info: machinery.serialNumber || 'No especificado' },
-    { subtitle: 'Tipo', info: machinery.type || 'No especificado' },
-    { subtitle: 'Consumo de energía', info: machinery.powerConsumption ? `${machinery.powerConsumption} kW` : 'No especificado' }
-  ]
+  machineInfoData.value = [
+    { subtitle: 'ID', info: row.id },
+    { subtitle: 'Nombre', info: row.name },
+    { subtitle: 'Modelo', info: row.model },
+    { subtitle: 'Fabricante', info: row.manufacturer },
+    { subtitle: 'N° Serie', info: row.serialNumber },
+    { subtitle: 'Tipo', info: row.type },
+    { subtitle: 'Consumo de energía', info: `${row.powerConsumption} kW` }
+  ];
   
-  techData.value = [
-    { subtitle: 'Línea de producción', info: machinery.productionLineId ? `ID: ${machinery.productionLineId}` : 'No asignada' },
-    { subtitle: 'Último mantenimiento', info: formatDate(machinery.lastMaintenanceDate) || 'No registrado' },
-    { subtitle: 'Próximo mantenimiento', info: formatDate(machinery.nextMaintenanceDate) || 'No programado' }
-  ]
+  metricsItems.value = row.metrics?.map(metric => ({
+    model: `${metric.name}: ${metric.value} ${metric.unit}`
+  })) || [];
   
   maintenanceItems.value = [
-    { date: formatDate(machinery.lastMaintenanceDate) || 'No registrado', type: 'Último mantenimiento', responsible: 'Sistema' },
-    { date: formatDate(machinery.nextMaintenanceDate) || 'No programado', type: 'Próximo mantenimiento', responsible: 'Sistema' }
-  ]
+    { model: `Estado: ${row.status}` },
+    { model: `Último mantenimiento: ${formatDate(row.lastMaintenanceDate)}` },
+    { model: `Próximo mantenimiento: ${formatDate(row.nextMaintenanceDate)}` }
+  ];
   
-  measurementData.value = [
-    { subtitle: 'Estado', info: getStatusText(machinery.status) },
-    { subtitle: 'ID de máquina', info: machinery.id.toString() }
-  ]
-}
+  showDetailPanel.value = true;
+};
 
-const closeDetailPanel = () => {
-  showDetailPanel.value = false
-  selectedMachine.value = null
-  selectedMachineId.value = null
-}
-
-const newMachineAction = () => {
-  isEditMode.value = false
-  showMachineryModal.value = true
-}
+const openNewMachineModal = () => {
+  isEditMode.value = false;
+  showMachineModal.value = true;
+};
 
 const editMachine = () => {
-  isEditMode.value = true
-  showMachineryModal.value = true
-}
+  isEditMode.value = true;
+  showMachineModal.value = true;
+};
 
-const closeModal = () => {
-  showMachineryModal.value = false
-}
+const closeMachineModal = () => {
+  showMachineModal.value = false;
+  isEditMode.value = false;
+};
 
-const saveMachinery = async (machineryData: any) => {
+const saveMachine = async (machineData) => {
   try {
-    loading.value = true
-    
-    const createdMachine = await MachineryApiService.createMachine(machineryData)
-    
-    if (selectedProductionLine.value && createdMachine.id) {
-      await MachineryApiService.assignMachineToProductionLine(createdMachine.id, selectedProductionLine.value)
-    }
-    
-    await loadMachineries()
-    closeModal()
-  } catch (err) {
-    console.error('Error guardando máquina:', err)
-    error.value = err?.message || 'Error al guardar la máquina'
-  } finally {
-    loading.value = false
+    await MachineryApiService.createMachine(machineData);
+    await loadMachineries();
+    closeMachineModal();
+  } catch (error) {
+    console.error('Error al guardar la máquina:', error);
   }
-}
+};
 
-const toggleMachineryStatus = async () => {
-  if (!selectedMachine.value) return
-  
-  try {
-    loading.value = true
-    
-    const newStatus = selectedMachine.value.status === 'Operational' ? 'Inactive' : 'Operational'
-    selectedMachine.value.status = newStatus
-    
-    updateInfoPanel(selectedMachine.value)
-  } catch (err) {
-    console.error('Error cambiando estado:', err)
-    error.value = err?.message || 'Error al cambiar el estado'
-  } finally {
-    loading.value = false
-  }
-}
+const closeDetailPanel = () => {
+  showDetailPanel.value = false;
+  selectedMachine.value = null;
+};
 
-// Cargar datos al montar el componente
+const formatDate = (dateString) => {
+  if (!dateString) return 'No programado';
+  return new Date(dateString).toLocaleDateString('es-ES');
+};
+
+// Inicialización
 onMounted(() => {
-  loadPlants()
-  loadMachineries()
-})
+  loadPlants();
+  loadMachineries();
+});
 </script>
 
 <style scoped>
@@ -478,65 +434,8 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-.search-bar {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.search-input {
-  flex: 1;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--clr-border, #ddd);
-  border-radius: var(--radius-sm, 4px);
-  background-color: var(--clr-surface, #fff);
-  color: var(--clr-text, #333);
-  font-size: 0.85rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--clr-primary, #007bff);
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
-.new-button {
-  padding: 0.5rem 1rem;
-  background-color: var(--clr-primary, #007bff);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm, 4px);
-  cursor: pointer;
-  transition: background-color 0.2s;
-  font-size: 0.85rem;
-}
-
-.new-button:hover {
-  background-color: var(--clr-primary-dark, #0056b3);
-}
-
 .breadcrumb-header {
   margin-bottom: 2em;
-}
-
-.breadcrumb-card {
-  background: var(--clr-surface, #fff);
-  border-radius: var(--radius-md, 8px);
-  box-shadow: 0 4px 16px 0 rgba(44, 62, 80, 0.07);
-  padding: 0.75em 1.5em;
-  margin-bottom: 2em;
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-}
-
-.breadcrumb-text {
-  color: var(--clr-text, #333);
-  font-size: 1rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
 }
 
 .main-container {
@@ -573,48 +472,6 @@ onMounted(() => {
   background-color: var(--clr-surface, #fff);
 }
 
-.record-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.record-table th {
-  background-color: var(--clr-primary, #007bff);
-  color: white;
-  padding: 1em;
-  text-align: left;
-  font-weight: 600;
-}
-
-.record-table tr:hover {
-  background-color: var(--clr-primary-light, rgba(0, 123, 255, 0.1));
-  cursor: pointer;
-}
-
-.record-table td {
-  padding: 1em;
-  border-bottom: 1px solid var(--clr-border, #ddd);
-}
-
-.btn-primary {
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, var(--clr-primary-400, #2E80E4) 0%, var(--clr-primary-500, #18549E) 100%);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm, 4px);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.85rem;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(46, 128, 228, 0.3);
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, var(--clr-primary-500, #18549E) 0%, var(--clr-primary-400, #2E80E4) 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(46, 128, 228, 0.4);
-}
-
 .information-panel-container {
   width: 28%;
   border-radius: var(--radius-md, 8px);
@@ -625,9 +482,8 @@ onMounted(() => {
   justify-content: flex-start;
   overflow: hidden;
   position: relative;
-  background:var(--clr-surface, #fff);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-  border: 1px solid var(--clr-primary-200, #5B62B3);
+  background-color: var(--clr-surface, #fff);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .panel-header {
@@ -651,176 +507,19 @@ onMounted(() => {
   opacity: 1;
 }
 
-.info-panel {
-  padding: 1.5rem;
-  position: relative;
+.loading-indicator {
+  text-align: center;
+  padding: 2rem;
+  color: var(--clr-gris2, #666);
 }
 
-.info-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--clr-primary-100, #6DA0E1) 0%, var(--clr-primary-300, #ECA6BB) 50%, var(--clr-primary-200, #5B62B3) 100%);
-}
-
-.panel-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--clr-primary-400, #2E80E4);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--clr-primary-300, #ECA6BB);
-}
-
-.panel-actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.btn-secondary {
-  padding: 0.5rem 1rem;
-  background-color: transparent;
-  border: 1px solid var(--clr-primary-300, #ECA6BB);
-  color: var(--clr-primary-300, #ECA6BB);
-  border-radius: var(--radius-sm, 4px);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.85rem;
-}
-
-.btn-secondary:hover {
-  background-color: var(--clr-primary-300, #ECA6BB);
-  color: white;
-}
-
-.info-section {
-  margin-bottom: 1.5rem;
+.error-message {
+  text-align: center;
   padding: 1rem;
-  background: var(--clr-surface, #fff);
+  color: var(--clr-error, #f44336);
+  background-color: var(--clr-surface, #fff);
   border-radius: var(--radius-md, 8px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid var(--clr-primary-200, #5B62B3);
-}
-
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.info-item:last-child {
-  margin-bottom: 0;
-  border-bottom: none;
-}
-
-.subtitle {
-  font-weight: 600;
-  color: var(--clr-primary-500, #18549E);
-  font-size: 0.9rem;
-}
-
-.info {
-  color: var(--clr-text, #383A37);
-  font-weight: 500;
-}
-
-.info-container {
-  margin-bottom: 1.5rem;
-}
-
-.info-container h3 {
-  font-size: 1.1rem;
-  color: var(--clr-primary-200, #5B62B3);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--clr-primary-300, #ECA6BB);
-  position: relative;
-}
-
-.info-container h3::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 30px;
-  height: 2px;
-  background-color: var(--clr-primary-100, #6DA0E1);
-}
-
-.maintenance-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.maintenance-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, var(--clr-primary-300, #ECA6BB) 0%, var(--clr-primary-100, #6DA0E1) 100%);
-  border-radius: var(--radius-md, 8px);
-  color: white;
-  font-weight: 500;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
-}
-
-.maintenance-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Estilos para elementos de medición con colores variados */
-.measurement-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-  border-radius: var(--radius-md, 8px);
-  background: var(--clr-surface, #fff);
-  color: white;
-  font-weight: 500;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.measurement-item:nth-child(even) {
-  background:var(--clr-surface, #fff);
-}
-
-.measurement-item:hover {
-  transform: translateX(5px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Estilos para estados de máquina */
-.status-active {
-  color: var(--color-success, #28a745);
-  font-weight: 600;
-}
-
-.status-inactive {
-  color: var(--color-error, #dc3545);
-  font-weight: 600;
-}
-
-.status-maintenance {
-  color: var(--color-warning, #ffc107);
-  font-weight: 600;
-}
-
-/* Efectos de hover para elementos de información */
-.info-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm, 4px);
-  padding: 0.5rem;
-  margin: 0 -0.5rem;
 }
 
 .modal-overlay {
@@ -847,50 +546,6 @@ onMounted(() => {
   background-color: var(--clr-surface, #fff);
   border-radius: var(--radius-md, 8px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  transform-origin: center center;
-}
-
-.modal-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.modal-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.modal-container::-webkit-scrollbar-thumb {
-  background-color: var(--clr-primary-light, rgba(0, 123, 255, 0.3));
-  border-radius: 4px;
-}
-
-.loading-indicator {
-  text-align: center;
-  padding: 2rem;
-  color: var(--clr-gris2, #666);
-}
-
-.error-message {
-  text-align: center;
-  padding: 1rem;
-  color: var(--clr-error, #f44336);
-  background-color: var(--clr-surface, #fff);
-  border-radius: var(--radius-md, 8px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.error-message button {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: var(--clr-primary, #007bff);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm, 4px);
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.error-message button:hover {
-  background-color: var(--clr-primary-dark, #0056b3);
 }
 
 /* Tablet: apila los paneles */

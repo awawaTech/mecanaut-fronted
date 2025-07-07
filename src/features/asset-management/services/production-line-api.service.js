@@ -21,11 +21,11 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
-
 export class ProductionLineApiService {
   static async getProductionLines(plantId) {
     try {
       const response = await http.get('/production-lines', { params: { plantId } });
+      console.log('🔄 Respuesta de API:', response);
       return ProductionLineAssembler.toEntitiesFromResponse(response);
     } catch (err) {
       console.error('Error loading production line list:', err);
@@ -45,33 +45,43 @@ export class ProductionLineApiService {
 
   static async createProductionLine(productionLineData) {
     try {
-      if (!productionLineData.name || !productionLineData.code || !productionLineData.capacityUnitsPerHour) {
-        throw new Error('Name, code and capacity units per hour is required');
+      if (!productionLineData.name || !productionLineData.code || 
+          !productionLineData.capacityUnitsPerHour || !productionLineData.plantId) {
+        throw new Error('Nombre, código, capacidad y planta son requeridos');
       }
 
-      const resourceData = ProductionLineAssembler.toResourceFromEntity(productionLineData);
+      const payload = {
+        name: productionLineData.name,
+        code: productionLineData.code,
+        capacityUnitsPerHour: Number(productionLineData.capacityUnitsPerHour),
+        plantId: Number(productionLineData.plantId)
+      };
 
-      const response = await http.post(productionLinesEndpoint, resourceData);
-
+      const response = await http.post(productionLinesEndpoint, payload);
       return ProductionLineAssembler.toEntityFromResource(response.data);
     } catch (err) {
-      console.error('Error creating production line:', err);
+      console.error('Error al crear la línea de producción:', err);
       throw err;
     }
   }
 
-  static async updateProductionLine(id, productionLineData) {
+  static async updateProductionLine(productionLineData) {
     try {
-      const resourceData = ProductionLineAssembler.toResourceFromEntity({
-        ...productionLineData,
-        id
-      });
+      if (!productionLineData.id) {
+        throw new Error('ID es requerido para actualizar');
+      }
 
-      const response = await http.put(`${productionLinesEndpoint}/${id}`, resourceData);
+      const payload = {
+        name: productionLineData.name,
+        code: productionLineData.code,
+        capacityUnitsPerHour: Number(productionLineData.capacityUnitsPerHour),
+        plantId: Number(productionLineData.plantId)
+      };
 
+      const response = await http.put(`${productionLinesEndpoint}/${productionLineData.id}`, payload);
       return ProductionLineAssembler.toEntityFromResource(response.data);
     } catch (err) {
-      console.error(`Error updating production line ${id}:`, err);
+      console.error(`Error al actualizar la línea de producción ${productionLineData.id}:`, err);
       throw err;
     }
   }
@@ -81,7 +91,17 @@ export class ProductionLineApiService {
       await http.delete(`${productionLinesEndpoint}/${id}`);
       return true;
     } catch (err) {
-      console.error(`Error deleting production line ${id}:`, err);
+      console.error(`Error al eliminar la línea de producción ${id}:`, err);
+      throw err;
+    }
+  }
+
+  static async changeProductionLineStatus(id, status) {
+    try {
+      const response = await http.patch(`${productionLinesEndpoint}/${id}/status`, { status });
+      return ProductionLineAssembler.toEntityFromResource(response.data);
+    } catch (err) {
+      console.error(`Error al cambiar el estado de la línea de producción ${id}:`, err);
       throw err;
     }
   }
