@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseEndpoint = 'http://localhost:5128/api/v1';
+const baseEndpoint = 'https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1';
 const usersEndpoint = `${baseEndpoint}/users`;
 
 const http = axios.create({

@@ -213,7 +213,8 @@ const addTask = () => {
   formData.value.tasks.push({
     taskId: null,
     taskName: '',
-    taskDescription: ''
+    taskDescription: '',
+    machineIds: []
   });
 };
 

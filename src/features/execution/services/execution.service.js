@@ -82,7 +82,7 @@ export default class ExecutionService {
    */
   static async getMachineries(productionLineId) {
     try {
-      const response = await axios.get(`http://localhost:5128/api/machines/production-line/${productionLineId}`);
+      const response = await axios.get(`https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/machines/production-line/${productionLineId}`);
       return response.data;
     } catch (error) {
       console.error('Error obteniendo maquinarias:', error);
@@ -125,7 +125,7 @@ export default class ExecutionService {
    */
   static async getInventoryParts(plantId) {
     try {
-      const response = await axios.get(`http://localhost:5128/api/inventory-parts?plantId=${plantId}`);
+      const response = await axios.get(`https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/inventory-parts?plantId=${plantId}`);
       console.log('BBBBBBBBBB', response.data);
       return response.data;
     } catch (error) {
@@ -221,7 +221,7 @@ export default class ExecutionService {
 
   static async decreaseInventoryPart(partId, quantity) {
     try {
-      const response = await axios.put(`http://localhost:5128/api/inventory-parts/${partId}/decrease`, quantity);
+      const response = await axios.put(`https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/inventory-parts/${partId}/decrease`, quantity);
       return response.data;
     } catch (error) {
       console.error('Error reduciendo stock:', error);
@@ -239,7 +239,7 @@ export default class ExecutionService {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post('http://localhost:5128/api/v1/image-storage/upload', formData, {
+      const response = await axios.post('https://mecanautbk-fffeemd3bqdwebce.centralus-01.azurewebsites.net/api/v1/image-storage/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
